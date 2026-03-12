@@ -7,10 +7,10 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
   Pencil, Save, X, Copy, Eye, EyeOff,
-  Terminal, ShieldCheck, RefreshCcw
+  Terminal, ShieldCheck, RefreshCcw, Trash2
 } from "lucide-react";
 import { getSessionData } from "@/utils/storage/local/session-operations";
-import { setLocal } from "@/utils/storage/local/crud";
+import { setLocal, omitLocal } from "@/utils/storage/local/crud";
 import { LocalStorageKeys } from "@/utils/storage/local/keys";
 import { SessionConfig } from "@/types/session";
 import { Badge } from "@/components/ui/badge";
@@ -40,7 +40,30 @@ export default function SessionData() {
     toast.success("Session configuration synchronized");
   };
 
-  if (!data) return null;
+  // --- NEW: Delete Session Logic ---
+  const handleDeleteSession = () => {
+    const confirmDelete = window.confirm("Are you sure you want to delete all session tokens? This will log you out.");
+    
+    if (confirmDelete) {
+      omitLocal(LocalStorageKeys.KEY_JSESSIONID);
+      omitLocal(LocalStorageKeys._oauth2_proxy_0);
+      omitLocal(LocalStorageKeys._oauth2_proxy_1);
+      omitLocal(LocalStorageKeys.sid);
+
+      setData(null);
+      setEditForm(null);
+      toast.error("Session data cleared successfully");
+    }
+  };
+
+  if (!data) return (
+    <div className="max-w-4xl mx-auto py-20 text-center">
+      <p className="text-slate-500 mb-4">No active session data found.</p>
+      <Button onClick={() => window.location.reload()} variant="outline">
+        <RefreshCcw className="w-4 h-4 mr-2" /> Reload Page
+      </Button>
+    </div>
+  );
 
   const fields = [
     { id: "jsessionId", label: "JSESSIONID", value: data.jsessionId },
@@ -54,15 +77,15 @@ export default function SessionData() {
     { key: "_oauth2_proxy_1", value: data.oAuthCookie2 },
     { key: "sid", value: data.sid }
   ]
-    .filter(item => item.value) // Only include keys that have values
+    .filter(item => item.value)
     .map(item => `${item.key}=${item.value}`)
     .join(";");
 
-  // 2. Add a helper to copy the whole string
   const copyAllCookies = () => {
     handleCopy(combinedCookie);
     toast.success("Full cookie string copied");
   };
+
   return (
     <div className="max-w-4xl mx-auto py-10 px-6 antialiased">
       {/* Header Section */}
@@ -83,6 +106,19 @@ export default function SessionData() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* NEW: Delete Button */}
+          {!isEditing && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleDeleteSession}
+              className="text-red-500 hover:text-red-700 hover:bg-red-50"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Session
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="sm"
@@ -102,11 +138,12 @@ export default function SessionData() {
             }}
           >
             {isEditing ? <X className="w-4 h-4 mr-2" /> : <Pencil className="w-4 h-4 mr-2" />}
-            {isEditing ? "Cancel" : "Edit Configuration"}
+            {isEditing ? "Cancel" : "Edit"}
           </Button>
         </div>
       </div>
 
+      {/* Rest of the component (Combined Cookie and Table) remains the same... */}
       {!isEditing && (
         <div className="mb-4 p-4 bg-slate-900 rounded-lg border border-slate-800 shadow-inner">
           <div className="flex items-center justify-between mb-2">
@@ -127,7 +164,7 @@ export default function SessionData() {
           </code>
         </div>
       )}
-      {/* Main Data Table Area */}
+
       <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="bg-slate-50/50 border-b border-slate-200 px-6 py-3 grid grid-cols-12 gap-4">
           <div className="col-span-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Parameter</div>
@@ -175,8 +212,7 @@ export default function SessionData() {
             </div>
           ))}
         </div>
-        <div>
-        </div>
+        
         {isEditing && (
           <div className="bg-slate-50 border-t border-slate-200 px-6 py-4 flex justify-end items-center gap-4">
             <span className="text-xs text-slate-500 flex items-center gap-2">
