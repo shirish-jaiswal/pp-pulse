@@ -185,8 +185,8 @@ export function LogResultsDashboard({ data }: LogDashboardProps) {
               {indexFilter.length > 0 && (
                 <>
                   <DropdownMenuSeparator />
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="w-full justify-center h-8 text-[10px] text-destructive"
                     onClick={() => setIndexFilter([])}
                   >
@@ -234,7 +234,7 @@ export function LogResultsDashboard({ data }: LogDashboardProps) {
                     <DropdownMenuCheckboxItem
                       key={field}
                       checked={selectedFields.includes(field)}
-                      onCheckedChange={() => 
+                      onCheckedChange={() =>
                         setSelectedFields(prev => prev.includes(field) ? prev.filter(f => f !== field) : [...prev, field])
                       }
                       onSelect={(e) => e.preventDefault()}
@@ -261,24 +261,36 @@ export function LogResultsDashboard({ data }: LogDashboardProps) {
         <Table className="relative w-full border-separate border-spacing-0">
           <TableHeader className="sticky top-0 z-50 shadow-sm">
             <TableRow className="hover:bg-transparent">
+              {/* Expansion Toggle Column */}
               <TableHead className="w-[40px] bg-muted/95 border-b" />
+
+              {/* Dynamic Field Columns */}
               {selectedFields.map(field => (
-                <TableHead key={field} className="bg-muted/95 border-b min-w-[120px]">
-                  <span className="text-[10px] font-black tracking-widest text-primary uppercase">
-                    {field.split('.').pop()}
+                <TableHead key={field} className="bg-muted/95 border-b min-w-[150px]">
+                  <span className="text-[10px] font-bold tracking-tight text-primary uppercase font-mono">
+                    {field} {/* Changed from field.split('.').pop() to show full name */}
                   </span>
                 </TableHead>
               ))}
-              <TableHead className="bg-muted/95 border-b min-w-[300px]">
-                <div className="flex items-center gap-2">
-                  <Input
-                    placeholder="Quick search message..."
-                    className="h-6 text-[10px]"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </TableHead>
+
+              {/* Message Search Column */}
+              {
+                filteredHits.at(0)?._source.hasOwnProperty("message") && (
+                  <TableHead className="bg-muted/95 border-b min-w-[400px]">
+                    <div className="flex items-center gap-2">
+                      <div className="relative w-full">
+                        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                        <Input
+                          placeholder="Search messages..."
+                          className="h-7 text-[10px] pl-7 bg-background/50"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </TableHead>
+                )
+              }
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -286,7 +298,7 @@ export function LogResultsDashboard({ data }: LogDashboardProps) {
               const isExpanded = expandedRows.has(hit._id);
               return (
                 <React.Fragment key={hit._id}>
-                  <TableRow 
+                  <TableRow
                     className={cn(isExpanded ? "bg-muted/30" : "hover:bg-muted/50", "cursor-pointer")}
                     onClick={() => {
                       const newSet = new Set(expandedRows);
@@ -301,26 +313,30 @@ export function LogResultsDashboard({ data }: LogDashboardProps) {
                       const rawValue = getDeepValue(hit._source, field);
                       let displayValue = String(rawValue ?? "-");
                       if (field === "@timestamp" && rawValue) {
-                         const date = new Date(rawValue);
-                         displayValue = date.toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + `.${date.getMilliseconds().toString().padStart(3, '0')}`;
+                        const date = new Date(rawValue);
+                        displayValue = date.toLocaleString('en-US', { month: 'short', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }) + `.${date.getMilliseconds().toString().padStart(3, '0')}`;
                       }
                       return (
                         <TableCell key={field} className="py-2">
-                          <Badge variant="outline" className="font-mono text-[10px] border-slate-200">
+                          <div className="font-mono text-[12px] whitespace-pre-wrap break-all">
                             {displayValue}
-                          </Badge>
+                          </div>
                         </TableCell>
                       );
                     })}
-                    <TableCell className="font-mono text-[12px] whitespace-pre-wrap break-all">
-                      {hit._source.message}
-                    </TableCell>
+                    {
+                      hit._source.message && (
+                        <TableCell className="font-mono text-[12px] whitespace-pre-wrap break-all">
+                          {hit._source.message}
+                        </TableCell>
+                      )
+                    }
                   </TableRow>
                   {isExpanded && (
                     <TableRow className="bg-muted/10">
-                      <TableCell colSpan={selectedFields.length + 2} className="p-4 w-fit">
+                      <TableCell colSpan={selectedFields.length + 2} className="p-4 w-full">
                         <div className="rounded-lg bg-slate-950 p-4 border relative group">
-                          <pre className="text-[11px] text-emerald-400 overflow-x-auto">
+                          <pre className="text-[11px] text-emerald-400 overflow-x-auto font-mono whitespace-pre-wrap break-all">
                             {JSON.stringify(hit._source, null, 2)}
                           </pre>
                         </div>

@@ -62,7 +62,6 @@ const convertToPayload = (params: LogRequestParams) => {
   const mustClauses: any[] = [
     {
       query_string: {
-        fields: ["message"],
         query: queryFormatting(params.query)
       }
     }
