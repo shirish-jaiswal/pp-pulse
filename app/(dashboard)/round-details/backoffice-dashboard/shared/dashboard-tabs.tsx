@@ -11,20 +11,21 @@ import { Database, Search, Loader2, RefreshCw, AlertCircle } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { cn } from "@/lib/utils"
+import { cn } from "@/utils/cn"
 
 import { useDashboard } from "@/app/(dashboard)/round-details/backoffice-dashboard/context/dashboard-context"
 import { useLogData } from "@/hooks/use-log-data"
 import { usePlayerBetTxnInfo } from "@/hooks/use-player-bet-txn-info"
 
 import { ArrowDownAz, ArrowUpAz } from "lucide-react"
-import { PlayerBetTxnInfoProps } from "@/types/player-bet-info"
-import { LogResultsDashboard } from "@/app/(dashboard)/round-details/kibana/log-result-dashboard"
-import { LogLoadingSkeleton } from "@/app/(dashboard)/round-details/kibana/log-skeleton"
+import { PlayerBetTxnInfoProps } from "@/types/round-details-input"
+import { LogResultsDashboard } from "@/app/(dashboard)/round-details/backoffice-dashboard/kibana/content/log-result-dashboard"
+import { LogLoadingSkeleton } from "@/app/(dashboard)/round-details/backoffice-dashboard/kibana/skeleton/log-skeleton"
 import { RoundDataDisplay } from "@/app/(dashboard)/round-details/round/round-data-diaplay"
 import { PlayerBetTxnResponse } from "@/types/round-details"
 import { LogRequestParams } from "@/lib/server/kibana/search"
 import { useEffect, useMemo } from "react"
+import { KibanaEmptyState } from "@/app/(dashboard)/round-details/backoffice-dashboard/kibana/skeleton/kibana-empty-state"
 
 export function DashboardTabs() {
 
@@ -47,6 +48,8 @@ export function DashboardTabs() {
     isRefetching
   } = useLogData(logPayload as any)
 
+  
+  console.log("log Data ::", logData)
   const defaultParams = {
     gameParamId: "round_id",
     game_id: "",
@@ -125,6 +128,12 @@ export function DashboardTabs() {
 
         {activeTab === "logs" && logPayload && !isLogsLoading && (
           <div className="flex items-center gap-2 mr-1">
+            {logData && (
+              <div className="px-2 py-1 bg-slate-100 border border-slate-200 rounded text-[10px] font-mono text-slate-600 flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="font-bold">{logData.total}</span> HITS
+              </div>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -158,8 +167,6 @@ export function DashboardTabs() {
           </div>
         )}
       </div>
-
-      {/* ROUND DATA TAB */}
 
       <TabsContent
         value="rounds"
@@ -205,23 +212,14 @@ export function DashboardTabs() {
           ) : (
             <>
               {!logPayload && (
-                <div className="flex flex-col items-center justify-center h-full border-2 border-dashed rounded-2xl">
-                  <Search className="h-8 w-8 text-slate-400 mb-4" />
-                  <h3 className="text-lg font-semibold">
-                    Ready to Query
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Configure search above
-                  </p>
-                </div>
+               <KibanaEmptyState />
               )}
               {logError && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertTitle>Query Failed</AlertTitle>
                   <AlertDescription className="font-mono text-xs mt-2">
-{JSON.stringify(logError.message)}
-
+                    {JSON.stringify(logError.message)}
                   </AlertDescription>
                 </Alert>
               )}
@@ -234,7 +232,7 @@ export function DashboardTabs() {
 
           {isRefetching && !isLogsLoading && (
             <div className="absolute inset-0 bg-white/50 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <LogLoadingSkeleton />
             </div>
           )}
         </div>

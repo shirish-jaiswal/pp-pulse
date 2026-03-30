@@ -16,15 +16,15 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { setSessionData } from "@/utils/storage/local/session-operations";
 import { useRouter } from "next/navigation";
-import { AlertCircle, Terminal } from "lucide-react"; // Assuming lucide-react is available
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// 1. Zod Schema for validation
 const sessionSchema = z.object({
   jsessionId: z.string().min(1, "JSessionID is required"),
   oAuthCookie1: z.string().min(1, "oAuthCookie1 is required"),
   oAuthCookie2: z.string().min(1, "oAuthCookie2 is required"),
   sid: z.string().min(1, "Sid is required"),
+  ccCookie: z.string(),
 });
 
 type SessionData = z.infer<typeof sessionSchema>;
@@ -35,6 +35,7 @@ export default function GetSessionForm() {
     oAuthCookie1: "",
     oAuthCookie2: "",
     sid: "",
+    ccCookie: "",
   });
   const router = useRouter();
   const [isSaved, setIsSaved] = useState(false);
@@ -69,6 +70,7 @@ export default function GetSessionForm() {
       formData.oAuthCookie1,
       formData.oAuthCookie2,
       formData.sid,
+      formData.ccCookie
     );
     setIsSaved(true);
     toast.success("Session data stored locally");
@@ -82,6 +84,7 @@ export default function GetSessionForm() {
       oAuthCookie1: "",
       oAuthCookie2: "",
       sid: "",
+      ccCookie: "",
     });
     setIsSaved(false);
     toast.info("Cleared local storage");
@@ -89,7 +92,6 @@ export default function GetSessionForm() {
 
   return (
     <div className="min-h-screen w-full flex flex-col items-center justify-center p-4 bg-slate-50 gap-4">
-      {/* Dev Notes / Requirements Banner */}
       <div className="w-full max-w-md">
         <Alert variant="destructive" className="bg-amber-50 border-amber-200 text-amber-900">
           <AlertCircle className="h-4 w-4 stroke-amber-600" />
@@ -167,6 +169,15 @@ export default function GetSessionForm() {
                   value={formData.sid}
                   onChange={handleChange}
                   placeholder="Enter Sid"
+                />
+              </div>
+              <div className="grid gap-1.5">
+                <Label htmlFor="ccCookie">Command Center Cookie</Label>
+                <Input
+                  id="ccCookie"
+                  value={formData.ccCookie}
+                  onChange={handleChange}
+                  placeholder="Enter Command Center cookie"
                 />
               </div>
             </div>

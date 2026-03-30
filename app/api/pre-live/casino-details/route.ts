@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
 // Import both schemas
-import { CasinoDetailsSchema } from "@/types/casino/details";
-import { CasinoConfigSchema } from "@/types/casino/config";
-import { OneWalletConfigSchema } from "@/types/casino/one-wallet-config";
-import { GameConfigArraySchema } from "@/types/casino/game-config";
+import { CasinoDetailsSchema } from "@/features/casino/types/details";
+import { CasinoConfigSchema } from "@/features/casino/types/config";
+import { OneWalletConfigSchema } from "@/features/casino/types/one-wallet-config";
+import { GameConfigArraySchema } from "@/features/casino/types/game-config";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);

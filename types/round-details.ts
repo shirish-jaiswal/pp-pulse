@@ -1,7 +1,5 @@
 import { z } from "zod";
 
-// --- 1. Sub-Schemas ---
-
 const GameProgressSchema = z.object({
   seatNumber: z.string(),
   resultTime: z.string(),
@@ -10,13 +8,13 @@ const GameProgressSchema = z.object({
 
 const TxnSettlementSchema = z.object({
   operatorTxnId: z.string().nullable(),
-  roundId: z.union([z.string(), z.number()]), // Flexible for different DB sources
+  roundId: z.union([z.string(), z.number()]),
   ppLiveTxnId: z.string(),
   ppSlotsTxnId: z.string().nullable(),
   txnDate: z.string(),
   txnType: z.string(),
   txnStatus: z.string(),
-  txnCurrency: z.string().transform((val) => val.trim()), // Cleans the "CAD       " whitespace
+  txnCurrency: z.string().transform((val) => val.trim()),
   txnAmount: z.string(),
   errorCode: z.string(),
   retryCount: z.string(),

@@ -124,3 +124,68 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer base {
+  /* The container for the editor content */
+  .ProseMirror {
+    padding: 1rem;
+    outline: none;
+  }
+
+  .ProseMirror table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+    margin: 1rem 0;
+    overflow: hidden;
+  }
+
+  .ProseMirror td,
+  .ProseMirror th {
+    min-width: 1em;
+    border: 1px solid oklch(0.85 0 0); /* Subtle border using your OKLCH scale */
+    padding: 6px 8px;
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+  }
+
+  /* Header row styling */
+  .ProseMirror th {
+    font-weight: bold;
+    text-align: left;
+    background-color: var(--muted);
+  }
+
+  /* Selection styling (The blue highlight when dragging over cells) */
+  .ProseMirror .selectedCell:after {
+    z-index: 2;
+    position: absolute;
+    content: "";
+    left: 0; right: 0; top: 0; bottom: 0;
+    background: oklch(0.7 0.1 250 / 0.1); /* Soft blue overlay */
+    pointer-events: none;
+  }
+
+  /* The resize handle (The bar you grab to resize columns) */
+  .ProseMirror .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: -2px;
+    width: 4px;
+    background-color: oklch(0.7 0.2 250); /* Blue resize bar */
+    pointer-events: none;
+  }
+
+  /* Ensure the cursor changes when hovering over the resize area */
+  .ProseMirror.resize-cursor {
+    cursor: ew-resize;
+  }
+}
+
+/* Dark mode adjustments */
+.dark .ProseMirror td,
+.dark .ProseMirror th {
+  border-color: var(--border);
+}

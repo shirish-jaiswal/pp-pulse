@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  ActivityIcon,
   Calendar,
+  DatabaseIcon,
   DicesIcon,
   Inbox,
   Search,
@@ -25,11 +27,10 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 
-// Single source of truth for navigation
 export const sideBarMenu = [
-  { title: "Casino Details", url: "/casino-details", icon: Inbox },
-  { title: "Round Details", url: "/round-details", icon: DicesIcon },
-  { title: "Player Info", url: "/player-info", icon: UserSearch },
+  { title: "Player", url: "/player-info", icon: UserSearch },
+  { title: "Round Activity", url: "/round-activity", icon: DicesIcon },
+  { title: "Excel DB", url: "/database", icon: DatabaseIcon },
 ];
 
 const sideBarFooter = [{ title: "Session", url: "/session", icon: SettingsIcon }];

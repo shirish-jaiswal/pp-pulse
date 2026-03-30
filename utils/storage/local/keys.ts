@@ -6,7 +6,7 @@ export const LocalStorageKeys = {
   _oauth2_proxy_0: "_oauth2_proxy_0",
   _oauth2_proxy_1: "_oauth2_proxy_1",
   sid: "sid",
-  CASINO_ADMIN_TOKEN: "CASINO_ADMIN_TOKEN"
+  cc_cookie: "cc_cookie",
 } as const;
 
 export type LocalStorageKeysType = keyof typeof LocalStorageKeys;

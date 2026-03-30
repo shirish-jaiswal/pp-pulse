@@ -1,4 +1,4 @@
-import { CasinoDetailsFormType, CasinoDetailsFormSchema } from "@/types/casino/casino-details-input";
+import { CasinoDetailsFormType, CasinoDetailsFormSchema } from "@/features/casino/types/casino-details-input";
 import { getSessionData } from "@/utils/storage/local/session-operations";
 
 export async function c_getCasinoDetails(rawData : CasinoDetailsFormType) {

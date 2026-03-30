@@ -23,14 +23,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     } as React.CSSProperties}>
       <AppSidebar />
       <SidebarInset>
-        <header className="flex h-12 shrink-0 items-center gap-2 border-b px-4">
+        <header className="flex h-8 shrink-0 items-center gap-2 border-b px-4">
           <SidebarTrigger className="-ml-1" />
-          <h1 className="transition-all text-2xl font-bold">
+          <h1 className="transition-all text-xl font-bold">
             {currentTitle}
           </h1>
         </header>
         <ScrollArea className="h-[calc(100vh-4rem)] w-full">
-          <div className="p-4">
+          <div className="p-2">
             <SessionValidation>{children}</SessionValidation>
           </div>
         </ScrollArea>

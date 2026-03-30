@@ -16,6 +16,11 @@ import { SessionConfig } from "@/types/session";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
+/**
+ * Note: If your SessionConfig type doesn't include cc_cookie yet, 
+ * you may need to add it to your types/session.ts file.
+ */
+
 export default function SessionData() {
   const initialSession = getSessionData();
   const [data, setData] = useState<SessionConfig | null>(initialSession);
@@ -24,31 +29,41 @@ export default function SessionData() {
   const [editForm, setEditForm] = useState<SessionConfig | null>(initialSession);
 
   const handleCopy = (text: string) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     toast.success("Token copied to clipboard", { duration: 1500 });
   };
 
   const handleSave = () => {
     if (!editForm) return;
+
+    // Persist all keys to LocalStorage
     setLocal(LocalStorageKeys.KEY_JSESSIONID, editForm.jsessionId);
     setLocal(LocalStorageKeys._oauth2_proxy_0, editForm.oAuthCookie1);
     setLocal(LocalStorageKeys._oauth2_proxy_1, editForm.oAuthCookie2);
     setLocal(LocalStorageKeys.sid, editForm.sid);
+    
+    // Persisting CC Cookie
+    if (editForm.cc_cookie !== undefined) {
+      setLocal("cc_cookie", editForm.cc_cookie);
+    }
 
     setData(editForm);
     setIsEditing(false);
     toast.success("Session configuration synchronized");
   };
 
-  // --- NEW: Delete Session Logic ---
   const handleDeleteSession = () => {
-    const confirmDelete = window.confirm("Are you sure you want to delete all session tokens? This will log you out.");
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete all session tokens? This will log you out."
+    );
     
     if (confirmDelete) {
       omitLocal(LocalStorageKeys.KEY_JSESSIONID);
       omitLocal(LocalStorageKeys._oauth2_proxy_0);
       omitLocal(LocalStorageKeys._oauth2_proxy_1);
       omitLocal(LocalStorageKeys.sid);
+      omitLocal("cc_cookie");
 
       setData(null);
       setEditForm(null);
@@ -65,21 +80,25 @@ export default function SessionData() {
     </div>
   );
 
+  // Field definitions including the new CC Cookie
   const fields = [
     { id: "jsessionId", label: "JSESSIONID", value: data.jsessionId },
     { id: "oAuthCookie1", label: "OAuth Cookie P1", value: data.oAuthCookie1 },
     { id: "oAuthCookie2", label: "OAuth Cookie P2", value: data.oAuthCookie2 },
     { id: "sid", label: "System ID (SID)", value: data.sid },
+    { id: "cc_cookie", label: "CC Cookie", value: data.cc_cookie },
   ];
 
+  // Logic for the raw cookie header string
   const combinedCookie = [
     { key: "_oauth2_proxy_0", value: data.oAuthCookie1 },
     { key: "_oauth2_proxy_1", value: data.oAuthCookie2 },
-    { key: "sid", value: data.sid }
+    { key: "sid", value: data.sid },
+    { key: "cc_cookie", value: data.cc_cookie }
   ]
     .filter(item => item.value)
     .map(item => `${item.key}=${item.value}`)
-    .join(";");
+    .join("; ");
 
   const copyAllCookies = () => {
     handleCopy(combinedCookie);
@@ -106,7 +125,6 @@ export default function SessionData() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* NEW: Delete Button */}
           {!isEditing && (
             <Button
               variant="ghost"
@@ -143,12 +161,12 @@ export default function SessionData() {
         </div>
       </div>
 
-      {/* Rest of the component (Combined Cookie and Table) remains the same... */}
+      {/* Raw Cookie Preview Box */}
       {!isEditing && (
         <div className="mb-4 p-4 bg-slate-900 rounded-lg border border-slate-800 shadow-inner">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-              Combined Proxy & SID Cookie
+              Combined Proxy, SID & CC Cookie
             </span>
             <Button
               variant="ghost"
@@ -165,6 +183,7 @@ export default function SessionData() {
         </div>
       )}
 
+      {/* Data Table */}
       <div className="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="bg-slate-50/50 border-b border-slate-200 px-6 py-3 grid grid-cols-12 gap-4">
           <div className="col-span-4 text-[11px] font-bold uppercase tracking-wider text-slate-500">Parameter</div>
@@ -201,7 +220,7 @@ export default function SessionData() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 text-slate-400 hover:text-blue-600 transition-colors"
-                        onClick={() => handleCopy(field.value)}
+                        onClick={() => handleCopy(field.value!)}
                       >
                         <Copy className="w-3.5 h-3.5" />
                       </Button>
