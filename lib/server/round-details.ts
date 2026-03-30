@@ -1,4 +1,4 @@
-import { PlayerBetTxnInfoProps, PlayerBetTxnInfoSchema } from "@/types/player-bet-info";
+import { PlayerBetTxnInfoProps, PlayerBetTxnInfoSchema } from "@/types/round-details-input";
 import { getSessionData } from "@/utils/storage/local/session-operations";
 
 export async function c_getPlayerBetTxnInfo(rawData: PlayerBetTxnInfoProps) {

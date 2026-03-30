@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import axios from "axios";
-import { CasinoDetailsSchema } from "@/types/casino/details";
+import { CasinoDetailsSchema } from "@/features/casino/types/details";
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);

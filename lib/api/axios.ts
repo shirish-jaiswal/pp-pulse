@@ -1,8 +1,6 @@
 import { getSessionData } from "@/utils/storage/local/session-operations";
 import axios from "axios";
 
-
-
 export const axiosClientInstance = (customheaders?: any) => {
 
   return axios.create({

@@ -3,7 +3,7 @@
 import React from "react";
 import { RoundDetailsForm } from "./round-details-form";
 import { usePlayerBetTxnInfo } from "@/hooks/use-player-bet-txn-info";
-import { PlayerBetTxnInfoProps } from "@/types/player-bet-info";
+import { PlayerBetTxnInfoProps } from "@/types/round-details-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Database, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";

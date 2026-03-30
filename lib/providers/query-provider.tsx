@@ -8,7 +8,6 @@ export default function QueryProvider({
 }: {
   children: React.ReactNode;
 }) {
-    //is because to make sure that the queryClient is only created once per component
   const [queryClient] = useState(() => new QueryClient());
   return (
     <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>

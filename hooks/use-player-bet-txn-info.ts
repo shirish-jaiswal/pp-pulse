@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { playerBetTxnInfoKeys } from "@/lib/query-key/player-bet-txn-info";
 import { c_getPlayerBetTxnInfo } from "@/lib/server/round-details";
-import { PlayerBetTxnInfoProps } from "@/types/player-bet-info";
+import { PlayerBetTxnInfoProps } from "@/types/round-details-input";
 import { PlayerBetTxnResponse } from "@/types/round-details";
 
 export function usePlayerBetTxnInfo(params: PlayerBetTxnInfoProps) {

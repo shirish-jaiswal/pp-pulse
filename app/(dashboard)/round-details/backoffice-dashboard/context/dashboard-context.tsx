@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState } from "react"
 import { LogRequestParams, SortType } from "@/lib/server/kibana/search"
-import { PlayerBetTxnInfoProps } from "@/types/player-bet-info"
+import { PlayerBetTxnInfoProps } from "@/types/round-details-input"
 
 type DashboardContextType = {
   activeTab: string

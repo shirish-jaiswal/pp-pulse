@@ -6,7 +6,8 @@ export function isSessionDataPresent() {
     getLocal(LocalStorageKeys.sid) &&
     getLocal(LocalStorageKeys.KEY_JSESSIONID) &&
     getLocal(LocalStorageKeys._oauth2_proxy_0) &&
-    getLocal(LocalStorageKeys._oauth2_proxy_1)
+    getLocal(LocalStorageKeys._oauth2_proxy_1) &&
+    getLocal(LocalStorageKeys.cc_cookie)
   );
 }
 
@@ -15,11 +16,13 @@ export function setSessionData(
   oAuthCookie1: string,
   oAuthCookie2: string,
   sid: string,
+  ccCookie: string
 ) {
   setLocal(LocalStorageKeys.sid, sid);
   setLocal(LocalStorageKeys.KEY_JSESSIONID, jsessionId);
   setLocal(LocalStorageKeys._oauth2_proxy_0, oAuthCookie1);
   setLocal(LocalStorageKeys._oauth2_proxy_1, oAuthCookie2);
+  setLocal(LocalStorageKeys.cc_cookie, ccCookie);
 }
 
 export function getSessionData () {
@@ -28,5 +31,6 @@ export function getSessionData () {
     oAuthCookie1: getLocal(LocalStorageKeys._oauth2_proxy_0) as string,
     oAuthCookie2: getLocal(LocalStorageKeys._oauth2_proxy_1) as string,
     sid: getLocal(LocalStorageKeys.sid) as string,
+    cc_cookie: getLocal(LocalStorageKeys.cc_cookie) as string
   };
 }
