@@ -1,19 +1,22 @@
 "use client";
 
-import { BetTable, LogTerminal, TransactionTable } from "@/features/round-details/components/round-audit/round-audit-views";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
+import LogTerminal from "@/features/round-details/components/round-audit/tab-content/log-terminal";
+import BetTable from "@/features/round-details/components/round-audit/tab-content/bet-details";
+import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
+import PremiumLogMonitor from "@/features/round-details/components/round-audit/tab-content/log-terminal";
 
 interface ContentProps {
   activeTab: string;
   activeLabel: string;
-  roundId: string;
+  gameId: string;
   data: any;
 }
 
-export function RoundAuditContent({ activeTab, activeLabel, roundId, data }: ContentProps) {
+export function RoundAuditContent({ activeTab, activeLabel, gameId, data }: ContentProps) {
   const { resolutionEditorOpen, setResolutionEditorOpen } = useRoundDetails();
 
   return (
@@ -22,7 +25,7 @@ export function RoundAuditContent({ activeTab, activeLabel, roundId, data }: Con
         <div className="flex items-center gap-4">
           <h3 className="text-sm font-bold truncate">{activeLabel}</h3>
           <span className="font-mono text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/50">
-            Game Id: {roundId.split("-").pop()}
+            Game Id: {gameId.split("-").pop()}
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -43,7 +46,7 @@ export function RoundAuditContent({ activeTab, activeLabel, roundId, data }: Con
           >
             {activeTab === "tx" && <TransactionTable transactions={data.transactions} />}
             {activeTab === "bets" && <BetTable items={data.bets} />}
-            {activeTab === "logs" && <LogTerminal logs={data.logs} />}
+            {activeTab === "logs" && <PremiumLogMonitor logs={data.logs} />}
           </motion.div>
         </AnimatePresence>
       </div>

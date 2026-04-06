@@ -1,7 +1,4 @@
-import { getSessionData } from "@/utils/storage/local/session-operations";
-
 export async function c_getTicketById(ticketId : string) {
-    const session = getSessionData();
     const params = new URLSearchParams({
         ticketId: ticketId.toString(),
     });

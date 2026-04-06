@@ -1,7 +1,7 @@
 interface CardProps {
   rank: Rank;
   suit?: Suit;
-  size?: number; // width
+  size?: number;
 }
 
 export type Suit = 'H' | 'D' | 'S' | 'C'; 

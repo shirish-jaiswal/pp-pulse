@@ -8,7 +8,7 @@ import {
   PASTE_COMMAND,
   $createParagraphNode,
 } from "lexical";
-import { $createImageNode, ImageNode } from "./image-node";
+import { $createImageNode, ImageNode } from "@/components/custom/text-editor/image-node";
 
 export default function ImagesPlugin() {
   const [editor] = useLexicalComposerContext();

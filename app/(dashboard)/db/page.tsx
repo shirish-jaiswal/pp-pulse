@@ -60,7 +60,7 @@ export default function ExcelDBPage() {
         </aside>
 
         {/* Main: Data Grid */}
-        <main className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden bg-background">
+        <main className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden bg-background w-[calc(100vw-52rem)]">
           <DataGrid dbName={selectedDb} tableName={selectedTable} />
         </main>
       </div>

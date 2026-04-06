@@ -31,7 +31,6 @@ function loadWB(dbName: string): WorkBook {
 }
 
 export const ExcelEngine = {
-  // ============ DATABASE CRUD ============
   createDatabase(dbName: string) {
     validateDbName(dbName);
     if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
@@ -221,4 +220,28 @@ export const ExcelEngine = {
 
     saveWorkbook(wb, getDBPath(dbName));
   },
+
+  findRows(
+    dbName: string,
+    tableName: string,
+    filters: Record<string, string | string[]>
+  ) {
+    const wb = loadWB(dbName);
+    const sheet = wb.Sheets[tableName];
+    if (!sheet) throw new Error("Table not found");
+
+    const rows = utils.sheet_to_json<Record<string, string>>(sheet);
+
+    return rows.filter((row) =>
+      Object.entries(filters).every(([key, value]) => {
+        const rowValue = row[key];
+
+        if (Array.isArray(value)) {
+          return value.includes(rowValue);
+        }
+
+        return rowValue === value;
+      })
+    );
+  }
 };
