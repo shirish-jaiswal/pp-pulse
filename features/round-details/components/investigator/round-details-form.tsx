@@ -8,18 +8,21 @@ import {
     RoundDetailsInputFormSchema,
     RoundDetailsInputProps,
 } from "@/features/round-details/types/round-details-input";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 
 interface Props {
-    onSubmit: (data: RoundDetailsInputProps) => void;
+    onSubmit?: (data: RoundDetailsInputProps) => void;
 }
 
 export function RoundDetailsForm({ onSubmit }: Props) {
+    const {roundDetailsInput } = useRoundDetails();
+    const defaultMode = roundDetailsInput?.game_id ? "game" : "round";
     const form = useForm({
         defaultValues: {
-            mode: "round" as "round" | "game",
-            round_id: "",
-            game_id: "",
-            user_id: "",
+            mode: defaultMode,
+            round_id: roundDetailsInput?.round_id || "",
+            game_id: roundDetailsInput?.game_id || "",
+            user_id: roundDetailsInput?.user_id || "",
         },
         onSubmit: async ({ value }) => {
             const { mode, ...payload } = value;
@@ -36,9 +39,9 @@ export function RoundDetailsForm({ onSubmit }: Props) {
                 return;
             }
             if (mode === "round") {
-                onSubmit({ round_id: value.round_id });
+                onSubmit?.({ round_id: value.round_id });
             } else {
-                onSubmit({ game_id: value.game_id, user_id: value.user_id });
+                onSubmit?.({ game_id: value.game_id, user_id: value.user_id });
             }
         },
     });

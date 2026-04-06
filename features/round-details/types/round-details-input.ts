@@ -8,12 +8,10 @@ export const RoundDetailsInputFormSchema = z.object({
   game_id: z.string().trim().optional(),
   round_id: z.string().trim().optional(),
   user_id: z.string().trim().optional(),
-  casino_id: z.string().trim().optional(),
 })
 .superRefine((data, ctx) => {
   const { game_id, round_id, user_id } = data;
 
-  // 1. RULE: user_id without game_id is NOT accepted
   if (user_id && !game_id && !round_id) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
@@ -67,7 +65,19 @@ export const RoundDetailsInputFormSchema = z.object({
   };
 
   validateFixedId(user_id, "user_id");
-  validateFixedId(data.casino_id, "casino_id");
 });
+
+// Rule for a single Round ID
+export const RoundIdSchema = z.string()
+  .trim()
+  .refine(isNumeric, "Must be numeric")
+  .refine((val) => val.endsWith("008"), "Must end with 008");
+
+// Schema for the multi-form
+export const MultiRoundDetailsSchema = z.object({
+  round_ids: z.array(RoundIdSchema).min(1, "At least one Round ID is required").max(10, "You can enter up to 10 Round IDs"),
+});
+
+export type MultiRoundDetailsProps = z.infer<typeof MultiRoundDetailsSchema>;
 
 export type RoundDetailsInputProps = z.infer<typeof RoundDetailsInputFormSchema>;

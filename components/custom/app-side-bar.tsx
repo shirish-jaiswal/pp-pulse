@@ -5,6 +5,7 @@ import {
   Calendar,
   DatabaseIcon,
   DicesIcon,
+  FileCog,
   Inbox,
   Search,
   Settings,
@@ -30,7 +31,8 @@ import Image from "next/image";
 export const sideBarMenu = [
   { title: "Player", url: "/player-info", icon: UserSearch },
   { title: "Round Activity", url: "/round-activity", icon: DicesIcon },
-  { title: "Excel DB", url: "/database", icon: DatabaseIcon },
+  { title: "Resolution Templates", url: "/resolution-template", icon: FileCog },
+  { title: "Excel DB", url: "/db", icon: DatabaseIcon },
 ];
 
 const sideBarFooter = [{ title: "Session", url: "/session", icon: SettingsIcon }];

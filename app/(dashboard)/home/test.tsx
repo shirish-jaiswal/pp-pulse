@@ -1,9 +1,12 @@
-"use client"
+const delay = (ms: number) => new Promise((res) => setTimeout(res, ms));
 
-import { usePlayerBetTxnInfo } from "@/hooks/use-player-bet-txn-info"
+export default async function TestPage() {
+  await delay(5000); 
 
-export default function Test() {
-    const { data } = usePlayerBetTxnInfo("30051024502008", "round_id");
-    console.log(data)
-    return <div>Test</div>
+  return (
+    <div className="p-6">
+      <h1 className="text-2xl font-bold">Data Loaded!</h1>
+      <p>This content appeared after a 5-second delay.</p>
+    </div>
+  );
 }

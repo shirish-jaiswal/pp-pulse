@@ -10,7 +10,7 @@ import {
   $applyNodeReplacement,
 } from "lexical";
 import * as React from "react";
-import { ImageComponent } from "./image-component";
+import { ImageComponent } from "@/components/custom/text-editor/image-component";
 
 export type SerializedImageNode = Spread<
   { src: string; altText: string },

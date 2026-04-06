@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
@@ -10,7 +10,6 @@ import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 import { TableCellNode, TableNode, TableRowNode } from "@lexical/table";
 import { LinkNode } from "@lexical/link";
-import { $getRoot } from "lexical";
 
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
@@ -18,6 +17,9 @@ import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 import { ImageNode } from "@/components/custom/text-editor/image-node";
 import { Toolbar } from "@/components/custom/text-editor/toolbar";
 import ImagesPlugin from "@/components/custom/text-editor/image-plugin";
+import FieldPlugin from "@/components/custom/text-editor/field-plugin";
+import { FieldNode } from "@/components/custom/text-editor/field-node";
+
 
 export default function RichTextEditor({
   onChange,
@@ -26,7 +28,7 @@ export default function RichTextEditor({
 }: {
   onChange?: (val: string) => void;
   placeholder?: string;
-  initialValue?: string; // JSON string
+  initialValue?: string;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -57,6 +59,7 @@ export default function RichTextEditor({
       TableCellNode,
       LinkNode,
       ImageNode,
+      FieldNode
     ],
     onError: (e: Error) => console.error(e),
 
@@ -79,11 +82,10 @@ export default function RichTextEditor({
       <div className="border rounded-md shadow-sm bg-white overflow-hidden max-w-4xl mx-auto">
         
         <Toolbar />
-
         <div className="relative">
           <RichTextPlugin
             contentEditable={
-              <ContentEditable className="h-[480px] p-4 outline-none overflow-auto" />
+              <ContentEditable className="h-full p-4 outline-none overflow-auto" />
             }
             placeholder={
               <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">
@@ -93,13 +95,13 @@ export default function RichTextEditor({
             ErrorBoundary={LexicalErrorBoundary}
           />
         </div>
+        <FieldPlugin />
 
         <HistoryPlugin />
         <LinkPlugin />
         <TablePlugin />
         <ImagesPlugin />
 
-        {/* ✅ SAVE FULL JSON STATE */}
         <OnChangePlugin
           onChange={(editorState) => {
             const json = JSON.stringify(editorState);

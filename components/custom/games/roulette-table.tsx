@@ -185,7 +185,7 @@ export const ProfessionalRoulette = ({
                 </div>
             </div>
 
-            <div className="relative w-full aspect-[36/9] border-4 border-white/30 rounded-xl overflow-hidden shadow-inner bg-black/20">
+            <div className="relative w-full aspect-36/9 border-4 border-white/30 rounded-xl overflow-hidden shadow-inner bg-black/20">
                 {/* Numbers Grid */}
                 <div className="flex h-[60%]">
                     <div

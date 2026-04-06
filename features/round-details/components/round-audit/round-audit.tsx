@@ -7,7 +7,6 @@ import { RoundAuditSidebar } from "./round-audit-sidebar";
 import { RoundAuditContent } from "./round-audit-content";
 
 interface RoundAuditProps {
-  roundId: string;
   data: {
     transactions?: any[];
     bets?: any[];
@@ -17,7 +16,7 @@ interface RoundAuditProps {
   };
 }
 
-export default function RoundAudit({ roundId, data }: RoundAuditProps) {
+export default function RoundAudit({ data }: RoundAuditProps) {
   const [isCollapsed, setIsCollapsed] = useState(true);
 
   const tabs = useMemo(() => {
@@ -46,7 +45,7 @@ export default function RoundAudit({ roundId, data }: RoundAuditProps) {
         <RoundAuditContent
           activeTab={activeTab}
           activeLabel={activeLabel}
-          roundId={roundId}
+          gameId={"shirish"}
           data={data}
         />
       </div>
