@@ -15,7 +15,7 @@ export function ResolutionFooter({ form }: any) {
 
             <Button
                 className="flex-1"
-                onClick={form.handleSave}
+                onClick={() => form.handleSave()}
                 disabled={
                     form.isPending ||
                     !form.title ||

@@ -2,18 +2,18 @@
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tabs } from "@/components/ui/tabs";
-import { Resolution } from "@/features/resolution-template/types/types";
 import { ResolutionHeader } from "@/features/resolution-template/components/form/resolution-header";
-import { useResolutionForm } from "@/features/resolution-template/hooks/use-resolution-form";
+import { useResolutionForm } from "@/features/resolution-template/context/use-resolution-form";
 import { ResolutionTabs } from "@/features/resolution-template/components/form/resolution-tabs";
 import { ResolutionForm } from "@/features/resolution-template/components/form/resolution-form";
 import { ResolutionEditor } from "@/features/resolution-template/components/form/resolution-editor";
 import { ResolutionFooter } from "@/features/resolution-template/components/form/resolution-footer";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
 
 interface Props {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
-    initialData: Resolution | null;
+    initialData: ResolutionTemplate | null;
     onSave: (data: any) => Promise<void>;
 }
 

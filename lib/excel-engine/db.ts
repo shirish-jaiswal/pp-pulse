@@ -13,6 +13,10 @@ export const RESOLUTION_TEMPLATE_CONFIG = {
         name: "games",
         schema: ["id", "title", "created_at", "updated_at"]
     },
+    categories: {
+        name: "categories",
+        schema: ["id", "title", "created_at", "updated_at"]
+    },
     subcategories: {
         name: "sub_category",
         schema: ["id", "title", "game", "created_at", "updated_at"]

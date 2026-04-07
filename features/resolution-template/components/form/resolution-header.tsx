@@ -1,7 +1,7 @@
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Resolution } from "@/features/resolution-template/types/types";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
 
-export function ResolutionHeader({ initialData }: { initialData: Resolution | null }) {
+export function ResolutionHeader({ initialData }: { initialData: ResolutionTemplate | null }) {
     return (
         <SheetHeader className="gap-0 p-2 border-b mb-2">
             <SheetTitle>

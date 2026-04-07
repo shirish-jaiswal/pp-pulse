@@ -26,7 +26,6 @@ export default function ExcelDBPage() {
           <span className="font-bold text-sm tracking-tight">ExcelDB</span>
           <span className="text-muted-foreground/40 text-xs font-medium">Admin</span>
         </div>
-        {/* Breadcrumb */}
         {selectedDb && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground ml-2">
             <ChevronRight className="h-3.5 w-3.5" />
@@ -42,15 +41,11 @@ export default function ExcelDBPage() {
           </div>
         )}
       </header>
-
-      {/* Main Layout */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Sidebar: Databases */}
         <aside className="w-52 shrink-0 border-r border-border bg-background flex flex-col min-h-0 overflow-hidden">
           <DatabaseManager selectedDb={selectedDb} onSelectDb={handleSelectDb} />
         </aside>
-
-        {/* Sidebar: Tables */}
         <aside className="w-52 shrink-0 border-r border-border bg-muted/20 flex flex-col min-h-0 overflow-hidden">
           <TableManager
             dbName={selectedDb}
@@ -58,8 +53,6 @@ export default function ExcelDBPage() {
             onSelectTable={setSelectedTable}
           />
         </aside>
-
-        {/* Main: Data Grid */}
         <main className="flex-1 min-w-0 flex flex-col min-h-0 overflow-hidden bg-background w-[calc(100vw-52rem)]">
           <DataGrid dbName={selectedDb} tableName={selectedTable} />
         </main>

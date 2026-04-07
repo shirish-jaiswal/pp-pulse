@@ -79,13 +79,13 @@ export default function RichTextEditor({
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="border rounded-md shadow-sm bg-white overflow-hidden max-w-4xl mx-auto">
+      <div className="border rounded-md shadow-sm bg-white overflow-auto max-w-4xl max-h-full mx-auto">
         
         <Toolbar />
         <div className="relative">
           <RichTextPlugin
             contentEditable={
-              <ContentEditable className="h-full p-4 outline-none overflow-auto" />
+              <ContentEditable className="h-full p-4 outline-none overflow-auto max-h-full" />
             }
             placeholder={
               <div className="absolute top-4 left-4 text-gray-400 pointer-events-none">

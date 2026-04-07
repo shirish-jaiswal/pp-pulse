@@ -1,18 +1,16 @@
-import { Button } from "@/components/ui/button";
 import {
     Sheet,
     SheetContent,
     SheetDescription,
-    SheetFooter,
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
-import { ResolutionSummary } from "@/features/round-details/components/resolution-sheet/resolution-summary";
-import { OperatorResponse } from "@/features/round-details/components/resolution-sheet/operator-response";
-import { CategoryType } from "@/features/resolution-template/types/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useCategories } from "@/hooks/excel-db/use-categories";
+import { ResolutionEditorContent } from "./resolution-editor-content";
+import { useSubcategories } from "@/features/resolution-template/hooks/use-subcategories";
 
 type ResolutionEditorProps = {
     gameName: string;
@@ -20,11 +18,18 @@ type ResolutionEditorProps = {
 
 export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
     const { resolutionEditorOpen, setResolutionEditorOpen } = useRoundDetails();
-    const [tabSelected, setTabSelected] = useState<CategoryType>("Resolution Summary");
-    const handleSave = () => {
-        setResolutionEditorOpen(false);
-    };
+    const { data: categories = [], isLoading } = useCategories();
+    const [tabSelected, setTabSelected] = useState<string>();
 
+    useEffect(() => {
+        if (categories.length > 0 && !tabSelected) {
+            setTabSelected(categories[0].title);
+        }
+    }, [categories, tabSelected]);
+
+    if (isLoading) return null;
+
+    console.log("ResolutionEditor rendered with + :", { gameName, categories, tabSelected });
     return (
         <Sheet open={resolutionEditorOpen} onOpenChange={setResolutionEditorOpen}>
             <SheetContent className="min-w-4xl flex flex-col gap-0 p-1">
@@ -35,13 +40,27 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
                     </SheetDescription>
                 </SheetHeader>
 
-                <Tabs defaultValue="details" className="w-full gap-0 flex-1 p-0">
-                    <TabsList className="grid w-full grid-cols-2">
-                        <TabsTrigger value="details" onClick={() => setTabSelected("Resolution Summary")}>Resolution Summary</TabsTrigger>
-                        <TabsTrigger value="response" onClick={() => setTabSelected("Operator Response")}>Operator Response</TabsTrigger>
+                <Tabs value={tabSelected} onValueChange={setTabSelected} className="flex-1">
+                    <TabsList className="flex w-full border-b">
+                        {categories.map((cat) => (
+                            <TabsTrigger
+                                key={cat.id}
+                                value={cat.title}
+                                className="flex-1"
+                            >
+                                {cat.title}
+                            </TabsTrigger>
+                        ))}
                     </TabsList>
-                    <ResolutionSummary gameName={gameName} tabSelected={tabSelected} />
-                    <OperatorResponse gameName={gameName} tabSelected={tabSelected} />
+
+                    {categories.map((cat) => (
+                        <ResolutionEditorContent
+                            key={cat.id}
+                            gameName={gameName}
+                            category={cat.title}
+                            tabsValue={cat.title}
+                        />
+                    ))}
                 </Tabs>
             </SheetContent>
         </Sheet>
