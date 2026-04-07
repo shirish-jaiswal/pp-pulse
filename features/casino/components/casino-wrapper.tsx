@@ -7,7 +7,6 @@ import { useCasinoDetails } from "@/features/casino/hooks/use-casino-details";
 import { Loader2, AlertCircle, Database} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-
 import { GeneralInfoView } from "@/features/casino/components/general-info-view";
 import { GameTableView } from "@/features/casino/components/game-tables-view";
 import { WalletView } from "@/features/casino/components/wallet-view";

@@ -12,11 +12,11 @@ import {
   $getRoot
 } from "lexical";
 import { TOGGLE_LINK_COMMAND } from "@lexical/link";
-import { 
-  INSERT_TABLE_COMMAND, 
-  $insertTableRowAtSelection, 
-  $insertTableColumnAtSelection, 
-  $findTableNode 
+import {
+  INSERT_TABLE_COMMAND,
+  $insertTableRowAtSelection,
+  $insertTableColumnAtSelection,
+  $findTableNode
 } from "@lexical/table";
 import { mergeRegister } from "@lexical/utils";
 import { $generateHtmlFromNodes } from "@lexical/html";
@@ -30,9 +30,9 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Toggle } from "@/components/ui/toggle";
 
 // Icons
-import { 
-  Bold, Italic, Underline, Link, Table as TableIcon, Undo2, Redo2, 
-  Trash2, Rows, Columns, Image as ImageIcon, Check, Copy, ChevronDown 
+import {
+  Bold, Italic, Underline, Link, Table as TableIcon, Undo2, Redo2,
+  Trash2, Rows, Columns, Image as ImageIcon, Check, Copy, ChevronDown
 } from "lucide-react";
 
 import { INSERT_IMAGE_COMMAND } from "@/components/custom/text-editor/image-commands";
@@ -93,7 +93,7 @@ export function Toolbar() {
   }, [editor]);
 
   const insertTable = () => editor.dispatchCommand(INSERT_TABLE_COMMAND, { rows: tableConfig.rows, columns: tableConfig.cols });
-  
+
   const deleteTable = () => editor.update(() => {
     const selection = $getSelection();
     if ($isRangeSelection(selection)) {
@@ -104,10 +104,9 @@ export function Toolbar() {
 
   return (
     <TooltipProvider delayDuration={400}>
-      <div className="relative z-20 flex items-center justify-between w-full p-1.5 bg-background border border-border rounded-t-xl shadow-sm min-h-11">
-        
+      <div className="sticky top-0 z-20 flex items-center justify-between w-full p-1.5 bg-background border-b border-border rounded-t-xl shadow-sm min-h-11">
         <div className="flex items-center gap-0.5 flex-wrap">
-          
+
           {/* Group 1: History */}
           <div className="flex items-center">
             <ToolbarButton tooltip="Undo" onClick={() => editor.dispatchCommand(UNDO_COMMAND, undefined)}>
@@ -122,27 +121,27 @@ export function Toolbar() {
 
           {/* Group 2: Formatting */}
           <div className="flex items-center gap-0.5">
-            <Toggle 
-                size="sm" 
-                pressed={isBold} 
-                onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
-                className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
+            <Toggle
+              size="sm"
+              pressed={isBold}
+              onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "bold")}
+              className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
             >
               <Bold className="h-4 w-4" />
             </Toggle>
-            <Toggle 
-                size="sm" 
-                pressed={isItalic} 
-                onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
-                className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
+            <Toggle
+              size="sm"
+              pressed={isItalic}
+              onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "italic")}
+              className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
             >
               <Italic className="h-4 w-4" />
             </Toggle>
-            <Toggle 
-                size="sm" 
-                pressed={isUnderline} 
-                onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
-                className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
+            <Toggle
+              size="sm"
+              pressed={isUnderline}
+              onPressedChange={() => editor.dispatchCommand(FORMAT_TEXT_COMMAND, "underline")}
+              className="data-[state=on]:bg-primary/10 data-[state=on]:text-primary h-8 w-8 p-0"
             >
               <Underline className="h-4 w-4" />
             </Toggle>
@@ -180,31 +179,31 @@ export function Toolbar() {
               </Tooltip>
               <PopoverContent className="w-80 p-4 flex flex-col gap-3 shadow-xl z-100" sideOffset={8}>
                 <div className="space-y-2">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Image URL</p>
-                    <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="h-8" />
-                    <Input placeholder="Alt text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} className="h-8" />
-                    <Button size="sm" className="w-full" onClick={() => {
-                        if(imageUrl) {
-                            editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src: imageUrl, altText: imageAlt });
-                            setImageUrl(""); setImageAlt("");
-                        }
-                    }}>Add to Editor</Button>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Image URL</p>
+                  <Input placeholder="https://..." value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="h-8" />
+                  <Input placeholder="Alt text" value={imageAlt} onChange={(e) => setImageAlt(e.target.value)} className="h-8" />
+                  <Button size="sm" className="w-full" onClick={() => {
+                    if (imageUrl) {
+                      editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src: imageUrl, altText: imageAlt });
+                      setImageUrl(""); setImageAlt("");
+                    }
+                  }}>Add to Editor</Button>
                 </div>
                 <div className="relative my-1">
-                    <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
-                    <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-background px-2 text-muted-foreground">or upload</span></div>
+                  <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+                  <div className="relative flex justify-center text-[10px] uppercase"><span className="bg-background px-2 text-muted-foreground">or upload</span></div>
                 </div>
                 <label className="flex flex-col items-center justify-center w-full h-16 border-2 border-dashed rounded-lg cursor-pointer hover:bg-accent hover:border-primary/50 transition-all">
                   <span className="text-xs text-muted-foreground font-medium">Click to select file</span>
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        const reader = new FileReader();
-                        reader.onload = () => editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src: reader.result as string, altText: file.name });
-                        reader.readAsDataURL(file);
-                        e.target.value = "";
-                      }
-                    }}
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = () => editor.dispatchCommand(INSERT_IMAGE_COMMAND, { src: reader.result as string, altText: file.name });
+                      reader.readAsDataURL(file);
+                      e.target.value = "";
+                    }
+                  }}
                   />
                 </label>
               </PopoverContent>
@@ -226,12 +225,12 @@ export function Toolbar() {
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="flex-1">
-                        <p className="text-[10px] text-muted-foreground mb-1">Rows</p>
-                        <Input type="number" value={tableConfig.rows} onChange={(e) => setTableConfig({ ...tableConfig, rows: e.target.value })} className="h-8" />
+                      <p className="text-[10px] text-muted-foreground mb-1">Rows</p>
+                      <Input type="number" value={tableConfig.rows} onChange={(e) => setTableConfig({ ...tableConfig, rows: e.target.value })} className="h-8" />
                     </div>
                     <div className="flex-1">
-                        <p className="text-[10px] text-muted-foreground mb-1">Cols</p>
-                        <Input type="number" value={tableConfig.cols} onChange={(e) => setTableConfig({ ...tableConfig, cols: e.target.value })} className="h-8" />
+                      <p className="text-[10px] text-muted-foreground mb-1">Cols</p>
+                      <Input type="number" value={tableConfig.cols} onChange={(e) => setTableConfig({ ...tableConfig, cols: e.target.value })} className="h-8" />
                     </div>
                   </div>
                   <Button size="sm" className="w-full" onClick={insertTable}>Insert Grid</Button>
@@ -264,8 +263,8 @@ export function Toolbar() {
             onClick={handleCopy}
             className={`
               h-8 flex items-center gap-2 px-3 rounded-md border transition-all duration-300
-              ${copied 
-                ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100" 
+              ${copied
+                ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
                 : "border-transparent text-muted-foreground hover:text-primary hover:bg-accent"
               }
             `}
@@ -293,10 +292,10 @@ function ToolbarButton({ children, onClick, tooltip }: { children: React.ReactNo
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-accent transition-colors" 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-8 w-8 p-0 text-muted-foreground hover:text-primary hover:bg-accent transition-colors"
           onClick={onClick}
         >
           {children}

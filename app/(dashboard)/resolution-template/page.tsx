@@ -1,67 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Resolution } from "@/features/resolution-template/types/types";
+import { useState, useMemo } from "react";
 import ResolutionTemplateSearch from "@/features/resolution-template/components/resolution-template-search";
 import ResolutionTableSkeleton from "@/features/resolution-template/components/resolution-table-skeleton";
 import NoTemplates from "@/features/resolution-template/components/no-templates";
 import { ResolutionTable } from "@/features/resolution-template/components/resolution-table";
 import { ResolutionSheet } from "@/features/resolution-template/components/form/resolution-sheet";
-import { deleteResolutionAction } from "@/lib/excel-engine/resolution-template/delete";
-import { getResolutionsAction } from "@/lib/excel-engine/resolution-template/get";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
+import { useResolutionTemplates } from "@/hooks/excel-db/use-resolution-templates";
+import { useDeleteResolution } from "@/features/resolution-template/hooks/use-delete-resolution-template";
+import { useSaveResolution } from "@/features/resolution-template/hooks/use-save-resolution-template";
+import { toast } from "sonner";
 
 
 export default function ResolutionTemplateManager() {
-  const [resolutions, setResolutions] = useState<Resolution[]>([]);
-  const [loading, setLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editingResolution, setEditingResolution] = useState<Resolution | null>(null);
+  const [editingResolution, setEditingResolution] = useState<ResolutionTemplate | null>(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  const { data: resolutions = [], isLoading: loading, refetch } = useResolutionTemplates();
+  const deleteMutation = useDeleteResolution();
+  const saveMutation = useSaveResolution();
 
-  const fetchData = async () => {
-    setLoading(true);
+  const handleSave = async (data: ResolutionTemplate): Promise<void> => {
     try {
-      const data = await getResolutionsAction();
-      setResolutions(data); 
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSave = async (data: Partial<Resolution>): Promise<void> => {
-    const { saveResolutionAction } = await import("@/lib/excel-engine/resolution-template/save");
-    try {
-      await saveResolutionAction(data as any, editingResolution?.id || null);
+      await saveMutation.mutateAsync({
+        data,
+        id: editingResolution?.id || null
+      });
       setIsDialogOpen(false);
-      fetchData();
+      setEditingResolution(null);
     } catch {
-      alert("Failed to save resolution.");
+      toast.error("Failed to save resolution.");
     }
   };
 
   const handleDelete = async (id: number) => {
-    if (confirm("Delete this template?")) {
-      await deleteResolutionAction(id);
-      fetchData();
+    if (confirm("Are you sure you want to delete this template?")) {
+      deleteMutation.mutate(id);
     }
   };
 
-  const openEdit = (res: Resolution) => {
+  const openEdit = (res: ResolutionTemplate) => {
     setEditingResolution(res);
     setIsDialogOpen(true);
   };
 
-  const filtered = resolutions.filter(
-    (res) =>
-      res.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.game.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      res.subcategory.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    return resolutions.filter(res =>
+      [res.title, res.game, res.category, res.subcategory]
+        .some(field => field.toLowerCase().includes(searchTerm.toLowerCase()))
+    );
+  }, [resolutions, searchTerm]);
 
   return (
     <div className="mx-auto h-[calc(100vh-64px)] flex flex-col gap-1">

@@ -40,7 +40,7 @@ export function RoundDetailsWrapper({ roundId, gameId, userId, data }: RoundDeta
             user_id: userId
         });
     }, [roundId, gameId, userId, setRoundDetailsInput]);
-
+console.log("RoundDetailsWrapper rendered with: ++ ", { roundId, gameId, userId, data, isBulkMode });
     return (
         <div className="flex flex-col gap-2">
             <RoundInvestigator />
@@ -53,7 +53,7 @@ export function RoundDetailsWrapper({ roundId, gameId, userId, data }: RoundDeta
                         <GameMetadata />
                         <RoundOverview />
                         <RoundAudit data={data} />
-                        <ResolutionEditor gameName={data?.game_name} />
+                        <ResolutionEditor gameName={data?.game_name || "All"} />
                     </>
                 ) : (
                     <EmptyRoundData />

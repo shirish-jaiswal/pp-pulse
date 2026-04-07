@@ -1,15 +1,13 @@
 "use server";
 
-import { RESOLUTION_TEMPLATE_CONFIG } from "@/lib/excel-engine/db";
 import { ExcelEngine } from "@/lib/excel-engine/excel-engine";
+import { DB_NAME, TABLE_NAME } from ".";
 
-const DB_NAME = RESOLUTION_TEMPLATE_CONFIG.name;
-const TABLE_NAME = RESOLUTION_TEMPLATE_CONFIG.tables.resolutions.name;
-
-export async function findResolutionsAction(filters: {
+export async function findResolutionTemplatesAction(filters: {
   game: string;
   category: string;
 }) {
+  console.log("Finding resolution templates with filters:", filters);
   try {
     const rows = await ExcelEngine.findRows(DB_NAME, TABLE_NAME, filters);
     return JSON.parse(JSON.stringify(rows));

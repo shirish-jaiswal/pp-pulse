@@ -3,11 +3,11 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Resolution } from "@/features/resolution-template/types/types";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
 
 interface ResolutionTableProps {
-  data: Resolution[];
-  onEdit: (res: Resolution) => void;
+  data: ResolutionTemplate[];
+  onEdit: (res: ResolutionTemplate) => void;
   onDelete: (id: number) => void;
 }
 
