@@ -3,14 +3,13 @@
 import { useEffect } from "react";
 import { ResolutionEditor } from "@/features/round-details/components/resolution-sheet/resolution-editor";
 import { RoundInvestigator } from "@/features/round-details/components/investigator/round-investigator";
+import { MultiRoundTabs } from "@/features/round-details/components/round-overview/multi-round-tab";
 import RoundOverview from "@/features/round-details/components/round-overview/round-overview";
 import GameMetadata from "@/features/round-details/components/round-overview/game-metadata";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import RoundAudit from "@/features/round-details/components/round-audit/round-audit";
 import { MiniPlayingCard, Rank, Suit } from "@/components/custom/games/playing-card";
-import { ProfessionalRoulette } from "@/components/custom/games/roulette-table";
 import EmptyRoundData from "@/features/round-details/components/empty-round-data";
-import { MultiRoundTabs } from "@/features/round-details/components/round-overview/multi-round-tab";
 
 type RoundDetailsWrapperProps = {
     roundId?: string;
@@ -19,28 +18,18 @@ type RoundDetailsWrapperProps = {
     data?: any
 };
 
-const myBets = {
-    "0": 1.5,                 // Straight Up (0 Green)
-    "2": 1.0,                 // Straight Up
-    "4": 0.5,                 // Straight Up
-    "17": 1.0,                // Straight Up
-    "20": 1.5,                // Straight Up
-    "21": 0.5,                // Straight Up
-    "black": 2.0,             // Outside Bet
-    "1-4": 0.5,               // Split
-    "4-7": 0.5,               // Split
-    "17-18-20-21": 0.5        // Corner
-};
 export function RoundDetailsWrapper({ roundId, gameId, userId, data }: RoundDetailsWrapperProps) {
-    const { setRoundDetailsInput, isBulkMode } = useRoundDetails();
+    const { setRoundDetailsInput, isBulkMode, setData } = useRoundDetails();
     useEffect(() => {
         setRoundDetailsInput({
             round_id: roundId,
             game_id: gameId,
             user_id: userId
         });
+        setData(data);
+
     }, [roundId, gameId, userId, setRoundDetailsInput]);
-console.log("RoundDetailsWrapper rendered with: ++ ", { roundId, gameId, userId, data, isBulkMode });
+
     return (
         <div className="flex flex-col gap-2">
             <RoundInvestigator />

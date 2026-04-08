@@ -9,7 +9,6 @@ export default function BetTable({ items }: { items?: any[] }) {
     );
   }
 
-  // Color mapping for statuses
   const statusStyles: Record<string, string> = {
     settled: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
     unsettled: "bg-amber-500/10 text-amber-500 border-amber-500/20",

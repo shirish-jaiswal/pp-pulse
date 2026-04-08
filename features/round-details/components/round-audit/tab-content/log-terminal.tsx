@@ -53,17 +53,13 @@ export default function PremiumLogMonitor({ logs = [] }: { logs: Log[] }) {
 
   const filtered = useMemo(() => {
     let result = Array.isArray(logs) ? logs : [];
-
     if (levelFilter.length) {
       result = result.filter((l) => levelFilter.includes(l.level));
     }
-
     if (query) {
       const q = query.toLowerCase();
       result = result.filter((l) => l.message?.toLowerCase().includes(q));
     }
-
-    // Newest logs at the bottom for terminal style
     return [...result].sort((a, b) => a.timestamp - b.timestamp);
   }, [logs, query, levelFilter]);
 
@@ -90,7 +86,6 @@ export default function PremiumLogMonitor({ logs = [] }: { logs: Log[] }) {
 
   return (
     <div className="h-screen bg-zinc-950 text-zinc-200 flex flex-col font-mono">
-      {/* HEADER */}
       <div className="p-4 border-b border-zinc-800 flex items-center gap-4 shrink-0">
         <div className="text-lg font-semibold tracking-wide">LOG STREAM</div>
 
@@ -154,7 +149,7 @@ export default function PremiumLogMonitor({ logs = [] }: { logs: Log[] }) {
             return (
               <div
                 key={`${log.id || 'log'}-${index}`} // Composite key to prevent duplication errors
-                className={`border-l-4 ${config.border} px-4 py-1.5 hover:bg-white/[0.02] transition-colors border-b border-zinc-900/50`}
+                className={`border-l-4 ${config.border} px-4 py-1.5 hover:bg-white/2 transition-colors border-b border-zinc-900/50`}
               >
                 <div className="flex gap-4 text-[13px] items-start">
                   <div className="w-24 shrink-0 tabular-nums text-zinc-500 pt-0.5">
@@ -182,8 +177,8 @@ export default function PremiumLogMonitor({ logs = [] }: { logs: Log[] }) {
         <div className="flex gap-4 text-zinc-500">
           <span>{filtered.length} logs matching</span>
           {levelFilter.length > 0 && (
-            <span 
-              className="text-amber-500/80 underline decoration-dotted cursor-pointer" 
+            <span
+              className="text-amber-500/80 underline decoration-dotted cursor-pointer"
               onClick={() => setLevelFilter([])}
             >
               Clear Filters

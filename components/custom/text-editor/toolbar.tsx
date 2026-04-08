@@ -21,7 +21,6 @@ import {
 import { mergeRegister } from "@lexical/utils";
 import { $generateHtmlFromNodes } from "@lexical/html";
 
-// UI Components (Assumes shadcn/ui components are in @/components/ui)
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
