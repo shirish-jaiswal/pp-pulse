@@ -15,6 +15,9 @@ type RoundDetailsContextType = {
 
     resolutionEditorOpen: boolean
     setResolutionEditorOpen: Dispatch<SetStateAction<boolean>>
+
+    data: any;
+    setData: Dispatch<SetStateAction<any>>
 }
 
 const RoundDetailsContext = createContext<RoundDetailsContextType | null>(null)
@@ -24,7 +27,7 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
     const [resolutionEditorOpen, setResolutionEditorOpen] = useState<boolean>(false)
     const [multiRoundIdsState, setMultiRoundIdsState] = useState<string[]>([]);
     const [isBulkMode, setBulkMode] = useState<boolean>(false);
-
+    const [data, setData] = useState<any>(null);
     const setMultiRoundIds = useCallback((val: string[] | ((prev: string[]) => string[])) => {
         setMultiRoundIdsState((prev) => {
             const nextValue = typeof val === "function" ? val(prev) : val;
@@ -40,16 +43,20 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
         isBulkMode,
         setBulkMode,
         resolutionEditorOpen,
-        setResolutionEditorOpen
+        setResolutionEditorOpen,
+        data,
+        setData
     }), [
-        roundDetailsInput, 
-        resolutionEditorOpen, 
-        multiRoundIdsState, 
-        isBulkMode, 
+        roundDetailsInput,
+        resolutionEditorOpen,
+        multiRoundIdsState,
+        isBulkMode,
         setMultiRoundIds,
         setBulkMode,
         setResolutionEditorOpen,
-        setRoundDetailsInput
+        setRoundDetailsInput,
+        data,
+        setData
     ]);
 
     return (

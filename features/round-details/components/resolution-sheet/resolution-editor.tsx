@@ -9,8 +9,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { useEffect, useState } from "react";
 import { useCategories } from "@/hooks/excel-db/use-categories";
-import { ResolutionEditorContent } from "./resolution-editor-content";
-import { useSubcategories } from "@/features/resolution-template/hooks/use-subcategories";
+import { ResolutionEditorContent } from "@/features/round-details/components/resolution-sheet/resolution-editor-content";
 
 type ResolutionEditorProps = {
     gameName: string;
@@ -20,7 +19,6 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
     const { resolutionEditorOpen, setResolutionEditorOpen } = useRoundDetails();
     const { data: categories = [], isLoading } = useCategories();
     const [tabSelected, setTabSelected] = useState<string>();
-
     useEffect(() => {
         if (categories.length > 0 && !tabSelected) {
             setTabSelected(categories[0].title);
@@ -29,7 +27,6 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
 
     if (isLoading) return null;
 
-    console.log("ResolutionEditor rendered with + :", { gameName, categories, tabSelected });
     return (
         <Sheet open={resolutionEditorOpen} onOpenChange={setResolutionEditorOpen}>
             <SheetContent className="min-w-4xl flex flex-col gap-0 p-1">
