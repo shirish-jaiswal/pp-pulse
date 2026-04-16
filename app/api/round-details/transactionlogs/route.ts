@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { getSessionCookie } from "@/lib/api/cookies";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest) {
         const fromTime = new Date(anchorTime.getTime() - 15 * 60 * 1000).toISOString();
         const toTime = new Date(anchorTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
+        const sessionCookie = getSessionCookie(request);
+
         const response = await axios.get(
             `${BACKEND_URL}/playerbetlogs/transactionlogs`,
             {
@@ -29,6 +32,10 @@ export async function GET(request: NextRequest) {
                     roundId,
                     from: fromTime,
                     to: toTime,
+                },
+                headers: {
+                    "Content-Type": "application/json",
+                    ...(sessionCookie ? { Cookie: sessionCookie } : {}),
                 },
             }
         );

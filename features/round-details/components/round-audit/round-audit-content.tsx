@@ -8,7 +8,7 @@ import BetTable from "@/features/round-details/components/round-audit/tab-conten
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 import { useState } from "react";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
-import PremiumLogMonitor from "./tab-content/log-terminal";
+import PremiumLogMonitor from "./tab-content/log-monitor";
 
 interface ContentProps {
   activeTab: string;

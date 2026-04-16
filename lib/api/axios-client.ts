@@ -9,9 +9,6 @@ import axios, {
 const BASE_URL =
   (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "");
 
-/**
- * Create Axios instance
- */
 export const axiosClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
@@ -23,20 +20,15 @@ export const axiosClient: AxiosInstance = axios.create({
 
 const pendingRequests = new Map<string, AbortController>();
 
-const createRequestKey = (config: AxiosRequestConfig) => {
-  return `${config.method}-${config.url}-${JSON.stringify(config.params || {})}`;
-};
+const createRequestKey = (config: AxiosRequestConfig) =>
+  `${config.method}-${config.url}-${JSON.stringify(config.params || {})}`;
 
 /**
- * REQUEST INTERCEPTOR
- * - SSR safe
- * - Attach token
- * - Prevent duplicate requests
- * - Attach AbortController
+ * REQUEST INTERCEPTOR (CLIENT SAFE ONLY)
  */
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // SSR guard
+    // browser token only
     if (typeof window !== "undefined") {
       const token = localStorage.getItem("token");
 
@@ -45,11 +37,10 @@ axiosClient.interceptors.request.use(
       }
     }
 
-    // Prevent duplicate requests (optional but useful for forms)
+    // dedupe requests
     const key = createRequestKey(config);
     const controller = new AbortController();
 
-    // Cancel previous same request
     if (pendingRequests.has(key)) {
       pendingRequests.get(key)?.abort();
       pendingRequests.delete(key);
@@ -60,22 +51,16 @@ axiosClient.interceptors.request.use(
 
     return config;
   },
-  (error: AxiosError) => {
-    return Promise.reject(normalizeError(error));
-  }
+  (error: AxiosError) => Promise.reject(normalizeError(error))
 );
 
 /**
  * RESPONSE INTERCEPTOR
- * - Cleanup request cache
- * - Normalize errors
- * - Handle auth failures
  */
 axiosClient.interceptors.response.use(
   (response: AxiosResponse) => {
     const key = createRequestKey(response.config);
     pendingRequests.delete(key);
-
     return response;
   },
   (error: AxiosError) => {
@@ -86,7 +71,6 @@ axiosClient.interceptors.response.use(
       pendingRequests.delete(key);
     }
 
-    // Handle network error
     if (!error.response) {
       return Promise.reject({
         message: "Network error. Please check your connection.",
@@ -98,28 +82,20 @@ axiosClient.interceptors.response.use(
     const status = error.response.status;
     const data = error.response.data as any;
 
-    // Handle unauthorized globally
     if (status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-
-      // optional: redirect hook
       window.location.href = "/login";
     }
 
     return Promise.reject({
-      message: data?.message || error.message || "Request failed",
+      message: data?.message || error.message,
       status,
       data,
     });
   }
 );
 
-/**
- * =========================
- * GLOBAL ERROR NORMALIZER
- * =========================
- */
 function normalizeError(error: AxiosError) {
   return {
     message:
@@ -131,32 +107,21 @@ function normalizeError(error: AxiosError) {
   };
 }
 
-/**
- * =========================
- * OPTIONAL HELPERS
- * =========================
- */
-
-/**
- * Cancel all pending requests (useful on route change)
- */
 export const cancelAllRequests = () => {
-  pendingRequests.forEach((controller) => controller.abort());
+  pendingRequests.forEach((c) => c.abort());
   pendingRequests.clear();
 };
 
-/**
- * Safe GET wrapper
- */
 export const safeGet = async <T>(url: string, config?: AxiosRequestConfig) => {
   const res = await axiosClient.get<T>(url, config);
   return res.data;
 };
 
-/**
- * Safe POST wrapper
- */
-export const safePost = async <T>(url: string, data?: any, config?: AxiosRequestConfig) => {
+export const safePost = async <T>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig
+) => {
   const res = await axiosClient.post<T>(url, data, config);
   return res.data;
 };

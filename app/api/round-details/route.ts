@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
+import { getSessionCookie } from "@/lib/api/cookies";
 
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
@@ -22,24 +23,15 @@ export async function GET(request: NextRequest) {
       if (rawData.user_id) externalQueryParams.userId = rawData.user_id;
     }
 
-    /**
-     * ✅ Extract cookies properly from request
-     */
-    const cookies = request.cookies.getAll();
-
-    // Convert cookies to string format: "key=value; key2=value2"
-    const cookieHeader = cookies
-      .map((c) => `${c.name}=${c.value}`)
-      .join("; ");
+    const sessionCookie = getSessionCookie(request);
 
     const axiosConfig = {
       baseURL: BACKEND_URL,
       params: externalQueryParams,
       headers: {
         "Content-Type": "application/json",
-        ...(cookieHeader && { Cookie: cookieHeader }),
+        ...(sessionCookie ? { Cookie: sessionCookie } : {}),
       },
-      withCredentials: true,
     };
 
     const [tptResponse, betResponse] = await Promise.all([
@@ -48,14 +40,23 @@ export async function GET(request: NextRequest) {
     ]);
 
     return NextResponse.json({
-      tptInfo: tptResponse.data?.data,
-      betInfo: betResponse.data?.data,
+      data: {
+        tptInfo: tptResponse.data?.data ?? tptResponse.data,
+        betInfo: betResponse.data?.data ?? betResponse.data,
+      },
     });
   } catch (error: any) {
-    console.warn("error", error);
+    console.warn(
+      "round-details error:",
+      error?.response?.status,
+      error?.response?.data || error?.message
+    );
 
     const errorMessage =
-      error.response?.data?.error || error.message || "Request failed";
+      error.response?.data?.error ||
+      error.response?.data?.message ||
+      error.message ||
+      "Request failed";
 
     return NextResponse.json(
       { error: errorMessage },
