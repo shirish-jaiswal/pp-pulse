@@ -15,7 +15,6 @@ import { cn } from "@/utils/cn"
 
 import { useDashboard } from "@/app/(dashboard)/round-details/backoffice-dashboard/context/dashboard-context"
 import { useLogData } from "@/hooks/use-log-data"
-import { usePlayerBetTxnInfo } from "@/hooks/use-player-bet-txn-info"
 
 import { ArrowDownAz, ArrowUpAz } from "lucide-react"
 import { PlayerBetTxnInfoProps } from "@/types/round-details-input"
@@ -48,7 +47,7 @@ export function DashboardTabs() {
     isRefetching
   } = useLogData(logPayload as any)
 
-  
+
   console.log("log Data ::", logData)
   const defaultParams = {
     gameParamId: "round_id",
@@ -57,8 +56,7 @@ export function DashboardTabs() {
     user_id: ""
   } satisfies PlayerBetTxnInfoProps;
 
-  const { data: boData, isLoading, error } =
-    usePlayerBetTxnInfo(queryParams || defaultParams)
+  const { data: boData, isLoading, error } ={data: { exist : true}, isLoading: false, error: { error: "" , mesage: "" }}
 
   const getLateBetPayload = (data: PlayerBetTxnResponse): LogRequestParams => {
     const txnDate = new Date(data.settlements.txnSettlementsList[0].txnDate);
@@ -85,17 +83,17 @@ export function DashboardTabs() {
     };
   };
 
-  const lateBetPayload = useMemo(() => {
-    if (kibanaFunction?.trim() !== "LATE BET" || !boData) return null; return getLateBetPayload(boData);
-  }, [boData]);
+  // const lateBetPayload = useMemo(() => {
+  //   if (kibanaFunction?.trim() !== "LATE BET" || !boData) return null; return getLateBetPayload(boData);
+  // }, [boData]);
 
-  useEffect(() => {
-    if (lateBetPayload !== null) {
-      console.log("LATE BET PAYLOAD :: ", lateBetPayload)
+  // useEffect(() => {
+  //   if (lateBetPayload !== null) {
+  //     console.log("LATE BET PAYLOAD :: ", lateBetPayload)
 
-      setLogPayload(lateBetPayload);
-    }
-  }, [lateBetPayload, setLogPayload]);
+  //     setLogPayload(lateBetPayload);
+  //   }
+  // }, [lateBetPayload, setLogPayload]);
   console.log("logPayload :: ", logPayload)
   const handleSortToggle = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc"
@@ -184,10 +182,10 @@ export function DashboardTabs() {
             <AlertCircle className="h-5 w-5" />
             <AlertTitle>Fetch Failed</AlertTitle>
             <AlertDescription>
-              {error.message || "Unexpected error"}
+              {error.mesage || "Unexpected error"}
             </AlertDescription>
           </Alert>
-        ) : !boData || !boData.exists ? (
+        ) : !boData || !boData.exist ? (
           <div className="flex flex-col items-center justify-center p-16">
             <Database className="h-8 w-8 text-slate-400 mb-4" />
             <h3 className="text-lg font-bold">

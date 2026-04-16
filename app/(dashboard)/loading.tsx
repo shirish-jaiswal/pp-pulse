@@ -1,33 +1,53 @@
 export const Skeleton = ({ className }: { className?: string }) => (
-  <div className={`animate-pulse rounded-md bg-gray-200 dark:bg-gray-800 ${className}`} />
+  <div
+    className={`animate-pulse rounded bg-muted ${className}`}
+  />
 );
+
 export default function Loading() {
   return (
-    <main className="max-w-7xl mx-auto p-6 space-y-8">
-      {/* Header Skeleton */}
-      <div className="space-y-3">
-        <Skeleton className="h-10 w-1/4" />
-        <Skeleton className="h-4 w-1/3" />
+    <main className="w-full h-full p-2 space-y-3">
+
+      {/* HEADER */}
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-5 w-32" />
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-6 w-16" />
+          <Skeleton className="h-6 w-16" />
+        </div>
       </div>
 
-      {/* Featured Hero Skeleton */}
-      <Skeleton className="h-64 w-full rounded-xl" />
+      {/* FILTER BAR */}
+      <div className="flex items-center gap-2">
+        <Skeleton className="h-6 w-40" />
+        <Skeleton className="h-6 w-28" />
+        <Skeleton className="h-6 w-28" />
+      </div>
 
-      {/* Grid of Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="border border-gray-100 dark:border-gray-800 p-4 rounded-xl space-y-4">
-            <Skeleton className="h-40 w-full rounded-lg" />
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-5/6" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-            <div className="flex items-center space-x-3 pt-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
+      {/* TABLE HEADER */}
+      <div className="border border-border rounded-md overflow-hidden">
+        <div className="grid grid-cols-6 gap-2 px-2 py-1 border-b border-border bg-muted">
+          {["col1", "col2", "col3", "col4", "col5", "col6"].map((_, i) => (
+            <Skeleton key={i} className="h-3 w-16" />
+          ))}
+        </div>
+
+        {/* TABLE ROWS */}
+        <div className="divide-y divide-border">
+          {[...Array(12)].map((_, i) => (
+            <div
+              key={i}
+              className="grid grid-cols-6 gap-2 px-2 py-1.5 items-center"
+            >
               <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-3 w-12 ml-auto" />
+              <Skeleton className="h-3 w-12 ml-auto" />
+              <Skeleton className="h-5 w-5 ml-auto rounded-sm" />
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </main>
   );

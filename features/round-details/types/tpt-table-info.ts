@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const TransactionActionSchema = z.object({
+export const TransactionSchema = z.object({
   game_id: z.string().trim(),
   round_id: z.string(),
   user_id: z.string(),
@@ -19,7 +19,7 @@ export const TransactionActionSchema = z.object({
   payoff: z.number(),
 });
 
-export const TPTTableInfoSchema = z.array(TransactionActionSchema);
+export const TPTTableInfoSchema = z.array(TransactionSchema);
 
-export type TransactionAction = z.infer<typeof TransactionActionSchema>;
+export type TransactionInfoDetails = z.infer<typeof TransactionSchema>;
 export type TPTTableInfo = z.infer<typeof TPTTableInfoSchema>;

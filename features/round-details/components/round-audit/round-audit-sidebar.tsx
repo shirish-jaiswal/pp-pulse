@@ -20,33 +20,41 @@ interface SidebarProps {
   setIsCollapsed: (val: boolean) => void;
 }
 
-export function RoundAuditSidebar({ tabs, activeTab, setActiveTab, isCollapsed, setIsCollapsed }: SidebarProps) {
+export function RoundAuditSidebar({
+  tabs,
+  activeTab,
+  setActiveTab,
+  isCollapsed,
+  setIsCollapsed,
+}: SidebarProps) {
   return (
     <motion.div
       animate={{ width: isCollapsed ? 64 : 164 }}
-      className="bg-muted/10 border-r flex flex-col relative transition-all duration-300 ease-in-out"
+      className="bg-muted/20 border-r border-border/50 flex flex-col transition-all duration-200"
     >
-      <div className="px-4 py-2 border-b flex items-center justify-between overflow-hidden min-h-12">
+      <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between min-h-11 bg-card-foreground/10">
         {!isCollapsed && (
           <motion.span
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="text-sm font-bold uppercase tracking-widest text-primary truncate"
+            className="text-base font-medium"
           >
             Audit
           </motion.span>
         )}
+
         <Button
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="ml-auto shrink-0 h-6 w-6"
+          className="ml-auto h-6 w-6 text-muted-foreground hover:text-foreground"
         >
-          {isCollapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+          {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
         </Button>
       </div>
 
-      <nav className="flex-1 px-1 py-2 flex flex-col gap-1">
+      {/* NAV */}
+      <nav className="flex-1 px-2 py-2 flex flex-col gap-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           const Icon = tab.icon;
@@ -54,20 +62,35 @@ export function RoundAuditSidebar({ tabs, activeTab, setActiveTab, isCollapsed, 
           return (
             <Tooltip key={tab.id}>
               <TooltipTrigger asChild>
-                <Button
-                  variant={isActive ? "default" : "ghost"}
-                  size={isCollapsed ? "icon" : "sm"}
+                <button
                   onClick={() => setActiveTab(tab.id)}
                   className={cn(
-                    "w-full justify-start transition-all",
-                    isCollapsed ? "justify-center px-0" : "px-3"
+                    "w-full flex items-center rounded-md text-sm transition-colors",
+                    "h-9",
+                    isCollapsed ? "justify-center" : "px-3",
+                    isActive
+                      ? "bg-accent border text-foreground"
+                      : "text-muted-foreground hover:bg-accent/60"
                   )}
                 >
-                  <Icon size={18} className={cn("shrink-0", !isCollapsed && "mr-2")} />
-                  {!isCollapsed && <span className="text-sm font-medium truncate">{tab.label}</span>}
-                </Button>
+                  <Icon
+                    size={16}
+                    className={cn("shrink-0", !isCollapsed && "mr-2")}
+                  />
+
+                  {!isCollapsed && (
+                    <span className="truncate font-normal">
+                      {tab.label}
+                    </span>
+                  )}
+                </button>
               </TooltipTrigger>
-              {isCollapsed && <TooltipContent side="right">{tab.label}</TooltipContent>}
+
+              {isCollapsed && (
+                <TooltipContent side="right">
+                  {tab.label}
+                </TooltipContent>
+              )}
             </Tooltip>
           );
         })}

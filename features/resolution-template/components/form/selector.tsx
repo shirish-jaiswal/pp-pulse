@@ -22,6 +22,7 @@ import { cn } from "@/utils/cn";
 export interface DropdownOption {
   key: string;
   value: string;
+  [key: string]: any;
 }
 
 interface DropdownSelectorProps {
@@ -42,7 +43,7 @@ export function DropdownSelector({
   return (
     <div className="flex flex-col min-w-0 space-y-1">
       <Label className="text-sm font-medium">{label}</Label>
-      
+
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -57,15 +58,15 @@ export function DropdownSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        
-        <PopoverContent 
-          className="w-full min-w-52 p-0" 
+
+        <PopoverContent
+          className="w-full min-w-52 p-0"
           align="start"
           onPointerDown={(e) => e.stopPropagation()}
         >
           <Command className="flex flex-col h-full max-h-40">
             <CommandInput placeholder={`Search ${label.toLowerCase()}...`} />
-            <CommandList 
+            <CommandList
               className="overflow-y-auto overflow-x-hidden"
               style={{ maxHeight: '200px' }} // Explicitly sets the scrollable height
               onWheel={(e) => e.stopPropagation()}

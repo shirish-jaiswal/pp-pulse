@@ -1,67 +1,53 @@
+'use client';
+
 import {
-    Building2,
-    Coins,
-    AlertCircle,
-    Fingerprint,
+  Building2,
+  Coins,
+  AlertCircle,
+  Fingerprint,
+  LucideIcon,
+  Landmark
 } from "lucide-react";
+
 import InfoCard from "@/features/round-details/components/round-overview/info-card";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  building: Building2,
+  coins: Coins,
+  alert: AlertCircle,
+  fingerprint: Fingerprint,
+  landmark: Landmark,
+};
 
 const RoundOverview = () => {
-    return (
-        <div className="p-1 flex w-full flex-nowrap items-stretch gap-3 overflow-hidden">
-            {/* 1. Casino Info - Default Variant */}
-            <InfoCard
-                icon={Building2}
-                iconBgClass="bg-blue-50 text-blue-600 border border-blue-100"
-                className="flex-[1.5] min-w-0"
-                items={[
-                    { label: "Casino Id", value: "ABC123DE456FG78H", copyable: true },
-                    { label: "Casino Name", value: "Evolution Gaming International", copyable: true },
-                ]}
-            />
+  const { roundOverview } = useRoundDetails();
 
-            {/* 2. User & Round Identifiers - Default Variant */}
-            <InfoCard
-                icon={Fingerprint}
-                iconBgClass="bg-indigo-50 text-indigo-600 border border-indigo-100"
-                className="flex-1 min-w-0"
-                items={[
-                    { label: "User ID", value: "USER_8822_X99J21", copyable: true },
-                    {
-                        label: "Round ID", value: "RX-990-22-KJ88-AL", copyable: true, link: {
-                            href: "https://docs.your-api.com/errors/20620",
-                            target: "_blank"
-                        }
-                    },
-                ]}
-            />
+  if (!roundOverview || !Array.isArray(roundOverview)) return null;
 
-            {/* 3. Financial Info - Success Variant */}
-            <InfoCard
-                icon={Coins}
-                iconBgClass="bg-amber-50 text-amber-600 border border-amber-100"
-                className="flex-1 min-w-0"
-                items={[
-                    { label: "Currency", value: "USD ($)" },
-                    { label: "Total BET", value: "150.00" },
-                ]}
-            />
+  return (
+    <div className="w-full border-border/50 bg-background/40">
+      <div className="flex items-stretch gap-2 overflow-x-auto no-scrollbar">
+        {roundOverview.map((section, idx) => {
+          const IconComponent = section.iName
+            ? ICON_MAP[section.iName]
+            : null;
 
-            {/* 4. Alert/Status - Error Variant with Link */}
-            <InfoCard
-                variant="error"
-                icon={AlertCircle}
-                iconBgClass="bg-red-50 text-red-600 border border-red-100"
-                className="flex-[1.2] min-w-0"
-                items={[
-                    {
-                        label: "Status Message",
-                        value: "Bet was refunded (20620)",
-                    },
-                ]}
-            />
-        </div>
-    );
+          return (
+            <div key={idx} className="min-w-55 max-w-[320px] shrink-0">
+              <InfoCard
+                icon={IconComponent ?? undefined}
+                className="h-full"
+                variant={section.variant || "default"}
+                items={section.items}
+              />
+
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 };
 
 export default RoundOverview;

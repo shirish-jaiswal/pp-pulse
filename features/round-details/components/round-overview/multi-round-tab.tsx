@@ -1,79 +1,142 @@
 "use client";
 
-import { useState } from "react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overview";
+import useGetRoundDetails from "@/features/round-details/hook/round-details";
+
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState, useMemo, useEffect } from "react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/utils/cn";
-import { Copy, Check, Loader2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { toast } from "sonner";
+
+type Mode = "round" | "game";
 
 export function MultiRoundTabs() {
-  const { multiRoundIds } = useRoundDetails();
-  const [isLoading, setIsLoading] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const { multiIds, setRoundDetails, setRoundOverview } =
+    useRoundDetails();
 
-  const handleTabChange = async (roundId: string) => {
-    if (!roundId) return;
-    setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 400));
-    setIsLoading(false);
-  };
+  const mode: Mode = useMemo(() => {
+    return multiIds.game_ids?.length ? "game" : "round";
+  }, [multiIds]);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(multiRoundIds.join(", ")).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
-  };
+  const [activeId, setActiveId] = useState<string>("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  if (multiRoundIds.length === 0) {
-    return (
-      <div className="flex items-center justify-center p-8 border rounded-lg text-sm text-muted-foreground">
-        No round IDs added
-      </div>
+  // Default active
+  useEffect(() => {
+    if (mode === "round" && multiIds.round_ids.length) {
+      setActiveId(multiIds.round_ids[0]);
+    }
+    if (mode === "game" && multiIds.game_ids.length) {
+      setActiveId(multiIds.game_ids[0]);
+    }
+  }, [mode, multiIds]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((i) => i !== id)
+        : [...prev, id]
     );
-  }
+  };
+
+  const ids =
+    mode === "round" ? multiIds.round_ids : multiIds.game_ids;
+
+  const {
+    data: roundData,
+    isLoading: isFetchingData,
+    isFetching,
+    isError,
+  } = useGetRoundDetails({
+    game_id: mode === "game" ? activeId : "",
+    round_id: mode === "round" ? activeId : "",
+    user_id:
+      mode === "game" && multiIds.user_id
+        ? multiIds.user_id
+        : "",
+  });
+
+  const isLoading = isFetchingData || isFetching;
+
+  useEffect(() => {
+    if (isError) {
+      toast.error(`Failed to fetch: ${activeId}`);
+    }
+  }, [isError, activeId]);
+
+  const roundOverviewData = useMemo(() => {
+    if (!roundData) return null;
+    return generateRoundOverview(roundData).roundOverview;
+  }, [roundData]);
+
+  useEffect(() => {
+    if (roundData && !isLoading) {
+      setRoundDetails(roundData);
+      if (roundOverviewData) {
+        setRoundOverview(roundOverviewData);
+      }
+    }
+  }, [roundData, roundOverviewData, isLoading]);
+
+  if (!ids.length) return null;
 
   return (
-    <div className="flex items-center border rounded-lg bg-background">
-      <Tabs
-        defaultValue={multiRoundIds[0]}
-        onValueChange={handleTabChange}
-        className="flex-1"
-      >
-        <TabsList className="flex w-full justify-start overflow-x-auto no-scrollbar">
-          {multiRoundIds.map((id, index) => (
-            <TabsTrigger
-              key={id}
-              value={id}
-              className={cn(
-                "flex items-center gap-2 px-3 py-2 text-sm",
-                "data-[state=active]:bg-background data-[state=active]:text-foreground"
-              )}
-            >
-              <span className="font-mono text-xs">
-                {id}
-              </span>
-            </TabsTrigger>
-          ))}
+    <div className="w-full bg-background/40">
+
+      <Tabs value={activeId} onValueChange={setActiveId}>
+        <TabsList className="flex w-full gap-1 px-2 overflow-x-auto no-scrollbar">
+
+          {ids.map((id) => {
+            const isActive = activeId === id;
+            const isChecked = selectedIds.includes(id);
+
+            return (
+              <TabsTrigger key={id} value={id} asChild>
+
+                <div
+                  className={cn(
+                    "flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition whitespace-nowrap",
+
+                    isActive
+                      ? "bg-muted text-foreground"
+                      : "text-muted-foreground hover:bg-muted/50",
+
+                    "cursor-pointer"
+                  )}
+                >
+                  {/* Checkbox */}
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={() => toggleSelection(id)}
+                    onClick={(e) => e.stopPropagation()}
+                    className="h-3 w-3"
+                  />
+
+                  {/* Label */}
+                  <div className="flex items-center gap-1 font-mono">
+                    <span className="opacity-50">
+                      {mode === "round" ? "R" : "G"}:
+                    </span>
+
+                    <span className="max-w-25">
+                      {id}
+                    </span>
+                  </div>
+
+                  {/* Loader */}
+                  {isLoading && isActive && (
+                    <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
       </Tabs>
-
-      <div className="flex items-center gap-2 px-2 border-l">
-        {isLoading && (
-          <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
-        )}
-
-        <button
-          onClick={handleCopy}
-          className="p-2 rounded-md hover:bg-muted transition"
-        >
-          {copied ? (
-            <Check className="w-4 h-4 text-green-600" />
-          ) : (
-            <Copy className="w-4 h-4" />
-          )}
-        </button>
-      </div>
     </div>
   );
 }

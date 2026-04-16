@@ -1,14 +1,22 @@
 import axios from "axios";
 import { RoundDetailsInputFormSchema } from "@/features/round-details/types/round-details-input";
 
+const BACKEND_URL = process.env.NEXT_PUBLIC_NEXT_URL;
+
 type TptTableInfoProps = {
     roundId?: string;
     gameId?: string;
     userId?: string;
-}
+};
 
-export async function c_tpttableinfo(rawData: TptTableInfoProps) {
-    const data = RoundDetailsInputFormSchema.parse(rawData);
+export async function c_tptTableInfo(rawData: TptTableInfoProps) {
+    const normalizedData = {
+        round_id: rawData.roundId,
+        game_id: rawData.gameId,
+        user_id: rawData.userId,
+    };
+
+    const data = RoundDetailsInputFormSchema.parse(normalizedData);
 
     const queryParams: Record<string, string> = {};
 
@@ -20,16 +28,25 @@ export async function c_tpttableinfo(rawData: TptTableInfoProps) {
     }
 
     try {
-        const response = await axios.get("/api/tpttableinfo", {
-            params: queryParams,
-            headers: {
-                "Content-Type": "application/json"
+        const response = await axios.get(
+            `${BACKEND_URL}/tpttableinfo`,
+            {
+                params: queryParams,
+                headers: {
+                    "Content-Type": "application/json",
+                },
             }
-        });
+        );
 
         return response.data;
-    } catch (error: any) {
-        const errorMessage = error.response?.data?.error || "Failed to fetch transaction info";
-        throw new Error(errorMessage);
+    } catch (error: unknown) {
+        if (axios.isAxiosError(error)) {
+            const errorMessage =
+                error.response?.data?.error ||
+                "Failed to fetch transaction info";
+            throw new Error(errorMessage);
+        }
+
+        throw new Error("Unexpected error occurred");
     }
 }

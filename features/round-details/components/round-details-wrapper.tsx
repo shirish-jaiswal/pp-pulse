@@ -10,39 +10,52 @@ import { useRoundDetails } from "@/features/round-details/context/round-details-
 import RoundAudit from "@/features/round-details/components/round-audit/round-audit";
 import { MiniPlayingCard, Rank, Suit } from "@/components/custom/games/playing-card";
 import EmptyRoundData from "@/features/round-details/components/empty-round-data";
+import { RoundFetchError } from "@/features/round-details/components/round-fetch-error";
+import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
+import { InfoCardProps } from "@/features/round-details/components/round-overview/info-card";
 
 type RoundDetailsWrapperProps = {
     roundId?: string;
     gameId?: string;
     userId?: string;
-    data?: any
+    data: RoundDetailsResponse | null;
+    roundOverview?: InfoCardProps[] | null;
+    error?: boolean
+
 };
 
-export function RoundDetailsWrapper({ roundId, gameId, userId, data }: RoundDetailsWrapperProps) {
-    const { setRoundDetailsInput, isBulkMode, setData } = useRoundDetails();
+export function RoundDetailsWrapper({ roundId, gameId, userId, data, roundOverview, error }: RoundDetailsWrapperProps) {
+    const { setRoundDetailsInput, isBulkMode, roundDetails, setRoundDetails, setRoundOverview } = useRoundDetails();
     useEffect(() => {
         setRoundDetailsInput({
             round_id: roundId,
             game_id: gameId,
             user_id: userId
         });
-        setData(data);
-
     }, [roundId, gameId, userId, setRoundDetailsInput]);
+
+    useEffect(() => {
+        setRoundDetails(data);
+        setRoundOverview(roundOverview ?? null);
+    }, [data, roundOverview, setRoundDetails, setRoundOverview]);
 
     return (
         <div className="flex flex-col gap-2">
             <RoundInvestigator />
             {
+                error &&
+                <RoundFetchError roundId={roundId} gameId={gameId} userId={userId} />
+            }
+            {
                 isBulkMode && <MultiRoundTabs />
             }
             {
-                data ? (
+                roundDetails ? (
                     <>
                         <GameMetadata />
                         <RoundOverview />
-                        <RoundAudit data={data} />
-                        <ResolutionEditor gameName={data?.game_name || "All"} />
+                        <RoundAudit />
+                        <ResolutionEditor gameName={"All"} />
                     </>
                 ) : (
                     <EmptyRoundData />

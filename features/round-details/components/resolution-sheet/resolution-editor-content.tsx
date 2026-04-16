@@ -4,118 +4,216 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import RichTextEditor from "@/components/custom/text-editor/rich-text-editor";
 import { useFindResolutionTemplates } from "@/hooks/excel-db/use-find-resolution-template";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
-import { fillAndTransformData } from "@/features/round-details/components/resolution-sheet/insert-values";
+import {
+  buildBetDetailsTable,
+  buildTransactionTable,
+  fillAndTransformData,
+} from "@/features/round-details/components/resolution-sheet/insert-values";
+import { useGetVariables } from "@/hooks/excel-db/use-get-variables";
+import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
+import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 
 interface ResolutionEditorContentProps {
-    gameName: string;
-    category: string;
-    tabsValue: string;
+  gameName: string;
+  category: string;
+  tabsValue: string;
+}
+
+function findValueDeep(obj: any, targetKey: string): any {
+  if (!obj || typeof obj !== "object") return undefined;
+
+  if (Object.prototype.hasOwnProperty.call(obj, targetKey)) {
+    return obj[targetKey];
+  }
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const found = findValueDeep(item, targetKey);
+      if (found !== undefined) return found;
+    }
+  } else {
+    for (const value of Object.values(obj)) {
+      const found = findValueDeep(value, targetKey);
+      if (found !== undefined) return found;
+    }
+  }
+  return undefined;
 }
 
 export function ResolutionEditorContent({
-    gameName,
-    category,
-    tabsValue
+  gameName,
+  category,
+  tabsValue,
 }: ResolutionEditorContentProps) {
-    const { data: resolutions = [], isLoading } = useFindResolutionTemplates({
-        game: gameName,
-        category: category,
+  const { data: resolutions = [], isLoading: templatesLoading } =
+    useFindResolutionTemplates({
+      game: gameName,
+      category: category,
     });
-    const { data } = useRoundDetails();
 
-    const dataValues = {
-        casinoid: "12345++++ ",
-        casinoName: "Grand Royale Casino New York",
-        roundId: "987654321",
-        playerId: "USR_777",
-        gameId: "SLOT_X",
-        currentUrl: "ss",
-        c_bet_details: "$10.00 on Red",
-        c_transaction_details: "TXN_ABC_001"
+  const { data: variables = [], isLoading: varsLoading } = useGetVariables();
+  const { roundDetails } = useRoundDetails();
+
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [editorContent, setEditorContent] = useState<string>("");
+
+  // =========================
+  // VALUES + LINK META
+  // =========================
+  const { dataValues, linkMeta } = useMemo(() => {
+    if (varsLoading) return { dataValues: {}, linkMeta: {} };
+
+    const values: Record<string, any> = {};
+    const links: Record<string, any> = {};
+
+    const staticVariables: Record<string, string> = {
+      currentUrl:
+        typeof window !== "undefined" ? window.location.href : "",
     };
 
-    const [selectedId, setSelectedId] = useState<string>("");
-    const [editorContent, setEditorContent] = useState<string>("");
+    variables.forEach((variable: any) => {
+      const key = variable.key;
 
-    const getPopulatedContent = useCallback((rawContent: string) => {
-        if (!rawContent) return "";
+      links[key] = {
+        isLink: variable.isLink,
+        linkTemplate: variable.linkTemplate,
+      };
 
-        try {
-            const editorStateObj = JSON.parse(rawContent);
-            if (editorStateObj && editorStateObj.root) {
-                editorStateObj.root = fillAndTransformData(editorStateObj.root, dataValues);
-            } else {
-                return JSON.stringify(fillAndTransformData(editorStateObj, dataValues));
-            }
-            return JSON.stringify(editorStateObj);
-        } catch (e) {
-            console.error("Transformation Error:", e);
-            return rawContent;
+      if (staticVariables[key]) {
+        values[key] = staticVariables[key];
+        return;
+      }
+
+      if (key === "bet_details") {
+        values[key] = buildBetDetailsTable(
+          roundDetails?.betInfo as BetTableInfo
+        );
+        return;
+      }
+
+      if (key === "transaction_details") {
+        values[key] = buildTransactionTable(
+          roundDetails?.tptInfo as TPTTableInfo
+        );
+        return;
+      }
+
+      const found = findValueDeep(roundDetails, key);
+      values[key] = found !== undefined ? found : "";
+    });
+
+    return { dataValues: values, linkMeta: links };
+  }, [variables, roundDetails, varsLoading]);
+
+  const isReady = useMemo(() => !varsLoading, [varsLoading]);
+
+  // =========================
+  // CONTENT TRANSFORM
+  // =========================
+  const getPopulatedContent = useCallback(
+    (rawContent: string) => {
+      if (!rawContent || !isReady) return "";
+
+      try {
+        const editorStateObj = JSON.parse(rawContent);
+
+        if (editorStateObj?.root) {
+          editorStateObj.root = fillAndTransformData(
+            editorStateObj.root,
+            dataValues,
+            linkMeta
+          );
+          return JSON.stringify(editorStateObj);
         }
-    }, [dataValues]);
 
-    useEffect(() => {
-        if (resolutions.length > 0 && !selectedId) {
-            const first = resolutions[0];
-            setSelectedId(first.id.toString());
-            setEditorContent(getPopulatedContent(first.content));
-        }
-    }, [resolutions, selectedId, getPopulatedContent]);
+        return JSON.stringify(
+          fillAndTransformData(editorStateObj, dataValues, linkMeta)
+        );
+      } catch (e) {
+        console.error("Transformation Error:", e);
+        return rawContent;
+      }
+    },
+    [dataValues, linkMeta, isReady]
+  );
 
-    const handleSelectChange = (id: string) => {
-        const selected = resolutions.find((r) => r.id.toString() === id);
-        if (selected) {
-            setSelectedId(id);
-            setEditorContent(getPopulatedContent(selected.content));
-        }
-    };
+  useEffect(() => {
+    if (!isReady || resolutions.length === 0) return;
 
-    const handleContentChange = useCallback((content: string) => {
-        setEditorContent(content);
-    }, []);
+    const current =
+      resolutions.find((r) => r.id.toString() === selectedId) ||
+      resolutions[0];
 
-    return (
-        <TabsContent value={tabsValue} className="mt-0 border-none">
-            <Card className="py-2 border-none shadow-none">
-                <CardContent className="p-2 py-0 space-y-2">
-                    <div className="flex gap-2 items-center justify-between">
-                        <h3 className="text-sm font-semibold text-foreground">{category}</h3>
-                        <Select
-                            value={selectedId}
-                            onValueChange={handleSelectChange}
-                            disabled={isLoading || resolutions.length === 0}
-                        >
-                            <SelectTrigger className="w-96" size="sm">
-                                <SelectValue placeholder={isLoading ? "Loading..." : "Select..."} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {resolutions.map((item) => (
-                                    <SelectItem key={item.id} value={item.id.toString()}>
-                                        <span className="opacity-80">{item.title}</span>
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="h-[calc(100vh-12rem)] overflow-auto border rounded-md">
-                        <RichTextEditor
-                            key={`${category}-${selectedId}`}
-                            initialValue={editorContent}
-                            onChange={handleContentChange}
-                            placeholder={`Write ${category.toLowerCase()}...`}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-        </TabsContent>
-    );
+    if (current) {
+      if (!selectedId) {
+        setSelectedId(current.id.toString());
+      }
+
+      const populated = getPopulatedContent(current.content);
+      setEditorContent(populated);
+    }
+  }, [resolutions, selectedId, getPopulatedContent, isReady]);
+
+  const isDataLoading = templatesLoading || varsLoading;
+
+  return (
+    <TabsContent value={tabsValue} className="mt-0 border-none">
+      <Card className="border-none shadow-none bg-transparent pt-0">
+        <CardContent className="p-2">
+
+          {/* HEADER */}
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-[13px] font-medium text-muted-foreground tracking-tight">
+              {category}
+            </h3>
+
+            <Select
+              value={selectedId}
+              onValueChange={setSelectedId}
+              disabled={isDataLoading || resolutions.length === 0}
+            >
+              <SelectTrigger className="min-w-55 h-8 text-xs">
+                <SelectValue placeholder="Select Template" />
+              </SelectTrigger>
+
+              <SelectContent>
+                {resolutions.map((item) => (
+                  <SelectItem key={item.id} value={item.id.toString()}>
+                    {item.title}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* EDITOR */}
+          <div className="h-[calc(100vh-12rem)] overflow-hidden rounded-md border border-border/40 bg-background/40">
+            {!isReady ? (
+              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                Loading variables...
+              </div>
+            ) : (
+              <RichTextEditor
+                key={`${category}-${selectedId}`}
+                initialValue={editorContent}
+                onChange={setEditorContent}
+                placeholder={`Write ${category.toLowerCase()}...`}
+                copyPopup={true}
+              />
+            )}
+          </div>
+
+        </CardContent>
+      </Card>
+    </TabsContent>
+  );
 }
