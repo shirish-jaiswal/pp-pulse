@@ -24,17 +24,14 @@ export async function GET(request: Request) {
       },
     };
 
-    // 1. Define target URLs
     const ticketUrl = `${FRESHDESK_DOMAIN}/v2/tickets/${ticketId}`;
     const conversationsUrl = `${FRESHDESK_DOMAIN}/v2/tickets/${ticketId}/conversations`;
 
-    // 2. Fetch both concurrently
     const [ticketResponse, conversationsResponse] = await Promise.all([
       axios.get(ticketUrl, config),
       axios.get(conversationsUrl, config),
     ]);
 
-    // 3. Return combined data
     return NextResponse.json({
       success: true,
       ticket: ticketResponse.data,
@@ -46,9 +43,9 @@ export async function GET(request: Request) {
 
     const status = error.response?.status || 500;
     return NextResponse.json(
-      { 
-        error: "Failed to fetch ticket data from Freshdesk.", 
-        details: error.response?.data 
+      {
+        error: "Failed to fetch ticket data from Freshdesk.",
+        details: error.response?.data
       },
       { status }
     );

@@ -41,7 +41,6 @@ function SheetOverlay({
     />
   )
 }
-
 function SheetContent({
   className,
   children,
@@ -49,36 +48,61 @@ function SheetContent({
   showCloseButton = true,
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
-  side?: "top" | "right" | "bottom" | "left"
-  showCloseButton?: boolean
+  side?: "top" | "right" | "bottom" | "left";
+  showCloseButton?: boolean;
 }) {
   return (
     <SheetPortal>
       <SheetOverlay />
+
       <SheetPrimitive.Content
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition duration-200 ease-in-out",
-          "data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:h-full data-[side=right]:border-l",
-          "data-[side=right]:w-3/4 data-[side=right]:sm:max-w-sm",
+          "fixed z-50 flex flex-col gap-4 bg-background shadow-xl",
+
+          // base animation (smooth)
+          "duration-200 ease-out will-change-transform",
+
+          // RIGHT (default)
+          "data-[side=right]:top-0 data-[side=right]:right-0 data-[side=right]:h-full",
+          "data-[side=right]:w-3/4 sm:data-[side=right]:max-w-sm",
+          "data-[side=right]:border-l",
+
+          // animation states (IMPORTANT PART)
+          "data-[state=open]:animate-in data-[state=closed]:animate-out",
+
+          "data-[state=open]:data-[side=right]:slide-in-from-right",
+          "data-[state=closed]:data-[side=right]:slide-out-to-right",
+
+          "data-[state=open]:fade-in-0",
+          "data-[state=closed]:fade-out-0",
+
+          // better feel
+          "data-[state=open]:duration-200",
+          "data-[state=closed]:duration-150",
+
           className
         )}
         {...props}
       >
         {children}
+
         {showCloseButton && (
-          <SheetPrimitive.Close data-slot="sheet-close" asChild>
-            <Button variant="ghost" className="absolute top-4 right-4" size="icon-sm">
-              <XIcon
-              />
+          <SheetPrimitive.Close asChild>
+            <Button
+              variant="ghost"
+              className="absolute top-4 right-4"
+              size="icon-sm"
+            >
+              <XIcon />
               <span className="sr-only">Close</span>
             </Button>
           </SheetPrimitive.Close>
         )}
       </SheetPrimitive.Content>
     </SheetPortal>
-  )
+  );
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {

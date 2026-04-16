@@ -1,112 +1,142 @@
+import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 import { cn } from "@/utils/cn";
 
-export default function TransactionTable({ transactions }: { transactions: any[] }) {
+export const formatDate = (dateStr: string | Date) => {
+  const date = new Date(dateStr);
+
+  const timeFormatter = new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+  });
+
+  const parts = timeFormatter.formatToParts(date);
+  const datePart = date.toLocaleDateString("en-US");
+  const ms = date.getMilliseconds().toString().padStart(3, "0");
+
+  const hour = parts.find((p) => p.type === "hour")?.value;
+  const minute = parts.find((p) => p.type === "minute")?.value;
+  const second = parts.find((p) => p.type === "second")?.value;
+  const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value;
+
+  return `${datePart}, ${hour}:${minute}:${second}.${ms} ${dayPeriod}`;
+};
+
+export default function TransactionTable({
+  transactions,
+}: {
+  transactions: TPTTableInfo | undefined;
+}) {
+  if (!transactions || transactions.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
+        No transaction data available.
+      </div>
+    );
+  }
+
+  const getActionStyle = (action: string) => {
+    return action === "Settled"
+      ? "bg-emerald-500/5 text-emerald-400 border-emerald-400/20"
+      : "bg-blue-500/5 text-blue-400 border-blue-400/20";
+  };
+
   return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
-      <table className="w-full text-left border-collapse table-fixed">
+    <div className="overflow-x-auto border border-border/60 rounded-lg bg-background/40">
+      <table className="w-full text-sm border-collapse">
+
+        {/* HEADER */}
         <thead>
-          <tr className="bg-slate-50 border-b border-slate-200">
-            <th className="w-[16%] p-2 text-xs font-bold uppercase tracking-widest text-slate-500">Transaction ID</th>
-            <th className="w-[12%] p-2 text-xs font-bold uppercase tracking-widest text-slate-500">Type</th>
-            <th className="w-[15%] p-2 text-xs font-bold uppercase tracking-widest text-slate-500">Operator Ref</th>
-            <th className="w-[20%] p-2 text-xs font-bold uppercase tracking-widest text-slate-500">Slot Trace (PP)</th>
-            <th className="w-[12%] p-2 text-xs font-bold uppercase tracking-widest text-right text-slate-500">Amount</th>
-            <th className="w-[15%] p-2 text-xs font-bold uppercase tracking-widest text-center text-slate-500">Status & Error</th>
-            <th className="w-[10%] p-2 text-xs font-bold uppercase tracking-widest text-center text-slate-500">Retry</th>
+          <tr className="border-b border-border/50 bg-muted">
+            <th className="px-4 py-2 text-xs font-medium text-left">Transaction</th>
+            <th className="px-4 py-2 text-xs font-medium text-left">Action</th>
+            <th className="px-4 py-2 text-xs font-medium text-left">3rd Party</th>
+            <th className="px-4 py-2 text-xs font-medium text-left">Platform</th>
+            <th className="px-4 py-2 text-xs font-medium text-right">Amount</th>
+            <th className="px-4 py-2 text-xs font-medium text-center">Status</th>
+            <th className="px-4 py-2 text-xs font-medium text-center">Retry</th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-slate-100">
+
+        {/* BODY */}
+        <tbody>
           {transactions.map((tx, i) => {
-            const isError = tx.error !== "0(Ok)" && tx.error !== "No Error";
-            const isSettled = tx.transType === "Bet Settled";
-            const retryVal = parseInt(tx.retryCount || "0");
+            const isError = !(tx.error_code === "0" || tx.error_code === null);
+            const retryVal = tx.retry_counter || 0;
+            const currency = tx.currency_code?.trim();
 
             return (
-              <tr key={i} className="group hover:bg-blue-50/40 transition-colors duration-150 text-slate-600">
-                {/* 1. TRANSACTION ID */}
-                <td className="p-2 align-top">
-                  <div className="flex flex-col">
-                    <span className="text-slate-900 font-mono text-xs font-bold">
-                      {tx.transId}
+              <tr
+                key={tx.transaction_id || i}
+                className="border-b border-border/40 last:border-0 hover:bg-accent/20 transition-colors"
+              >
+                {/* TRANSACTION */}
+                <td className="px-4 py-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="font-mono text-xs text-foreground truncate max-w-56">
+                      {tx.transaction_id}
                     </span>
-                    <span className="text-xs text-slate-400 font-medium">
-                      {tx.transDate}
+                    <span className="text-[11px] text-muted-foreground font-mono">
+                      {formatDate(tx.trans_date)}
                     </span>
                   </div>
                 </td>
 
-                {/* 2. TYPE */}
-                <td className="p-2 align-top">
-                  <span className={cn(
-                    "inline-block px-2 py-0.5 rounded text-xs font-bold uppercase border",
-                    isSettled
-                      ? "bg-emerald-50 text-emerald-600 border-emerald-200"
-                      : "bg-blue-50 text-blue-600 border-blue-200"
-                  )}>
-                    {tx.transType}
+                <td className="px-4 py-2">
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-md border text-[11px] font-medium",
+                      getActionStyle(tx.action_type)
+                    )}
+                  >
+                    {tx.action_type}
                   </span>
                 </td>
 
-                {/* 3. OPERATOR REF */}
-                <td className="p-2 align-top">
-                  <span className="font-mono text-xs break-all leading-tight">
-                    {tx.operatorTransId !== "null" ? tx.operatorTransId : "—"}
-                  </span>
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
+                  {tx.third_party_txn_id && tx.third_party_txn_id !== "null"
+                    ? tx.third_party_txn_id
+                    : "—"}
                 </td>
 
-                {/* 4. SLOT TRACE */}
-                <td className="p-2 align-top">
-                  <span className="font-mono text-xs text-slate-500 break-all leading-relaxed whitespace-pre-line">
-                    {tx.ppSlotsTransId !== "null"
-                      ? tx.ppSlotsTransId
-                      : "—"}
-                  </span>
+                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
+                  {tx.platform_trans_id || "—"}
                 </td>
 
-                {/* 6. AMOUNT */}
-                <td className="p-2 align-top text-right">
+                <td className="px-4 py-2 text-right">
                   <div className="flex flex-col items-end">
-                    <span className={cn(
-                      "text-sm font-mono font-bold tracking-tight text-slate-900"
-                    )}>
-                      {parseFloat(tx.transAmt).toFixed(2)}
+                    <span className="font-mono text-sm text-foreground">
+                      {Number(tx.amount)}
                     </span>
-                    <span className="text-xs font-black text-slate-400 uppercase tracking-tighter">
-                      {tx.transCur}
+                    <span className="text-[10px] text-muted-foreground font-mono">
+                      {currency}
                     </span>
                   </div>
                 </td>
 
-                {/* 7. STATUS & ERROR */}
-                <td className="p-2 align-top">
-                  <div className="flex flex-col items-center gap-1.5">
-                    <div className="flex items-center gap-1">
-                      <span className={cn(
-                        "text-xs font-black uppercase tracking-widest",
-                        tx.transStatus === "Success" ? "text-emerald-600" : "text-rose-600"
-                      )}>
-                        {tx.transStatus}
-                      </span>
-                    </div>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded border text-xs font-mono w-full text-center truncate max-w-24",
-                      isError
-                        ? "bg-rose-50 border-rose-200 text-rose-500 font-bold"
-                        : "bg-slate-50 border-slate-200 text-slate-400"
-                    )}>
-                      {tx.error}
-                    </span>
-                  </div>
+                <td className="px-4 py-2 text-center">
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium",
+                      isError ? "text-rose-400" : "text-emerald-400"
+                    )}
+                  >
+                    {isError ? "Failed" : "Success"}
+                    {isError && tx.error_description && ` (${tx.error_description})`}
+                  </span>
                 </td>
 
-                {/* 5. RETRY COUNT (NEW) */}
-                <td className="p-2 align-top text-center">
-                  <span className={cn(
-                    "inline-flex items-center justify-center min-w-6 h-6 rounded-full font-mono text-xs font-bold border",
-                    retryVal > 0
-                      ? "bg-amber-50 text-amber-600 border-amber-200 animate-pulse"
-                      : "bg-slate-50 text-slate-400 border-slate-100"
-                  )}>
+                {/* RETRY */}
+                <td className="px-4 py-2 text-center">
+                  <span
+                    className={cn(
+                      "inline-flex items-center justify-center min-w-6 h-6 rounded-md text-[11px] font-mono border",
+                      retryVal > 0
+                        ? "bg-amber-500/5 text-amber-400 border-amber-400/20"
+                        : "bg-muted/40 text-muted-foreground border-border"
+                    )}
+                  >
                     {retryVal}
                   </span>
                 </td>

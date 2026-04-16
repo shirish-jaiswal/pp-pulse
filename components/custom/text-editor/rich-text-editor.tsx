@@ -25,10 +25,12 @@ export default function RichTextEditor({
   onChange,
   placeholder = "Start typing...",
   initialValue,
+  copyPopup = false,
 }: {
   onChange?: (val: string) => void;
   placeholder?: string;
   initialValue?: string;
+  copyPopup?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -80,8 +82,8 @@ export default function RichTextEditor({
   return (
     <LexicalComposer initialConfig={editorConfig}>
       <div className="border rounded-md shadow-sm bg-white overflow-auto max-w-4xl max-h-full mx-auto">
-        
-        <Toolbar />
+
+        <Toolbar copyPopup={copyPopup} />
         <div className="relative">
           <RichTextPlugin
             contentEditable={

@@ -19,6 +19,7 @@ export function useResolutionForm({
     onOpenChange,
 }: Props) {
     const [title, setTitle] = useState("");
+    const [isFreshDesk, setIsFreshDesk] = useState<boolean>(false);
     const [game, setGame] = useState<DropdownOption | null>(null);
     const [subcategory, setSubcategory] = useState<DropdownOption | null>(null);
     const [category, setCategory] = useState<string>("");
@@ -35,6 +36,7 @@ export function useResolutionForm({
 
             await onSave({
                 title,
+                isFreshDesk,
                 content,
                 game: game?.value,
                 category,
@@ -53,6 +55,7 @@ export function useResolutionForm({
 
         if (initialData) {
             setTitle(initialData.title || "");
+            setIsFreshDesk(initialData.isFreshDesk);
             setCategory(initialData.category);
             setContent(initialData.content);
             setGame({ key: initialData.game, value: initialData.game });
@@ -62,6 +65,7 @@ export function useResolutionForm({
             });
         } else {
             setTitle("");
+            setIsFreshDesk(false);
             setContent("");
             setGame(null);
             setSubcategory(null);
@@ -91,6 +95,8 @@ export function useResolutionForm({
     return {
         title,
         setTitle,
+        isFreshDesk,
+        setIsFreshDesk,
         game,
         setGame,
         subcategory,

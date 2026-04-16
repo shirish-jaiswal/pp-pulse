@@ -4,18 +4,14 @@ export function SkeletonRows({ count = 3 }: { count?: number }) {
             {Array.from({ length: count }).map((_, i) => (
                 <div
                     key={i}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md bg-muted/40 animate-pulse mx-1"
+                    className="flex items-center gap-2 px-2 py-1 rounded-sm mx-0.5 animate-pulse"
                 >
-                    {/* Mimic the Icon */}
-                    <div className="h-4 w-4 rounded bg-muted-foreground/20 shrink-0" />
-
-                    <div className="flex flex-col gap-2 w-full">
-                        {/* Mimic the Table Name */}
-                        <div className="h-3 w-24 rounded bg-muted-foreground/20" />
-
-                        {/* Mimic the Stats (rows/cols) */}
-                        <div className="h-2 w-16 rounded bg-muted-foreground/10 ml-2" />
+                    <div className="h-3.5 w-3.5 rounded bg-muted/40 shrink-0" />
+                    <div className="flex flex-col gap-1 w-full min-w-0">
+                        <div className="h-2.5 w-28 bg-muted/40 rounded-sm" />
+                        <div className="h-2 w-14 bg-muted/20 rounded-sm ml-1" />
                     </div>
+
                 </div>
             ))}
         </>

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const GameTransactionSchema = z.object({
+export const BetInfoSchema = z.object({
   game_id: z.string().trim(),
   user_id: z.string(),
   round_id: z.string(),
@@ -13,13 +13,13 @@ export const GameTransactionSchema = z.object({
   amount: z.number(),
   payoff: z.number(),
   currency_code: z.string().trim(),
-  // Status can be 'S' for Settled, 'P' for Pending, 'C' for Cancelled
-  status: z.enum(['S', 'P', 'C']), 
+  status: z.enum(['P', 'S', 'C', 'F']),
   casino_id: z.string(),
   casino_desc: z.string().trim(),
+  displayDescription: z.string().trim(),
 });
 
-export const BetTableInfoSchema = z.array(GameTransactionSchema);
+export const BetTableInfoSchema = z.array(BetInfoSchema);
 
-export type GameTransaction = z.infer<typeof GameTransactionSchema>;
+export type GameTransaction = z.infer<typeof BetInfoSchema>;
 export type BetTableInfo = z.infer<typeof BetTableInfoSchema>;

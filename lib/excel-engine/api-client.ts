@@ -89,3 +89,39 @@ export async function deleteRow(dbName: string, tableName: string, id: number) {
   const res = await fetch(`${BASE}/${dbName}/tables/${tableName}/rows/${id}`, { method: "DELETE" });
   return res.json();
 }
+
+export const downloadDb = async (fileName: string) => {
+  const res = await fetch(`/api/excel-db/download?file=${fileName}`);
+
+  if (!res.ok) {
+    throw new Error("Download failed");
+  }
+
+  const blob = await res.blob();
+  const url = window.URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  a.click();
+
+  window.URL.revokeObjectURL(url);
+};
+
+export async function uploadDb(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("/api/excel-db/upload", {
+    method: "POST",
+    body: formData,
+  });
+
+  const data = await res.json();
+
+  if (!res.ok) {
+    throw new Error(data.error || "Upload failed");
+  }
+
+  return data;
+}

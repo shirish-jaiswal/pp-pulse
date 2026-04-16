@@ -35,9 +35,10 @@ import {
 } from "lucide-react";
 
 import { INSERT_IMAGE_COMMAND } from "@/components/custom/text-editor/image-commands";
-import { FieldDropdown } from "./field-dropdown";
+import { FieldDropdown } from "@/components/custom/text-editor/field-dropdown";
+import { CopyHtmlButton } from "./copy-html-button";
 
-export function Toolbar() {
+export function Toolbar({ copyPopup }: { copyPopup: boolean }) {
   const [editor] = useLexicalComposerContext();
 
   const [isBold, setIsBold] = useState(false);
@@ -255,32 +256,23 @@ export function Toolbar() {
         </div>
 
         {/* Action Section (Right Side) */}
-        <div className="flex items-center gap-2 ml-auto pl-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopy}
-            className={`
-              h-8 flex items-center gap-2 px-3 rounded-md border transition-all duration-300
-              ${copied
-                ? "bg-green-50 border-green-200 text-green-600 hover:bg-green-100"
-                : "border-transparent text-muted-foreground hover:text-primary hover:bg-accent"
-              }
-            `}
-          >
-            {copied ? (
-              <>
-                <Check className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">Copy HTML</span>
-              </>
-            )}
-          </Button>
-        </div>
+        <CopyHtmlButton
+          copyPopup={copyPopup}
+          getHtml={async () => {
+            const htmlString = await editor.getEditorState().read(() =>
+              $generateHtmlFromNodes(editor, null)
+            );
+
+            const textString = editor.getEditorState().read(() =>
+              $getRoot().getTextContent()
+            );
+
+            return {
+              html: htmlString,
+              text: textString,
+            };
+          }}
+        />
 
       </div>
     </TooltipProvider>

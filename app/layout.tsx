@@ -3,7 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
 import QueryProvider from "@/lib/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import SessionValidation from "@/components/custom/session-validation";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -33,9 +33,11 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
+        <Toaster position="top-right" duration={3000} richColors />
         <TooltipProvider>
           <QueryProvider>
-            <SessionValidation>{children}</SessionValidation></QueryProvider>
+            {children}
+          </QueryProvider>
         </TooltipProvider>
       </body>
     </html>

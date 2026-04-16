@@ -6,6 +6,7 @@ import { DB_NAME, TABLE_NAME } from ".";
 export interface ResolutionTemplate {
   id: number;
   title: string;
+  isFreshDesk: boolean;
   game: string;
   category: string;
   subcategory: string;

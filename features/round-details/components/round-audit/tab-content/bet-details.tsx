@@ -1,65 +1,140 @@
-import { cn } from "@/utils/cn";
+"use client";
 
-export default function BetTable({ items }: { items?: any[] }) {
+import { useState, useMemo } from "react";
+import { cn } from "@/utils/cn";
+import { formatDate } from "./transaction-table";
+import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
+
+type SortKey = "win" | "status";
+type SortOrder = "asc" | "desc";
+
+export default function BetTable({ items }: { items?: BetTableInfo }) {
+  const [sortKey, setSortKey] = useState<SortKey>("win");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
   if (!items || items.length === 0) {
     return (
-      <div className="text-center py-10 text-muted-foreground text-sm italic">
+      <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
         No bet data available.
       </div>
     );
   }
 
-  const statusStyles: Record<string, string> = {
-    settled: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
-    unsettled: "bg-amber-500/10 text-amber-500 border-amber-500/20",
-    cancelled: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "S":
+        return { label: "Settled", priority: 3, style: "bg-emerald-500/5 text-emerald-400 border-emerald-400/20" };
+      case "C":
+        return { label: "Cancelled", priority: 1, style: "bg-rose-500/5 text-rose-400 border-rose-400/20" };
+      default:
+        return { label: "Unsettled", priority: 2, style: "bg-amber-500/5 text-amber-400 border-amber-400/20" };
+    }
   };
 
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortOrder("desc"); // default for new column
+    }
+  };
+
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => {
+      let valueA: number = 0;
+      let valueB: number = 0;
+
+      if (sortKey === "win") {
+        valueA = a.payoff;
+        valueB = b.payoff;
+      }
+
+      if (sortKey === "status") {
+        valueA = getStatusConfig(a.status).priority;
+        valueB = getStatusConfig(b.status).priority;
+      }
+
+      if (sortOrder === "asc") return valueA - valueB;
+      return valueB - valueA;
+    });
+  }, [items, sortKey, sortOrder]);
+
   return (
-    <div className="overflow-x-auto border rounded-lg bg-background/50 shadow-sm">
-      <table className="w-full text-left text-sm border-collapse">
+    <div className="overflow-x-auto border border-border/60 rounded-lg bg-background/40">
+      <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-muted/50 border-b">
-            <th className="p-3 font-bold uppercase text-xs tracking-wider">Bet Details</th>
-            <th className="p-3 font-bold uppercase text-xs tracking-wider">Initiated</th>
-            <th className="p-3 font-bold uppercase text-xs tracking-wider text-right">Amount</th>
-            <th className="p-3 font-bold uppercase text-xs tracking-wider text-right">Win</th>
-            <th className="p-3 font-bold uppercase text-xs tracking-wider text-center">Status</th>
+          <tr className="border-b border-border/50 bg-muted">
+            <th className="px-4 py-2 text-xs text-left">Bet Details</th>
+            <th className="px-4 py-2 text-xs text-left">Placed</th>
+            <th className="px-4 py-2 text-xs text-left">Settled</th>
+            <th className="px-4 py-2 text-xs text-right">Amount</th>
+
+            {/* WIN SORT */}
+            <th
+              onClick={() => handleSort("win")}
+              className="px-4 py-2 text-xs text-right cursor-pointer select-none hover:text-foreground"
+            >
+              Win {sortKey === "win" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+            </th>
+
+            {/* STATUS SORT */}
+            <th
+              onClick={() => handleSort("status")}
+              className="px-4 py-2 text-xs text-center cursor-pointer select-none hover:text-foreground"
+            >
+              Status {sortKey === "status" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+            </th>
           </tr>
         </thead>
+
         <tbody>
-          {items.map((bet, i) => {
-            const statusKey = bet.betStatus?.toLowerCase() || "unsettled";
-            const isSettled = statusKey === "settled";
+          {sortedItems.map((bet, i) => {
+            const { label, style } = getStatusConfig(bet.status);
 
             return (
-              <tr key={i} className="border-b last:border-0 hover:bg-accent/30 transition-colors">
-                <td className="p-3 font-medium">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="truncate max-w-52">{bet.betCode}</span>
-                    <span className="text-xs text-muted-foreground font-mono">
-                      {isSettled ? `Settled: ${bet.settlementTime}` : "Awaiting Settlement"}
-                    </span>
-                  </div>
+              <tr
+                key={i}
+                className={cn(
+                  "border-b border-border/40 last:border-0 transition-colors",
+                  bet.payoff > 0 ? "bg-emerald-500/5 honver:bg-emerald-500/60" : "hover:bg-accent",
+                )}
+              >
+                <td className="px-4 py-2">
+                  <span className="truncate max-w-56 text-sm font-medium">
+                    {bet.displayDescription}
+                  </span>
                 </td>
-                <td className="p-3 text-muted-foreground font-mono text-xs whitespace-nowrap">
-                  {bet.betInitiatedOn}
+
+                <td className="px-4 py-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                  {formatDate(bet.place_time)}
                 </td>
-                <td className="p-3 text-right font-mono font-bold text-primary">
-                  ${parseFloat(bet.betAmount).toFixed(2)}
+
+                <td className="px-4 py-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                  {formatDate(bet.settle_time)}
                 </td>
-                <td className={cn(
-                  "p-3 text-right font-mono font-bold",
-                  parseFloat(bet.winAmount) > 0 ? "text-emerald-500" : "text-muted-foreground"
-                )}>
-                  ${parseFloat(bet.winAmount).toFixed(2)}
+
+                <td className="px-4 py-2 text-right font-mono text-sm">
+                  {bet.amount.toFixed(2)}
                 </td>
-                <td className="p-3 text-center">
-                  <span className={cn(
-                    "px-2.5 py-1 rounded-md border text-xs font-bold uppercase tracking-tighter transition-all",
-                    statusStyles[statusKey] || "bg-zinc-500/10 text-zinc-500 border-zinc-500/20"
-                  )}>
-                    {bet.betStatus}
+
+                <td
+                  className={cn(
+                    "px-4 py-2 text-right font-mono text-sm",
+                    bet.payoff > 0 ? "text-emerald-400" : "text-muted-foreground"
+                  )}
+                >
+                  {bet.payoff.toFixed(2)}
+                </td>
+
+                <td className="px-4 py-2 text-center">
+                  <span
+                    className={cn(
+                      "px-2 py-0.5 rounded-md border text-[11px] font-medium",
+                      style
+                    )}
+                  >
+                    {label}
                   </span>
                 </td>
               </tr>

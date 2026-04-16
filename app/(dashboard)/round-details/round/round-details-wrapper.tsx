@@ -2,7 +2,6 @@
 
 import React from "react";
 import { RoundDetailsForm } from "./round-details-form";
-import { usePlayerBetTxnInfo } from "@/hooks/use-player-bet-txn-info";
 import { PlayerBetTxnInfoProps } from "@/types/round-details-input";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2, AlertCircle, Database, RefreshCw } from "lucide-react";
@@ -19,8 +18,10 @@ export function RoundDetailsWrapper() {
     user_id: ""
   };
 
-  const { data, isLoading, error } = usePlayerBetTxnInfo(queryParams || defaultParams);
-
+  // const { data, isLoading, error } = usePlayerBetTxnInfo(queryParams || defaultParams);
+  const data = { exist : true};
+  const isLoading = false;
+  const error = { error: "" , mesage: "" };
   const handleFormSubmit = (data: PlayerBetTxnInfoProps) => {
     const finalData = { ...data, user_id: data.gameParamId === "round_id" ? "" : data.user_id };
     setQueryParams(finalData);
@@ -42,7 +43,7 @@ export function RoundDetailsWrapper() {
           <AlertCircle className="h-5 w-5" />
           <AlertTitle className="font-bold">Fetch Failed</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
-            <p>{error.message || "An unexpected error occurred."}</p>
+            <p>{error.mesage || "An unexpected error occurred."}</p>
             <Button
               variant="outline"
               size="sm"
@@ -53,7 +54,7 @@ export function RoundDetailsWrapper() {
             </Button>
           </AlertDescription>
         </Alert>
-      ) : !data || !data.exists ? (
+      ) : !data || !data.exist ? (
         <div className="flex flex-col items-center justify-center p-16 text-center">
           <div className="p-4 bg-slate-100 rounded-full mb-4">
             <Database className="h-8 w-8 text-slate-400" />

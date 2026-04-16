@@ -3,193 +3,285 @@
 import { useForm, useStore } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RotateCcw, Hash, AlertCircle, X } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { RoundIdSchema } from "@/features/round-details/types/round-details-input";
+import {
+  RotateCcw,
+  ArrowLeftRight,
+  Hash,
+  Gamepad2,
+  X,
+  AlertCircle,
+} from "lucide-react";
+
+import {
+  RoundIdSchema,
+  GameIdSchema,
+  UserIdSchema,
+} from "@/features/round-details/types/round-details-input";
+
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+import { toast } from "sonner";
+import { IdList } from "@/features/round-details/components/investigator/id-list";
+
+type Mode = "round" | "game";
 
 interface Props {
-    onSubmit?: (data: { round_ids: string[] }) => void;
+  onSubmit?: (data: {
+    round_id?: string[];
+    game_id?: string[];
+    user_id?: string;
+  }) => void;
 }
 
 export function MultiRoundDetailsForm({ onSubmit }: Props) {
-    const { setMultiRoundIds, setRoundDetailsInput } = useRoundDetails();
-    const form = useForm({
-        defaultValues: {
-            raw_input: "",
-            round_ids: [] as string[],
-        },
-        onSubmit: async ({ value }) => {
-            const uniqueIds = new Set(value.round_ids);
-            const leftover = value.raw_input.trim();
+  const { setMultiIds, setRoundDetailsInput } = useRoundDetails();
 
-            if (leftover && RoundIdSchema.safeParse(leftover).success) {
-                uniqueIds.add(leftover);
-            }
+  const form = useForm({
+    defaultValues: {
+      mode: "round" as Mode,
+      raw_input: "",
+      round_id: [] as string[],
+      game_id: [] as string[],
+      user_id: "",
+    },
 
-            const finalArray = Array.from(uniqueIds);
+    onSubmit: async ({ value }) => {
+      if (value.mode === "game") {
+        const userCheck = UserIdSchema.safeParse(value.user_id);
 
-            if (finalArray.length > 0) {
-                setMultiRoundIds(finalArray);
-                setRoundDetailsInput(null);
-                onSubmit?.({ round_ids: finalArray });
-            }
-        },
+        if (!userCheck.success) {
+          form.setFieldMeta("user_id", (prev) => ({
+            ...prev,
+            errors: userCheck.error.errors.map((e) => e.message),
+          }));
+          toast.error(userCheck.error.errors[0].message);
+          return;
+        }
+      }
+
+      const payload =
+        value.mode === "round"
+          ? { round_id: value.round_id }
+          : {
+            game_id: value.game_id,
+            user_id: value.user_id || undefined,
+          };
+
+      const hasAny =
+        (payload as any).round_id?.length ||
+        (payload as any).game_id?.length ||
+        !!payload.user_id;
+
+      if (!hasAny) return;
+
+      setMultiIds({
+        round_ids: payload.round_id ?? [],
+        game_ids: payload.game_id ?? [],
+        user_id: payload.user_id ?? "",
+      });
+      setRoundDetailsInput(null);
+
+      onSubmit?.(payload);
+    },
+  });
+
+  const mode = useStore(form.store, (s) => s.values.mode);
+  const roundIds = useStore(form.store, (s) => s.values.round_id);
+  const gameIds = useStore(form.store, (s) => s.values.game_id);
+  const userId = useStore(form.store, (s) => s.values.user_id);
+
+  /**
+   * BULK PROCESSOR
+   */
+  const processBulkInput = (value: string) => {
+    const parts = value.split(/[\s,]+/).filter(Boolean);
+    if (!parts.length) return;
+
+    const last = parts.pop() || "";
+    const candidates = [...parts, last];
+
+    const schema = mode === "round" ? RoundIdSchema : GameIdSchema;
+    const existing = mode === "round" ? roundIds : gameIds;
+
+    const valid: string[] = [];
+    let hasError = false;
+
+    candidates.forEach((id) => {
+      const res = schema.safeParse(id);
+
+      if (res.success) {
+        if (!existing.includes(id) && !valid.includes(id)) {
+          valid.push(id);
+        }
+      } else {
+        hasError = true;
+      }
     });
 
-    const roundIds = useStore(form.store, (s) => s.values.round_ids);
-    const rawInput = useStore(form.store, (s) => s.values.raw_input);
+    if (mode === "round") {
+      form.setFieldValue("round_id", (prev) => [...prev, ...valid]);
+    } else {
+      form.setFieldValue("game_id", (prev) => [...prev, ...valid]);
+    }
 
-    const processInput = (value: string, forceAll = false) => {
-        const parts = value.split(/[\s,]+/).filter(Boolean);
+    form.setFieldValue("raw_input", "");
 
-        if (parts.length === 0) {
-            form.setFieldValue("raw_input", "");
-            return;
-        }
+    if (hasError) {
+      form.setFieldMeta("raw_input", (prev) => ({
+        ...prev,
+        errors: ["Some invalid IDs were skipped"],
+      }));
+    }
+  };
 
-        const lastPart = forceAll ? "" : parts.pop() || "";
-        const candidates = parts.concat(forceAll && lastPart ? [lastPart] : []);
+  const validateUser = (val: string) => {
+    const res = UserIdSchema.safeParse(val);
 
-        const validToAdd: string[] = [];
-        let errorFound = false;
+    form.setFieldMeta("user_id", (prev) => ({
+      ...prev,
+      errors: res.success ? [] : res.error.errors.map((e) => e.message),
+    }));
+  };
 
-        candidates.forEach((id) => {
-            const result = RoundIdSchema.safeParse(id);
-            if (result.success) {
-                if (!roundIds.includes(id) && !validToAdd.includes(id)) {
-                    validToAdd.push(id);
-                }
-            } else {
-                errorFound = true;
-            }
-        });
+  const removeId = (id: string) => {
+    if (mode === "round") {
+      form.setFieldValue("round_id", (p) =>
+        p.filter((x) => x !== id)
+      );
+    } else {
+      form.setFieldValue("game_id", (p) =>
+        p.filter((x) => x !== id)
+      );
+    }
+  };
 
-        if (validToAdd.length > 0) {
-            form.setFieldValue("round_ids", (prev) => [...prev, ...validToAdd]);
-        }
+  const total =
+    roundIds.length + gameIds.length + (userId ? 1 : 0);
 
-        form.setFieldValue("raw_input", lastPart);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        form.handleSubmit();
+      }}
+      className="space-y-3"
+    >
+      <div className="flex w-full gap-2 mb-px">
 
-        if (errorFound) {
-            form.setFieldMeta("raw_input", (prev) => ({
-                ...prev,
-                errors: ["Some IDs were invalid and skipped"],
-            }));
-        }
-    };
+        {/* MODE SWITCH */}
+        <form.Field
+          name="mode"
+          children={(field) => (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                const next: Mode =
+                  field.state.value === "round"
+                    ? "game"
+                    : "round";
 
-    const removeId = (idToRemove: string) => {
-        form.setFieldValue("round_ids", (prev) => prev.filter(id => id !== idToRemove));
-    };
+                field.handleChange(next);
 
-    const isInputValidAndUnique =
-        RoundIdSchema.safeParse(rawInput.trim()).success &&
-        !roundIds.includes(rawInput.trim());
+                form.setFieldValue("raw_input", "");
+                form.setFieldValue("round_id", []);
+                form.setFieldValue("game_id", []);
+                form.setFieldValue("user_id", "");
+              }}
+            >
+              {field.state.value === "round"
+                ? "R_ID"
+                : "G_ID"}
 
-    const totalCount = roundIds.length + (isInputValidAndUnique ? 1 : 0);
+              <ArrowLeftRight className="h-4 w-4 ml-1 opacity-60" />
+            </Button>
+          )}
+        />
 
-    return (
-        <form
-            onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-            }}
-            className="mb-2 space-y-2"
-        >
-            <div className="flex items-center gap-2">
-                <div className="relative flex-1">
-                    <form.Field
-                        name="raw_input"
-                        children={(field) => {
-                            const errors = field.state.meta.errors ?? [];
-                            return (
-                                <div className="relative">
-                                    <Hash className={`absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50 ${errors.length ? "text-red-500" : ""}`} />
-                                    <Input
-                                        placeholder="Paste IDs or type one by one..."
-                                        className={`pl-9 h-9 text-sm transition-all ${errors.length ? "border-red-500 focus-visible:ring-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.1)]" : ""}`}
-                                        value={field.state.value}
-                                        onChange={(e) => {
-                                            const val = e.target.value;
-                                            if (val.trim().includes(" ") || val.trim().includes(",")) {
-                                                processInput(val, val.endsWith(" ") || val.endsWith(","));
-                                            } else {
-                                                field.handleChange(val);
-                                                if (errors.length) form.setFieldMeta("raw_input", (p) => ({ ...p, errors: [] }));
-                                            }
-                                        }}
-                                        onBlur={() => processInput(field.state.value, true)}
-                                        onKeyDown={(e) => {
-                                            if (e.key === "Enter") {
-                                                e.preventDefault();
-                                                processInput(field.state.value, true);
-                                            }
-                                        }}
-                                    />
-                                </div>
-                            );
-                        }}
+        {/* INPUT */}
+        <div className="flex items-center gap-2 w-full">
+          <form.Field
+            name="raw_input"
+            children={(field) => {
+              const errors = field.state.meta.errors ?? [];
+
+              return (
+                <div className="flex-1 flex items-center gap-2">
+                  <Input
+                    placeholder={
+                      mode === "round"
+                        ? "Enter Round IDs..."
+                        : "Enter Game IDs..."
+                    }
+                    value={field.state.value}
+                    onChange={(e) =>
+                      field.handleChange(e.target.value)
+                    }
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        processBulkInput(field.state.value);
+                      }
+                    }}
+                    onBlur={() =>
+                      processBulkInput(field.state.value)
+                    }
+                  />
+
+                  {mode === "game" && (
+                    <Input
+                      placeholder="User ID..."
+                      value={userId}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        form.setFieldValue("user_id", val);
+                        validateUser(val);
+                      }}
+                      className="w-64"
                     />
+                  )}
+
+                  <Button type="button" onClick={() => form.reset()}>
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+
+                  <Button type="submit" disabled={!total}>
+                    Fetch ({total})
+                  </Button>
+
+                  {errors.length > 0 && (
+                    <div className="text-red-500 text-[10px] flex items-center gap-1">
+                      <AlertCircle className="h-3 w-3" />
+                      {errors[0]}
+                    </div>
+                  )}
                 </div>
+              );
+            }}
+          />
+        </div>
+      </div>
 
-                <div className="flex gap-1">
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9 shrink-0"
-                        onClick={() => form.reset()}
-                    >
-                        <RotateCcw className="h-4 w-4" />
-                    </Button>
+      {/* TAGS */}
+      <div className="space-y-2">
+        {mode === "round" && (
+          <IdList
+            title="Round IDs"
+            icon={<Hash className="h-3 w-3" />}
+            items={roundIds}
+            onRemove={removeId}
+          />
+        )}
 
-                    <Button
-                        type="submit"
-                        size="sm"
-                        className="h-9 px-4 shrink-0 font-medium"
-                        disabled={totalCount === 0}
-                    >
-                        Fetch ({totalCount})
-                    </Button>
-                </div>
-            </div>
-
-            <div className="px-1">
-                <form.Field
-                    name="raw_input"
-                    children={(field) => (
-                        <>
-                            {field.state.meta.errors?.[0] && (
-                                <div className="flex items-center gap-1.5 py-1 text-red-500 animate-in fade-in slide-in-from-top-1">
-                                    <AlertCircle className="h-3 w-3" />
-                                    <p className="text-[10px] font-semibold">{field.state.meta.errors[0]}</p>
-                                </div>
-                            )}
-                        </>
-                    )}
-                />
-
-                <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pt-1 scrollbar-thin">
-                    {roundIds.map((id) => (
-                        <Badge
-                            key={id}
-                            variant="secondary"
-                            className="text-[10px] px-1.5 py-0.5 font-mono flex items-center gap-1 bg-muted hover:bg-muted/80 transition-colors"
-                        >
-                            {id}
-                            <button
-                                type="button"
-                                onClick={() => removeId(id)}
-                                className="ml-1 hover:text-destructive rounded-full p-0.5 hover:bg-destructive/10 transition-colors"
-                            >
-                                <X className="h-3 w-3" />
-                            </button>
-                        </Badge>
-                    ))}
-                </div>
-            </div>
-        </form>
-    );
+        {mode === "game" && (
+          <IdList
+            title="Game IDs"
+            icon={<Gamepad2 className="h-3 w-3" />}
+            items={gameIds}
+            onRemove={removeId}
+          />
+        )}
+      </div>
+    </form>
+  );
 }

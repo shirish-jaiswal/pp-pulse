@@ -15,7 +15,7 @@ interface Props {
 }
 
 export function RoundDetailsForm({ onSubmit }: Props) {
-    const {roundDetailsInput } = useRoundDetails();
+    const { roundDetailsInput } = useRoundDetails();
     const defaultMode = roundDetailsInput?.game_id ? "game" : "round";
     const form = useForm({
         defaultValues: {
@@ -53,10 +53,10 @@ export function RoundDetailsForm({ onSubmit }: Props) {
     const fieldMeta = useStore(form.store, (s) => s.fieldMeta);
     const hasErrors = Object.values(fieldMeta).some((meta) => meta.errors.length > 0);
 
-    const isFetchDisabled = 
-        hasErrors || 
-        (mode === "round" 
-            ? !roundId.trim() 
+    const isFetchDisabled =
+        hasErrors ||
+        (mode === "round"
+            ? !roundId.trim()
             : (!gameId.trim() || !userId.trim()));
 
     return (
@@ -74,8 +74,6 @@ export function RoundDetailsForm({ onSubmit }: Props) {
                     <Button
                         type="button"
                         variant="outline"
-                        size="sm"
-                        className="h-10 shrink-0 bg-muted/30 font-medium"
                         onClick={() => {
                             const next = field.state.value === "round" ? "game" : "round";
                             field.handleChange(next);
@@ -187,17 +185,14 @@ export function RoundDetailsForm({ onSubmit }: Props) {
 
             <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                className="h-10 w-10 shrink-0"
                 onClick={() => form.reset()}
             >
                 <RotateCcw className="h-4 w-4" />
             </Button>
 
-            <Button 
-                type="submit" 
-                className="h-10 px-6 shrink-0 transition-opacity disabled:opacity-50"
+            <Button
+                type="submit"
+                className="px-3 shrink-0 transition-opacity disabled:opacity-50"
                 disabled={isFetchDisabled}
             >
                 Fetch

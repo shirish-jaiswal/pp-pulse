@@ -2,7 +2,6 @@
 
 import { usePathname } from "next/navigation";
 import { AppSidebar, sideBarMenu } from "@/components/custom/app-side-bar";
-import SessionValidation from "@/components/custom/session-validation";
 import {
   SidebarInset,
   SidebarProvider,
@@ -33,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </header>
           <ScrollArea className="h-[calc(100vh-4rem)] w-full">
             <div className="p-2">
-              <SessionValidation>{children}</SessionValidation>
+              {children}
             </div>
           </ScrollArea>
         </RoundDetailsProvider>
