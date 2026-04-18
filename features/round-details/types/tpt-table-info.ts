@@ -12,7 +12,7 @@ export const TransactionSchema = z.object({
   third_party_txn_id: z.string(),
   platform_trans_id: z.string(),
   game_mode: z.string(),
-  error_code: z.string(),
+  error_code: z.string().nullable(),
   error_description: z.string(),
   retry_counter: z.number().int(),
   trans_date: z.string().datetime(),

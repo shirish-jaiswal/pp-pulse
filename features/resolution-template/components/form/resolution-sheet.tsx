@@ -8,7 +8,7 @@ import { ResolutionTabs } from "@/features/resolution-template/components/form/r
 import { ResolutionForm } from "@/features/resolution-template/components/form/resolution-form";
 import { ResolutionEditor } from "@/features/resolution-template/components/form/resolution-editor";
 import { ResolutionFooter } from "@/features/resolution-template/components/form/resolution-footer";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
 
 interface Props {
     isOpen: boolean;

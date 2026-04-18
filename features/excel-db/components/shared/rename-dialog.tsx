@@ -8,6 +8,11 @@ export function RenameDialog({ open, onOpenChange, initialValue, onConfirm, load
 
     useEffect(() => setValue(initialValue), [initialValue]);
 
+    const handleConfirm = async () => {
+        if (!value.trim()) return;
+        await onConfirm(value.trim());
+        onOpenChange(!open);
+    }
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-sm">
@@ -19,7 +24,7 @@ export function RenameDialog({ open, onOpenChange, initialValue, onConfirm, load
                 />
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                    <Button onClick={() => onConfirm(value)} disabled={loading || !value.trim()}>
+                    <Button onClick={handleConfirm} disabled={loading || !value.trim()}>
                         {loading ? "Saving..." : "Rename"}
                     </Button>
                 </DialogFooter>

@@ -17,7 +17,7 @@ export default function ExcelDBPage() {
   };
 
   return (
-    <div className="flex flex-col max-w-[calc(100vw-32px)] min-h-dvh bg-background text-foreground">
+    <div className="flex flex-col w-[calc(100vw-240px)] min-h-dvh bg-background text-foreground">
 
       {/* HEADER */}
       <header className="flex h-8 items-center justify-between border-b border-border px-2 shrink-0">

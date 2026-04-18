@@ -69,14 +69,14 @@ export function MultiRoundTabs() {
 
   const roundOverviewData = useMemo(() => {
     if (!roundData) return null;
-    return generateRoundOverview(roundData).roundOverview;
+    return generateRoundOverview(roundData);
   }, [roundData]);
 
   useEffect(() => {
     if (roundData && !isLoading) {
       setRoundDetails(roundData);
       if (roundOverviewData) {
-        setRoundOverview(roundOverviewData);
+        setRoundOverview(roundOverviewData.roundOverview);
       }
     }
   }, [roundData, roundOverviewData, isLoading]);

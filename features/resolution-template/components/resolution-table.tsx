@@ -3,7 +3,7 @@
 import { Pencil, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
 
 interface ResolutionTableProps {
   data: ResolutionTemplate[];

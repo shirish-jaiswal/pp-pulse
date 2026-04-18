@@ -17,14 +17,12 @@ export default function Loading() {
         </div>
       </div>
 
-      {/* FILTER BAR */}
       <div className="flex items-center gap-2">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-6 w-28" />
         <Skeleton className="h-6 w-28" />
       </div>
 
-      {/* TABLE HEADER */}
       <div className="border border-border rounded-md overflow-hidden">
         <div className="grid grid-cols-6 gap-2 px-2 py-1 border-b border-border bg-muted">
           {["col1", "col2", "col3", "col4", "col5", "col6"].map((_, i) => (
@@ -32,7 +30,6 @@ export default function Loading() {
           ))}
         </div>
 
-        {/* TABLE ROWS */}
         <div className="divide-y divide-border">
           {[...Array(12)].map((_, i) => (
             <div

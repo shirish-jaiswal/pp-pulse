@@ -4,7 +4,8 @@ import {
   DatabaseIcon,
   DicesIcon,
   FileCog,
-  SettingsIcon,
+  HomeIcon,
+  UserIcon,
 } from "lucide-react";
 import {
   Sidebar,
@@ -12,7 +13,6 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -20,19 +20,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/utils/cn";
 import LogoutButton from "./logout-button";
+import { useProfile } from "@/context/use-profile";
 
 export const sideBarMenu = [
+  { title: "Dashboard", url: "/home", icon: HomeIcon },
   { title: "Round Activity", url: "/round-activity", icon: DicesIcon },
   { title: "Resolution Templates", url: "/resolution-template", icon: FileCog },
   { title: "Excel DB", url: "/excel-db", icon: DatabaseIcon },
-];
-
-const sideBarFooter = [
-  { title: "Session", url: "/session", icon: SettingsIcon },
 ];
 
 export function AppSidebar() {
@@ -40,17 +37,17 @@ export function AppSidebar() {
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
 
+  const { user } = useProfile();
   return (
     <Sidebar
       variant="inset"
       collapsible="icon"
       className="border-r border-border bg-background p-0"
     >
-      <SidebarHeader className="h-10 px-3 flex items-center border-b border-border">
+      <SidebarHeader className="px-3 py-1.5 flex border-b border-border">
         {!isCollapsed && (
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="logo" width={28} height={28} />
-            <span className="text-sm font-semibold tracking-tight">
+          <div className="flex gap-2">
+            <span className="text-base font-semibold tracking-tight">
               PP Pulse
             </span>
           </div>
@@ -60,10 +57,6 @@ export function AppSidebar() {
       {/* Content */}
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            Application
-          </SidebarGroupLabel>
-
           <SidebarGroupContent>
             <SidebarMenu className="space-y-0.5">
               {sideBarMenu.map((item) => {
@@ -100,9 +93,29 @@ export function AppSidebar() {
       {/* Footer */}
       <SidebarFooter className="border-t border-border px-2 py-2">
         <SidebarMenu className="space-y-0.5">
+
+          {/* Profile */}
+          {user && (
+            <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip={isCollapsed ? `${user.name || "Profile"}` : undefined}
+                  className="h-8 px-2 text-sm font-medium flex items-center gap-2 rounded-md border border-transparent hover:bg-muted/50 hover:border-border"
+                >
+                  <UserIcon className="w-4 h-4 shrink-0" />
+                  {!isCollapsed && (
+                    <span className="truncate">
+                      {user.name || "Profile"}
+                    </span>
+                  )}
+                </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+
+          {/* Logout */}
           <SidebarMenuItem>
             <LogoutButton isCollapsed={isCollapsed} />
           </SidebarMenuItem>
+
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>

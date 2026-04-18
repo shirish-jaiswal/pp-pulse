@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useSubcategories } from "@/features/resolution-template/hooks/use-subcategories";
 import { useGames } from "@/hooks/excel-db/use-games";
 import { DropdownOption } from "@/features/resolution-template/components/form/selector";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
 import { useCategories } from "@/hooks/excel-db/use-categories";
 
 interface Props {

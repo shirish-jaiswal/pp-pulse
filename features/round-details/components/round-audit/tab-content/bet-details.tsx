@@ -97,7 +97,7 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
                 key={i}
                 className={cn(
                   "border-b border-border/40 last:border-0 transition-colors",
-                  bet.payoff > 0 ? "bg-emerald-500/5 honver:bg-emerald-500/60" : "hover:bg-accent",
+                  bet.payoff > 0 ? "bg-emerald-400/10 ring ring-emerald-400 honver:bg-emerald-500/60" : "hover:bg-accent",
                 )}
               >
                 <td className="px-4 py-2">

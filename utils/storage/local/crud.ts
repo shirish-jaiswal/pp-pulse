@@ -1,11 +1,9 @@
-// utils/storage/local/crud.ts
 "use client";
 
 import { LocalStorageKeysType } from "@/utils/storage/local/keys";
 
-// 1. Export functions individually (Better for Tree-shaking & Hoisting)
 export function getLocal(key: LocalStorageKeysType) {
-  if (typeof window === "undefined") return null; // Safety for Next.js SSR
+  if (typeof window === "undefined") return null;
   try {
     const value = localStorage.getItem(key);
     return value ? JSON.parse(value) : null;
@@ -26,7 +24,6 @@ export function omitLocal(key: LocalStorageKeysType) {
   }
 }
 
-// 2. Export the object as well if you still want the "LocalStorage.get" syntax
 export const LocalStorage = {
   set: setLocal,
   get: getLocal,

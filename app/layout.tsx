@@ -4,6 +4,7 @@ import "./globals.css";
 import QueryProvider from "@/lib/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
+import { ProfileProvider } from "@/context/use-profile";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -33,12 +34,12 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        <Toaster position="top-right" duration={3000} richColors />
-        <TooltipProvider>
-          <QueryProvider>
-            {children}
-          </QueryProvider>
-        </TooltipProvider>
+          <Toaster position="top-right" duration={3000} richColors />
+          <TooltipProvider>
+            <QueryProvider>
+              {children}
+            </QueryProvider>
+          </TooltipProvider>
       </body>
     </html>
   );

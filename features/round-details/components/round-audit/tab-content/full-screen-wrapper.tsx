@@ -45,7 +45,7 @@ export default function FullScreenWrapper({
         {/* Expand Button */}
         <button
           onClick={() => setIsFullScreen(true)}
-          className="absolute right-2 top-2 z-10 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition"
+          className="absolute right-2 top-2 z-10 p-1 rounded-md ring-1 ring-border bg-accent-foreground text-muted-foreground hover:text-white hover:bg-accent-foreground transition"
           title="Expand"
         >
           <Maximize2 className="w-3.5 h-3.5" />
@@ -82,7 +82,7 @@ export default function FullScreenWrapper({
           </div>
 
           {/* CONTENT */}
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-y-auto scroll-smooth">
             {children}
           </div>
         </div>

@@ -3,8 +3,9 @@ import {
   RoundDetailsInputProps,
 } from "@/features/round-details/types/round-details-input";
 import { serverAxiosClient } from "@/lib/api/server-axios-client";
+import { axiosClient } from "@/lib/api/axios-client";
 
-export async function c_getRoundDetails(rawData: RoundDetailsInputProps) {
+export async function getRoundDetails(rawData: RoundDetailsInputProps) {
   const data = RoundDetailsInputFormSchema.parse(rawData);
   const queryParams: Record<string, string> = {};
   if (data.round_id) {
@@ -20,3 +21,4 @@ export async function c_getRoundDetails(rawData: RoundDetailsInputProps) {
   });
   return response.data?.data ?? response.data;
 }
+
