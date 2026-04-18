@@ -1,5 +1,5 @@
-import TestPage from "./test";
-
-export default function Page() {
-  return <TestPage />;
+function HomePage() {
+return<div>shirish</div>
 }
+
+export default HomePage;

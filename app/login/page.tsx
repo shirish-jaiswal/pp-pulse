@@ -1,4 +1,3 @@
-//app/login/page.tsx
 "use client";
 
 import { useState } from "react";
@@ -18,6 +17,8 @@ import {
 } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { c_login } from "@/lib/api/auth/login/request-login";
+import { c_requestUserCookie } from "@/lib/api/auth/user/request-user-cookie";
+import { c_getUser } from "@/lib/api/auth/user/me";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -38,6 +39,9 @@ export default function LoginPage() {
         if (res?.success && res?.authenticated) {
           toast.success("Welcome back!");
           localStorage.setItem("user", JSON.stringify(res.user));
+          await c_requestUserCookie(res.user);
+         const user = await c_getUser();
+         console.log(user)
           router.push("/home");
           router.refresh();
         } else {

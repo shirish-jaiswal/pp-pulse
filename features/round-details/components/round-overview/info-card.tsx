@@ -1,26 +1,50 @@
 "use client";
 
-import { useState } from "react";
-import { LucideIcon, Copy, Check, ExternalLink } from "lucide-react";
+import React, { ReactNode, useState } from "react";
+import { LucideIcon, Copy, Check } from "lucide-react";
 import { cn } from "@/utils/cn";
 import Link from "next/link";
 
-export interface InfoItem {
-  label: string;
-  value: string | number;
-  copyable?: boolean;
-  link?: {
-    href: string;
-    target?: "_blank" | "_self";
-  };
+/**
+ * External link configuration
+ */
+export interface InfoLink {
+  href: string;
+  target?: "_blank" | "_self";
 }
 
+export interface ValueType {
+  label: string;
+  variant: InfoCardVariant;
+}
+
+/**
+ * Single row item inside a card
+ */
+export interface InfoItem {
+  label: string;
+  value: ReactNode | ValueType[];
+  copyable?: boolean;
+  link?: InfoLink;
+}
+
+/**
+ * Visual state of the card
+ */
+export type InfoCardVariant = "default" | "error" | "success";
+
+/**
+ * Info card container
+ */
 export interface InfoCardProps {
-  items: InfoItem[];
   iName?: string;
+  items: InfoItem[];
+
+  /** Icon */
   icon?: LucideIcon;
+
   className?: string;
-  variant?: "default" | "error" | "success";
+  variant?: InfoCardVariant;
 }
 
 export default function InfoCard({
@@ -29,15 +53,22 @@ export default function InfoCard({
   className,
   variant = "default",
 }: InfoCardProps) {
-  const [copiedIndex, setCopiedIndex] = useState<number | "all" | null>(null);
+  const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const isError = variant === "error";
   const isSuccess = variant === "success";
 
-  const handleCopy = (text: string, index: number | "all") => {
+  const handleCopy = (text: string, index: number) => {
     navigator.clipboard.writeText(text);
     setCopiedIndex(index);
     setTimeout(() => setCopiedIndex(null), 1500);
+  };
+
+  const getCopyText = (value: InfoItem["value"]) => {
+    if (Array.isArray(value)) {
+      return value.map((v) => v.label).join(" | ");
+    }
+    return String(value);
   };
 
   return (
@@ -62,10 +93,8 @@ export default function InfoCard({
 
       {/* CONTENT */}
       <div className="flex flex-col gap-2 w-full min-w-0">
-
         {items.map((item, index) => (
           <div key={index} className="flex items-start justify-between gap-3">
-
             {/* TEXT */}
             <div className="min-w-0">
               <div className="text-[11px] text-muted-foreground">
@@ -78,17 +107,11 @@ export default function InfoCard({
                   target={item.link.target || "_blank"}
                   className="text-sm font-mono text-foreground hover:underline"
                 >
-                  {item.value}
+                  {renderValue(item.value)}
                 </Link>
               ) : (
-                <div
-                  className={cn(
-                    "text-sm font-mono truncate",
-                    isError && "text-red-400",
-                    isSuccess && "text-emerald-400"
-                  )}
-                >
-                  {item.value}
+                <div className="text-sm font-mono truncate">
+                  {renderValue(item.value)}
                 </div>
               )}
             </div>
@@ -97,7 +120,9 @@ export default function InfoCard({
             <div className="flex items-center gap-2 shrink-0">
               {item.copyable && (
                 <button
-                  onClick={() => handleCopy(String(item.value), index)}
+                  onClick={() =>
+                    handleCopy(getCopyText(item.value), index)
+                  }
                   className="text-muted-foreground hover:text-foreground"
                 >
                   {copiedIndex === index ? (
@@ -113,4 +138,32 @@ export default function InfoCard({
       </div>
     </div>
   );
+}
+
+/**
+ * Render value (handles ValueType[])
+ */
+function renderValue(value: InfoItem["value"]) {
+  if (Array.isArray(value)) {
+    return value.map((val, i) => {
+      const colorClass =
+        val.variant === "error"
+          ? "text-red-400"
+          : val.variant === "success"
+          ? "text-emerald-400"
+          : "text-foreground";
+
+      return (
+        <span key={i}>
+          <span className={cn(colorClass)}>{val.label}</span>
+
+          {i < value.length - 1 && (
+            <span className="mx-1 text-muted-foreground">|</span>
+          )}
+        </span>
+      );
+    });
+  }
+
+  return <span className="text-foreground">{value}</span>;
 }

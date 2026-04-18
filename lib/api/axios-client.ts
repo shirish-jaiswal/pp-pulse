@@ -10,11 +10,11 @@ const BASE_URL =
   (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "");
 
 export const axiosClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: `${BASE_URL}`,
   timeout: 15000,
   withCredentials: true,
   headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
+    "Content-Type": "application/json",
   },
 });
 

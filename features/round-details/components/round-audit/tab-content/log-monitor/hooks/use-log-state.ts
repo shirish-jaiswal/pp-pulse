@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTransactionLogs } from "@/hooks/use-transactionlogs";
-import { getDeepKeys } from "./log-utils";
+import { getDeepKeys } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
 
 export function useLogState(roundId: string, timeStamp: any) {
-  const { data } = useTransactionLogs({ roundId, timeStamp });
+  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp });
 
-  const [activeTab, setActiveTab] = useState("");
+  const [activeTab, setActiveTab] = useState<string | null>("");
   const [query, setQuery] = useState("");
   const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
@@ -75,6 +75,7 @@ export function useLogState(roundId: string, timeStamp: any) {
 
   return {
     data,
+    isLoading,
     activeTab,
     setActiveTab,
     query,

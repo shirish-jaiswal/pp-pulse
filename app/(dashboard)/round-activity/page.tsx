@@ -1,7 +1,7 @@
 import { RoundDetailsWrapper } from "@/features/round-details/components/round-details-wrapper";
 import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
-import { c_getRoundDetails } from "@/lib/api/round-details/round-details";
+import { getRoundDetails } from "@/lib/api/round-details/round-details";
 import generateRoundOverview from "./round-overview";
 
 interface PageProps {
@@ -35,7 +35,7 @@ export default async function Page({ searchParams }: PageProps) {
                 ? { round_id: roundId }
                 : { game_id: gameId, user_id: userId };
 
-            roundDetails = await c_getRoundDetails(payload);
+            roundDetails = await getRoundDetails(payload);
         } catch (error) {
             return (
                 <RoundDetailsWrapper

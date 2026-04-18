@@ -20,8 +20,6 @@ export async function POST(request: NextRequest) {
         headers: {
           "Content-Type": "application/json",
         },
-        // withCredentials on server-to-server calls is usually unnecessary
-        // unless your backend requires it for specific auth
       }
     );
 

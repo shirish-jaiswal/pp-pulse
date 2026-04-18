@@ -1,4 +1,4 @@
-const BASE = "/api/excel-db";
+const BASE = "/portal/api/excel-db";
 
 // ============ DATABASE ============
 

@@ -6,7 +6,7 @@ import ResolutionTableSkeleton from "@/features/resolution-template/components/r
 import NoTemplates from "@/features/resolution-template/components/no-templates";
 import { ResolutionTable } from "@/features/resolution-template/components/resolution-table";
 import { ResolutionSheet } from "@/features/resolution-template/components/form/resolution-sheet";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
 import { useResolutionTemplates } from "@/hooks/excel-db/use-resolution-templates";
 import { useDeleteResolution } from "@/features/resolution-template/hooks/use-delete-resolution-template";
 import { useSaveResolution } from "@/features/resolution-template/hooks/use-save-resolution-template";

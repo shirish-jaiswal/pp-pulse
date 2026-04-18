@@ -6,7 +6,8 @@ import {
   AlertCircle,
   Fingerprint,
   LucideIcon,
-  Landmark
+  Landmark,
+  HandCoinsIcon
 } from "lucide-react";
 
 import InfoCard from "@/features/round-details/components/round-overview/info-card";
@@ -18,6 +19,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   alert: AlertCircle,
   fingerprint: Fingerprint,
   landmark: Landmark,
+  hand_coins: HandCoinsIcon
 };
 
 const RoundOverview = () => {

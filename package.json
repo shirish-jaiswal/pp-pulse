@@ -29,8 +29,10 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
+    "cookie-parser": "^1.4.7",
     "date-fns": "^4.1.0",
     "framer-motion": "^12.38.0",
+    "jsonwebtoken": "^9.0.3",
     "lightningcss-win32-x64-msvc": "^1.32.0",
     "lucide-react": "^1.7.0",
     "next": "16.1.6",
@@ -51,6 +53,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^20.19.37",
     "@types/papaparse": "^5.5.2",
     "@types/react": "^19",

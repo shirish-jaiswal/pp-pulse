@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 
 import { cn } from "@/utils/cn";
-import { getNestedValue } from "./log-utils";
+import { getNestedValue } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
 export function LogTable({ filteredLogs, visibleColumns }: any) {
     return (
         <div className="flex-1 overflow-auto">
