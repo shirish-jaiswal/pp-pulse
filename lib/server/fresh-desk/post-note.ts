@@ -1,8 +1,6 @@
-import { getSessionData } from "@/utils/storage/local/session-operations";
 
 export async function c_postPrivateNote(ticketId: string, noteContent: string) {
-    const session = getSessionData();
-    
+
     // We pass the ticketId as a query parameter to match your Next.js GET logic
     const params = new URLSearchParams({
         ticketId: ticketId.toString(),
@@ -15,7 +13,7 @@ export async function c_postPrivateNote(ticketId: string, noteContent: string) {
         },
         // Freshdesk requires the note content to be in a 'body' field
         body: JSON.stringify({
-            body: noteContent, 
+            body: noteContent,
             private: true // Ensures this is a internal-only note
         })
     });

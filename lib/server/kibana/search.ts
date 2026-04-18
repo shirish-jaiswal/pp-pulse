@@ -1,5 +1,4 @@
 import axios from "axios";
-import { getSessionData } from "@/utils/storage/local/session-operations";
 import { EsSortValue } from "@/types/kibana";
 
 export const MATCH_PHRASE_OPTIONS = [
@@ -40,15 +39,7 @@ export interface LogRequestParams {
 }
 
 export async function c_getKibanaLogs(data: LogRequestParams) {
-    const session = getSessionData();
-    const combinedCookie = [
-        { key: "_oauth2_proxy_0", value: session.oAuthCookie1 },
-        { key: "_oauth2_proxy_1", value: session.oAuthCookie2 },
-        { key: "sid", value: session.sid }
-    ]
-        .filter(item => item.value)
-        .map(item => `${item.key}=${item.value}`)
-        .join(";");
+    const combinedCookie = ["", ""].join("; ");
 
     try {
         const response = await axios.post(`/api/kibana`, data, {
