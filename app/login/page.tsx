@@ -36,12 +36,13 @@ export default function LoginPage() {
           password: value.password
         });
 
+        console.log("res :: ", res);
         if (res?.success && res?.authenticated) {
-          toast.success("Welcome back!");
-          localStorage.setItem("user", JSON.stringify(res.user));
           await c_requestUserCookie(res.user);
-         const user = await c_getUser();
-         console.log(user)
+          const user = await c_getUser();
+          toast.success("Welcome back!");
+         console.log("user :: ", user);
+console.log("redirecting...", "/home");
           router.push("/home");
           router.refresh();
         } else {

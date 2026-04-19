@@ -1,9 +1,14 @@
-import { RoundDetailsInputFormSchema, RoundDetailsInputProps } from "@/features/round-details/types/round-details-input";
-import { axiosClient } from "@/lib/api/axios-client";
+import {
+  RoundDetailsInputFormSchema,
+  RoundDetailsInputProps,
+} from "@/features/round-details/types/round-details-input";
+import apiRequest from "@/lib/api/api-request";
 
 export async function c_getRoundDetails(rawData: RoundDetailsInputProps) {
   const data = RoundDetailsInputFormSchema.parse(rawData);
+
   const queryParams: Record<string, string> = {};
+
   if (data.round_id) {
     queryParams.roundId = data.round_id;
   } else {
@@ -11,8 +16,32 @@ export async function c_getRoundDetails(rawData: RoundDetailsInputProps) {
     if (data.user_id) queryParams.userId = data.user_id;
   }
 
-  const response = await axiosClient.get("/round-details", {
-    params: queryParams,
-  });
-  return response.data?.data ?? response.data;
+  const [tptResponse, betResponse] = await Promise.all([
+    apiRequest<any>({
+      method: "GET",
+      endpoint: "/tpttableinfo",
+      params: queryParams,
+      requireCookie: true,
+    }),
+    apiRequest<any>({
+      method: "GET",
+      endpoint: "/bettableinfo",
+      params: queryParams,
+      requireCookie: true,
+    }),
+  ]);
+
+  if (!tptResponse.success || !betResponse.success) {
+    throw new Error(
+      tptResponse.message ||
+        betResponse.message ||
+        "Failed to fetch round details"
+    );
+  }
+
+  // ✅ Clean return (no guessing nested structure)
+  return {
+    tptInfo: tptResponse.data,
+    betInfo: betResponse.data,
+  };
 }

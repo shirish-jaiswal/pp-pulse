@@ -1,16 +1,11 @@
 const nextConfig = {
   basePath: "/portal",
 
-  async headers() {
+  async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-        ],
+        source: "/api/:path*",
+        destination: "https://pp-pulse-backend.onrender.com/api/:path*",
       },
     ];
   },
