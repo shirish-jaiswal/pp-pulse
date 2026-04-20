@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ResolutionEditor } from "@/features/round-details/components/resolution-sheet/resolution-editor";
 import { RoundInvestigator } from "@/features/round-details/components/investigator/round-investigator";
 import { MultiRoundTabs } from "@/features/round-details/components/round-overview/multi-round-tab";
@@ -8,24 +8,31 @@ import RoundOverview from "@/features/round-details/components/round-overview/ro
 import GameMetadata from "@/features/round-details/components/round-overview/game-metadata";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import RoundAudit from "@/features/round-details/components/round-audit/round-audit";
-import { MiniPlayingCard, Rank, Suit } from "@/components/custom/games/playing-card";
 import EmptyRoundData from "@/features/round-details/components/empty-round-data";
 import { RoundFetchError } from "@/features/round-details/components/round-fetch-error";
-import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
-import { InfoCardProps } from "@/features/round-details/components/round-overview/info-card";
+import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overview";
 
 type RoundDetailsWrapperProps = {
     roundId?: string;
     gameId?: string;
     userId?: string;
-    data: RoundDetailsResponse | null;
-    roundOverview?: InfoCardProps[] | null;
-    error?: boolean
-
 };
 
-export function RoundDetailsWrapper({ roundId, gameId, userId, data, roundOverview, error }: RoundDetailsWrapperProps) {
-    const { setRoundDetailsInput, isBulkMode, roundDetails, setRoundDetails, setRoundOverview } = useRoundDetails();
+import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
+import RoundDetailsSkeleton from "./round-details-skeleton";
+
+export function RoundDetailsWrapper({ roundId, gameId, userId }: RoundDetailsWrapperProps) {
+    const {
+        setRoundDetailsInput,
+        isBulkMode,
+        roundDetails,
+        setRoundDetails,
+        setRoundOverview
+    } = useRoundDetails();
+
+    const [error, setError] = useState(false);
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
         setRoundDetailsInput({
             round_id: roundId,
@@ -35,55 +42,63 @@ export function RoundDetailsWrapper({ roundId, gameId, userId, data, roundOvervi
     }, [roundId, gameId, userId, setRoundDetailsInput]);
 
     useEffect(() => {
-        setRoundDetails(data);
-        setRoundOverview(roundOverview ?? null);
-    }, [data, roundOverview, setRoundDetails, setRoundOverview]);
+        const fetchData = async () => {
+            const hasRequiredParams = roundId || (gameId && userId);
+            if (!hasRequiredParams) return;
+
+            setLoading(true);
+            setError(false);
+
+            try {
+                const payload = roundId
+                    ? { round_id: roundId }
+                    : { game_id: gameId, user_id: userId };
+
+                const data = await c_getRoundDetails(payload);
+
+                setRoundDetails(data);
+
+                const { roundOverview } = generateRoundOverview(data);
+                setRoundOverview(roundOverview);
+
+            } catch (err) {
+                setError(true);
+                setRoundDetails(null);
+                setRoundOverview(null);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [roundId, gameId, userId, setRoundDetails, setRoundOverview]);
 
     return (
         <div className="flex flex-col gap-2">
             <RoundInvestigator />
-            {
-                error &&
-                <RoundFetchError roundId={roundId} gameId={gameId} userId={userId} />
-            }
-            {
-                isBulkMode && <MultiRoundTabs />
-            }
-            {
-                roundDetails ? (
-                    <>
-                        <GameMetadata />
-                        <RoundOverview />
-                        <RoundAudit />
-                        <ResolutionEditor gameName={"All"} />
-                    </>
-                ) : (
-                    <EmptyRoundData />
-                )
-            }
+
+            {error && (
+                <RoundFetchError
+                    roundId={roundId}
+                    gameId={gameId}
+                    userId={userId}
+                />
+            )}
+
+            {isBulkMode && <MultiRoundTabs />}
+
+            {loading ? (
+                <RoundDetailsSkeleton />
+            ) : roundDetails ? (
+                <>
+                    <GameMetadata />
+                    <RoundOverview />
+                    <RoundAudit />
+                    <ResolutionEditor gameName={"All"} />
+                </>
+            ) : (
+                <EmptyRoundData />
+            )}
         </div>
     );
 }
-
-
-const DeckDisplay = () => {
-    const suits: Suit[] = ['S', 'H', 'D', 'C'];
-    const ranks: Rank[] = ['A', 'K', 'Q', 'J', '10', '9', '8', '7', '6', '5', '4', '3', '2'];
-
-    return (
-        <div className="p-6 bg-gray-100 min-h-screen">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">Standard 52-Card Deck</h2>
-
-            {/* Grid Layout: 13 cards per row */}
-            <div className="grid grid-cols-4 md:grid-cols-7 lg:grid-cols-13 gap-3">
-                {suits.map((s) =>
-                    ranks.map((r) => (
-                        <div key={r + s} className="flex flex-col items-center">
-                            <MiniPlayingCard rank={r} suit={s} size={60} />
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
-    );
-};

@@ -8,7 +8,6 @@ export function proxy(req: NextRequest) {
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.includes(".");
-  pathname.includes("/")
 
   if (isPublicRoute) return NextResponse.next();
 

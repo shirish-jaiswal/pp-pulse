@@ -28,15 +28,6 @@ const createRequestKey = (config: AxiosRequestConfig) =>
  */
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // browser token only
-    if (typeof window !== "undefined") {
-      const token = localStorage.getItem("token");
-
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
-    }
-
     // dedupe requests
     const key = createRequestKey(config);
     const controller = new AbortController();

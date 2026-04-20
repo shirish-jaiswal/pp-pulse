@@ -66,7 +66,6 @@ export function RoundDetailsProvider({
   const [roundOverview, setRoundOverviewData] =
     useState<InfoCardProps[] | null>(null);
 
-  // ✅ MAIN STATE
   const [multiIdsState, setMultiIdsState] =
     useState<MultiIdsState>({
       round_ids: [],
@@ -74,7 +73,6 @@ export function RoundDetailsProvider({
       user_id: "",
     });
 
-  // ✅ SAFE SETTER
   const setMultiIds = useCallback(
     (val: Partial<MultiIdsState> | ((prev: MultiIdsState) => MultiIdsState)) => {
       setMultiIdsState((prev) => {
