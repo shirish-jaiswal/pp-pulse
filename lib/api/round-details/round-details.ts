@@ -17,8 +17,10 @@ export async function getRoundDetails(rawData: RoundDetailsInputProps) {
     if (data.user_id) queryParams.userId = data.user_id;
   }
 
+
   const cookiess = await cookies();
   const cookie = cookiess.get("JSESSIONID")?.value ?? "";
+console.log("Cookies :: ", cookie);
   const response = await axios.get(NEXT_URL + "/round-details", {
     params: queryParams,
     headers: {

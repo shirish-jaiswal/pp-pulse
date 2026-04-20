@@ -26,8 +26,9 @@ export default async function Page({ searchParams }: PageProps) {
             const payload = roundId
                 ? { round_id: roundId }
                 : { game_id: gameId, user_id: userId };
-
+            console.log("📦 Payload:", payload);
             roundDetails = await getRoundDetails(payload);
+            console.log("📦 Round details:", roundDetails);
         } catch (error) {
             return (
                 <RoundDetailsWrapper

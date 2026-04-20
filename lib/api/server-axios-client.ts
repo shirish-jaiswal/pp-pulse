@@ -13,7 +13,6 @@ const BASE_URL =
 
 export const serverAxiosClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
-  timeout: 15000,
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
