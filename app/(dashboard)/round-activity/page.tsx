@@ -1,16 +1,8 @@
 import { RoundDetailsWrapper } from "@/features/round-details/components/round-details-wrapper";
 import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
-import { getRoundDetails } from "@/lib/api/round-details/round-details";
 import generateRoundOverview from "./round-overview";
-
-interface PageProps {
-    searchParams: Promise<{
-        roundId?: string;
-        gameId?: string;
-        userId?: string;
-    }>;
-}
+import { getRoundDetails } from "@/lib/api/round-details/round-details";
 
 interface PageProps {
     searchParams: Promise<{

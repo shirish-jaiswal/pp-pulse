@@ -17,6 +17,7 @@ export const serverAxiosClient: AxiosInstance = axios.create({
   headers: {
     "Content-Type": "application/x-www-form-urlencoded",
   },
+  withCredentials: true,
 });
 
 /**
