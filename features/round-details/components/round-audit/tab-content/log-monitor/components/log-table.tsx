@@ -22,7 +22,7 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
                         {visibleColumns.map((col: string) => (
                             <TableHead
                                 key={col}
-                                className="px-2 py-2 text-xs text-muted-foreground break-words"
+                                className="px-2 py-2 text-xs text-muted-foreground wrap-break-words"
                             >
                                 {col}
                             </TableHead>

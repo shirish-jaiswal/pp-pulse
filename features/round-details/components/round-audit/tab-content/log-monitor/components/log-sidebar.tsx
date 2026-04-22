@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Columns, X } from "lucide-react";
+import { Columns, X, RotateCcw, CheckSquare } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 export function LogSidebar({
   sidebarKeys,
   visibleColumns,
   setVisibleColumns,
+  activeTab,
+  resetToDefault,
 }: any) {
   const [search, setSearch] = useState("");
 
@@ -49,8 +51,23 @@ export function LogSidebar({
     </label>
   );
 
+  const clearAllSelected = () => {
+    setVisibleColumns((prev: string[]) =>
+      prev.filter((k) => !selectedKeys.includes(k))
+    );
+  };
+
+  // ✅ NEW: Select all available (unselected)
+  const selectAllAvailable = () => {
+    setVisibleColumns((prev: string[]) => {
+      const newSet = new Set(prev);
+      unselectedKeys.forEach((k: string) => newSet.add(k));
+      return Array.from(newSet);
+    });
+  };
+
   return (
-    <aside className="w-56 border-r border-border bg-muted/40 flex flex-col">
+    <aside className="w-48 border-r border-border bg-muted/40 flex flex-col">
       {/* Search Header */}
       <div className="h-10 flex items-center gap-2 px-2 border-b border-border">
         <Columns className="w-3 h-3 text-muted-foreground" />
@@ -79,9 +96,28 @@ export function LogSidebar({
         {/* Selected */}
         {selectedKeys.length > 0 && (
           <div>
-            <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground">
-              Selected
+            <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground flex items-center justify-between">
+              <span>Selected</span>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => resetToDefault(activeTab)}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="Reset to default"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                </button>
+
+                <button
+                  onClick={clearAllSelected}
+                  className="text-muted-foreground hover:text-foreground"
+                  title="Deselect all"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             </div>
+
             {selectedKeys.map(renderItem)}
           </div>
         )}
@@ -93,8 +129,17 @@ export function LogSidebar({
               <div className="mt-2 border-t border-border" />
             )}
 
-            <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground">
-              Available
+            {/* ✅ UPDATED HEADER */}
+            <div className="px-3 py-1 text-[10px] uppercase text-muted-foreground flex items-center justify-between">
+              <span>Available</span>
+
+              <button
+                onClick={selectAllAvailable}
+                className="text-muted-foreground hover:text-foreground"
+                title="Select all available"
+              >
+                <CheckSquare className="w-3 h-3" />
+              </button>
             </div>
 
             {unselectedKeys.map(renderItem)}

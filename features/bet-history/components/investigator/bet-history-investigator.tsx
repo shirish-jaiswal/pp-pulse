@@ -13,6 +13,7 @@ export function BetHistoryInvestigator() {
 
     useEffect(() => {
         router.push("/player-history?playerId=" + input.playerId + "&from=" + input.from + "&to=" + input.to);
+        router.refresh();
     }, [router, input]);
 
 
