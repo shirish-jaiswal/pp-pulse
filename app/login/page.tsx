@@ -37,11 +37,8 @@ export default function LoginPage() {
         });
 
         if (res?.success && res?.authenticated) {
-          toast.success("Welcome back!");
-          localStorage.setItem("user", JSON.stringify(res.user));
           await c_requestUserCookie(res.user);
-         const user = await c_getUser();
-         console.log(user)
+          toast.success("Welcome back!");
           router.push("/home");
           router.refresh();
         } else {

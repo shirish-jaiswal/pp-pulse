@@ -1,11 +1,8 @@
-import { NextRequest } from "next/server";
+import { cookies } from "next/headers";
 
-export function getSessionCookie(request: NextRequest) {
-  const cookieHeader = request.headers.get("cookie") ?? "";
+export async function getSessionCookie() {
+  const cookieStore = await cookies();
+  const session = cookieStore.get("JSESSIONID");
 
-  return cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .filter((c) => c.startsWith("JSESSIONID="))
-    .join("; ");
+  return session ? `JSESSIONID=${session.value}` : "";
 }

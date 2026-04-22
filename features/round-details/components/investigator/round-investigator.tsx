@@ -11,47 +11,33 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { MultiRoundDetailsForm } from "@/features/round-details/components/investigator/round-details-from-bulk";
 import { cn } from "@/utils/cn";
-
 export function RoundInvestigator() {
   const router = useRouter();
 
   const {
-    roundDetailsInput,
-    setRoundDetailsInput,
     isBulkMode,
     setBulkMode,
     setMultiIds,
   } = useRoundDetails();
 
   useEffect(() => {
-    if (
-      roundDetailsInput?.round_id ||
-      (roundDetailsInput?.game_id && roundDetailsInput?.user_id)
-    ) {
-      setRoundDetailsInput(roundDetailsInput);
-      handleSubmit(roundDetailsInput);
-    }
-  }, [roundDetailsInput?.round_id]);
-
-  useEffect(() => {
     if (isBulkMode) {
-      router.push("/round-activity");
+      router.push("/round-activity/?isBulk=true");
       setMultiIds({ round_ids: [], game_ids: [], user_id: "" });
     }
-  }, [isBulkMode, router]);
+  }, [isBulkMode, router, setMultiIds]);
 
   const handleSubmit = (data: RoundDetailsInputProps) => {
     if (isBulkMode) return;
 
     if (data?.round_id) {
-      router.push("/round-activity/?roundId=" + data.round_id);
+      router.push(`/round-activity/?roundId=${data.round_id}`);
     } else if (data?.game_id && data?.user_id) {
-      router.push(
-        "/round-activity/?gameId=" +
-          data.game_id +
-          "&userId=" +
-          data.user_id
-      );
+      const params = new URLSearchParams({
+        gameId: data.game_id,
+        userId: data.user_id,
+      });
+      router.push(`/round-activity/?${params.toString()}`);
     } else {
       router.push("/round-activity");
     }
@@ -64,7 +50,6 @@ export function RoundInvestigator() {
         {/* HEADER */}
         <div className="flex items-center justify-between mb-1.5">
 
-          {/* LEFT TITLE */}
           <div className="flex items-center gap-2 text-muted-foreground">
             <Activity className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
@@ -72,7 +57,6 @@ export function RoundInvestigator() {
             </span>
           </div>
 
-          {/* RIGHT TOGGLE */}
           <div className="flex items-center gap-2">
             <Label
               htmlFor="bulk-mode"

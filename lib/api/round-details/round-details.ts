@@ -2,8 +2,10 @@ import {
   RoundDetailsInputFormSchema,
   RoundDetailsInputProps,
 } from "@/features/round-details/types/round-details-input";
-import { serverAxiosClient } from "@/lib/api/server-axios-client";
-import { axiosClient } from "@/lib/api/axios-client";
+import axios from "axios";
+import { cookies } from "next/headers";
+
+const NEXT_URL = process.env.NEXT_PUBLIC_NEXT_URL;
 
 export async function getRoundDetails(rawData: RoundDetailsInputProps) {
   const data = RoundDetailsInputFormSchema.parse(rawData);
@@ -15,9 +17,15 @@ export async function getRoundDetails(rawData: RoundDetailsInputProps) {
     if (data.user_id) queryParams.userId = data.user_id;
   }
 
-  const response = await serverAxiosClient.get("/round-details", {
-    params: queryParams,
 
+  const cookiess = await cookies();
+  const cookie = cookiess.get("JSESSIONID")?.value ?? "";
+  const response = await axios.get(NEXT_URL + "/round-details", {
+    params: queryParams,
+    headers: {
+      "Content-Type": "application/json",
+      "cookie": `JSESSIONID=${cookie}`,
+    },
   });
   return response.data?.data ?? response.data;
 }

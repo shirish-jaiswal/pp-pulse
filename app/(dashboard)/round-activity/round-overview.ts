@@ -2,7 +2,7 @@ import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { InfoCardProps, ValueType } from "@/features/round-details/components/round-overview/info-card";
 
 const DOMAIN_URL = process.env.NEXT_PUBLIC_NEXT_URL;
-interface RoundOverviewData {
+export interface RoundOverviewData {
   roundOverview: InfoCardProps[];
 }
 const EXTERNAL_LINKS = {

@@ -220,7 +220,14 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        processBulkInput(field.state.value);
+
+                        const hasInput = field.state.value.trim().length > 0;
+
+                        if (hasInput) {
+                          processBulkInput(field.state.value);
+                        } else if (total > 0) {
+                          form.handleSubmit();
+                        }
                       }
                     }}
                     onBlur={() =>

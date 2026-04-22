@@ -4,9 +4,11 @@ import {
   DatabaseIcon,
   DicesIcon,
   FileCog,
+  HistoryIcon,
   HomeIcon,
   UserIcon,
 } from "lucide-react";
+
 import {
   Sidebar,
   SidebarContent,
@@ -19,15 +21,18 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/utils/cn";
 import LogoutButton from "./logout-button";
 import { useProfile } from "@/context/use-profile";
+import Image from "next/image";
 
 export const sideBarMenu = [
   { title: "Dashboard", url: "/home", icon: HomeIcon },
   { title: "Round Activity", url: "/round-activity", icon: DicesIcon },
+  { title: "Player History", url: "/player-history", icon: HistoryIcon },
   { title: "Resolution Templates", url: "/resolution-template", icon: FileCog },
   { title: "Excel DB", url: "/excel-db", icon: DatabaseIcon },
 ];
@@ -36,8 +41,8 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
-
   const { user } = useProfile();
+
   return (
     <Sidebar
       variant="inset"
@@ -47,6 +52,7 @@ export function AppSidebar() {
       <SidebarHeader className="px-3 py-1.5 flex border-b border-border">
         {!isCollapsed && (
           <div className="flex gap-2">
+            <Image src="/portal/logo.png" alt="logo" className="bg-black" width={64} height={20} />
             <span className="text-base font-semibold tracking-tight">
               PP Pulse
             </span>
@@ -93,21 +99,20 @@ export function AppSidebar() {
       {/* Footer */}
       <SidebarFooter className="border-t border-border px-2 py-2">
         <SidebarMenu className="space-y-0.5">
-
           {/* Profile */}
           {user && (
             <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip={isCollapsed ? `${user.name || "Profile"}` : undefined}
-                  className="h-8 px-2 text-sm font-medium flex items-center gap-2 rounded-md border border-transparent hover:bg-muted/50 hover:border-border"
-                >
-                  <UserIcon className="w-4 h-4 shrink-0" />
-                  {!isCollapsed && (
-                    <span className="truncate">
-                      {user.name || "Profile"}
-                    </span>
-                  )}
-                </SidebarMenuButton>
+              <SidebarMenuButton
+                tooltip={isCollapsed ? `${user.name || "Profile"}` : undefined}
+                className="h-8 px-2 text-sm font-medium flex items-center gap-2 rounded-md border border-transparent hover:bg-muted/50 hover:border-border"
+              >
+                <UserIcon className="w-4 h-4 shrink-0" />
+                {!isCollapsed && (
+                  <span className="truncate">
+                    {user.name || "Profile"}
+                  </span>
+                )}
+              </SidebarMenuButton>
             </SidebarMenuItem>
           )}
 
@@ -115,7 +120,6 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <LogoutButton isCollapsed={isCollapsed} />
           </SidebarMenuItem>
-
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
