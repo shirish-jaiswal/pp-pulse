@@ -66,8 +66,12 @@ export function DataTable<TData>({
                                 {hg.headers.map((h) => (
                                     <TableHead
                                         key={h.id}
-                                        onClick={h.column.getToggleSortingHandler()}
-                                        className="cursor-pointer select-none"
+                                        onClick={h.column.getCanSort() ? h.column.getToggleSortingHandler() : undefined}
+                                        className={
+                                            h.column.getCanSort()
+                                                ? "cursor-pointer select-none"
+                                                : ""
+                                        }
                                     >
                                         <div className="flex items-center gap-1">
                                             {flexRender(
@@ -75,12 +79,14 @@ export function DataTable<TData>({
                                                 h.getContext()
                                             )}
 
-                                            {h.column.getIsSorted() === "asc" ? (
-                                                <ArrowUp className="w-4 h-4" />
-                                            ) : h.column.getIsSorted() === "desc" ? (
-                                                <ArrowDown className="w-4 h-4" />
-                                            ) : (
-                                                <ArrowUpDown className="w-4 h-4 opacity-30" />
+                                            {h.column.getCanSort() && (
+                                                h.column.getIsSorted() === "asc" ? (
+                                                    <ArrowUp className="w-4 h-4" />
+                                                ) : h.column.getIsSorted() === "desc" ? (
+                                                    <ArrowDown className="w-4 h-4" />
+                                                ) : (
+                                                    <ArrowUpDown className="w-4 h-4 opacity-30" />
+                                                )
                                             )}
                                         </div>
                                     </TableHead>

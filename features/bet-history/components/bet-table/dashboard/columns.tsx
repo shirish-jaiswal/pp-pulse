@@ -24,7 +24,6 @@ export const columns: ColumnDef<RoundRow>[] = [
         header: "Game ID",
         enableSorting: true,
     },
-
     {
         accessorKey: "time",
         header: "Time",
@@ -33,21 +32,18 @@ export const columns: ColumnDef<RoundRow>[] = [
         cell: ({ row }) =>
             new Date(row.original.time).toLocaleString(),
     },
-
     {
         accessorKey: "totalPlaced",
         header: "Placed",
         enableSorting: true,
         cell: ({ row }) => row.original.totalPlaced.toFixed(2),
     },
-
     {
         accessorKey: "totalSettled",
         header: "Settled",
         enableSorting: true,
         cell: ({ row }) => row.original.totalSettled.toFixed(2),
     },
-
     {
         accessorKey: "profitLoss",
         header: "P/L",
@@ -64,7 +60,6 @@ export const columns: ColumnDef<RoundRow>[] = [
             </span>
         ),
     },
-
     {
         accessorKey: "status",
         header: "Status",
@@ -87,7 +82,6 @@ export const columns: ColumnDef<RoundRow>[] = [
             );
         },
     },
-
     {
         accessorKey: "errorCode",
         header: "Error Code",

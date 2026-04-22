@@ -6,6 +6,7 @@ import { usePlayerBetHistory } from "@/features/bet-history/hooks/use-player-bet
 import BetHistorySkeleton from "@/features/bet-history/components/bet-history-skeleton";
 import { BetHistoryInvestigator } from "@/features/bet-history/components/investigator/bet-history-investigator";
 import DashboardPage from "@/features/bet-history/components/bet-table/dashboard";
+import { BetHistoryError } from "@/features/bet-history/components/bet-hostory-error";
 
 function BetHistoryContent() {
   const { input, setLoading, setError, setData } = useBetHistory();
@@ -16,11 +17,8 @@ function BetHistoryContent() {
     to: input.to || "",
   };
 
-  const shouldFetch = Boolean(input.playerId);
-
   const { data, loading, error } = usePlayerBetHistory(
     params,
-    shouldFetch ? 30000 : undefined
   );
 
   useEffect(() => {
@@ -42,9 +40,7 @@ function BetHistoryContent() {
       <BetHistoryInvestigator />
 
       {error && (
-        <div className="text-red-500 text-sm">
-          Failed to fetch bet history
-        </div>
+        <BetHistoryError />
       )}
 
       {loading ? (

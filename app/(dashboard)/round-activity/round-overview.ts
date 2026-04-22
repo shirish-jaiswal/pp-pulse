@@ -1,5 +1,6 @@
 import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { InfoCardProps, ValueType } from "@/features/round-details/components/round-overview/info-card";
+import { ro } from "date-fns/locale";
 
 const DOMAIN_URL = process.env.NEXT_PUBLIC_NEXT_URL;
 export interface RoundOverviewData {
@@ -43,6 +44,7 @@ export default function generateRoundOverview(
 
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
+  const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
 
   const appendCurrencyInValueType = (value: ValueType[]): ValueType[] => {
     return [
@@ -63,7 +65,7 @@ export default function generateRoundOverview(
     };
   });
 
-    const betsPlacedError: ValueType[] = (() => {
+  const betsPlacedError: ValueType[] = (() => {
     const errors = settledTxns
       .filter(txn => isValidErrorCode(txn.error_code))
       .map(txn => ({
@@ -80,7 +82,6 @@ export default function generateRoundOverview(
         },
       ];
   })();
-
 
   const betsSettledItems: ValueType[] = settledTxns.map(txn => {
     const hasError = isValidErrorCode(txn.error_code);
@@ -108,6 +109,30 @@ export default function generateRoundOverview(
         },
       ];
   })();
+
+  const unknownTxnsItems: ValueType[] = unknownTxns.map(txn => {
+    const hasError = isValidErrorCode(txn.error_code);
+
+    return {
+      label: formatAmount(txn.amount),
+      variant: hasError ? "error" : "success",
+    };
+  });
+
+  const unknownTxnsError: ValueType[] = (() => {
+    const errors = unknownTxns
+      .filter(txn => isValidErrorCode(txn.error_code))
+      .map(txn => ({
+        label: txn.error_description,
+        variant: "error" as const,
+      }));
+
+    return errors.length > 0
+      ? errors
+      : [];
+  })();
+
+  const placedTxn = placedTxns[0];
 
   const settledTxn = settledTxns[0];
 
@@ -149,7 +174,8 @@ export default function generateRoundOverview(
   // -------------------------------
   // FINAL OUTPUT
   // -------------------------------
-  const roundOverview: InfoCardProps[] = [
+  const roundOverview: InfoCardProps[] = [];
+  roundOverview.push(
     {
       iName: "landmark",
       items: [
@@ -164,7 +190,9 @@ export default function generateRoundOverview(
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
-    },
+    }
+  );
+  roundOverview.push(
     {
       iName: "fingerprint",
       items: [
@@ -179,35 +207,63 @@ export default function generateRoundOverview(
           ...createLink(roundId, EXTERNAL_LINKS.round),
         },
       ],
-    },
-    {
-      iName: "coins",
-      items: [
-        {
-          label: "Placed BETs",
-          value: appendCurrencyInValueType(betsPlacedItems),
-        },
-        {
-          label: "Error",
-          value: betsPlacedError,
-        },
-      ],
-    },
-    {
-      iName: "hand_coins",
-      items: [
-        {
-          label: "Settled BETs",
-          value: appendCurrencyInValueType(betsSettledItems),
-        },
-        {
-          label: "Error",
-          value: betsSettledError,
-        },
-      ],
-      variant: transactionVariant,
-    },
-  ];
+    }
+  );
+
+  if (betsPlacedItems.length > 0 || betsPlacedError.length > 0) {
+    roundOverview.push(
+      {
+        iName: "coins",
+        items: [
+          {
+            label: "Placed BETs",
+            value: appendCurrencyInValueType(betsPlacedItems),
+          },
+          {
+            label: "Error",
+            value: betsPlacedError,
+          },
+        ],
+      },
+    )
+  };
+  if (betsSettledItems.length > 0 || betsSettledError.length > 0) {
+    roundOverview.push(
+      {
+        iName: "hand_coins",
+        items: [
+          {
+            label: "Settled BETs",
+            value: appendCurrencyInValueType(betsSettledItems),
+          },
+          {
+            label: "Error",
+            value: betsSettledError,
+          },
+        ],
+        variant: transactionVariant,
+      }
+    )
+  };
+  console.log(unknownTxnsItems)
+  console.log(unknownTxnsError)
+  if (unknownTxnsItems.length > 0 || unknownTxnsError.length > 0) {
+    roundOverview.push(
+      {
+        iName: "coins",
+        items: [
+          {
+            label: "Unknown BETs",
+            value: appendCurrencyInValueType(unknownTxnsItems),
+          },
+          {
+            label: "Error",
+            value: unknownTxnsError,
+          },
+        ],
+      }
+    )
+  };
 
   return { roundOverview };
 }
