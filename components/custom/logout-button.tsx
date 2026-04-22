@@ -33,8 +33,6 @@ export default function LogoutButton({
       await c_logout();
       router.push("/login");
       router.refresh();
-    } catch (error) {
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -44,12 +42,12 @@ export default function LogoutButton({
     <AlertDialog>
       <AlertDialogTrigger
         className={cn(
-          "w-full h-8 px-2 text-sm font-medium flex items-center gap-2 rounded-md",
+          "w-full h-8 px-2 text-sm flex items-center gap-2 rounded-md",
           "hover:bg-red-500/10 text-red-500",
           isCollapsed && "justify-center px-0"
         )}
       >
-        <LogOut className="w-4 h-4 shrink-0" />
+        <LogOut className="w-4 h-4" />
         {!isCollapsed && <span>Logout</span>}
       </AlertDialogTrigger>
 
@@ -58,9 +56,8 @@ export default function LogoutButton({
           <AlertDialogTitle>
             Are you sure you want to logout?
           </AlertDialogTitle>
-
           <AlertDialogDescription>
-            You will be signed out of your account and redirected to the login page.
+            You will be signed out and redirected to login.
           </AlertDialogDescription>
         </AlertDialogHeader>
 

@@ -22,7 +22,7 @@ export function RoundInvestigator() {
 
   useEffect(() => {
     if (isBulkMode) {
-      router.push("/round-activity");
+      router.push("/round-activity/?isBulk=true");
       setMultiIds({ round_ids: [], game_ids: [], user_id: "" });
     }
   }, [isBulkMode, router, setMultiIds]);

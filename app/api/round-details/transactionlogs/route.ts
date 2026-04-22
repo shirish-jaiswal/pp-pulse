@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
         const fromTime = new Date(anchorTime.getTime() - 15 * 60 * 1000).toISOString();
         const toTime = new Date(anchorTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-        const sessionCookie = getSessionCookie(request);
+        const sessionCookie = getSessionCookie();
 
         const response = await axios.get(
             `${BACKEND_URL}/playerbetlogs/transactionlogs`,
@@ -33,10 +33,7 @@ export async function GET(request: NextRequest) {
                     from: fromTime,
                     to: toTime,
                 },
-                headers: {
-                    "Content-Type": "application/json",
-                    ...(sessionCookie ? { Cookie: sessionCookie } : {}),
-                },
+
             }
         );
 

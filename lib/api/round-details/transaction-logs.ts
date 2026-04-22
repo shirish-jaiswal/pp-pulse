@@ -5,30 +5,33 @@ export type TransactionLogsProps = {
 };
 
 export async function c_getTransactionLogs(
-  rawData: TransactionLogsProps
+    rawData: TransactionLogsProps
 ): Promise<any> {
-  try {
-    const data =rawData;
-    const queryParams: Record<string, any> = {};
+    try {
+        const data = rawData;
+        const queryParams: Record<string, any> = {};
 
-    if (data.roundId) {
-      queryParams.roundId = data.roundId;
+        if (data.roundId) {
+            queryParams.roundId = data.roundId;
+        }
+
+        if (data.timeStamp) {
+            const anchorTime = data.timeStamp ? new Date(data.timeStamp) : new Date();
+            const from = new Date(anchorTime.getTime() - 15 * 60 * 1000).toISOString();
+            const to = new Date(anchorTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
+            queryParams.from = from;
+            queryParams.to = to;
+        }
+
+        const response = await apiRequest({
+            method: "GET",
+            endpoint: "playerbetlogs/transactionlogs",
+            params: queryParams,
+            requireCookie: true,
+        });
+
+        return response ?? [];
+    } catch (error) {
+        return [];
     }
-
-    if (data.timeStamp) {
-      queryParams.timeStamp = data.timeStamp;
-    }
-
-    console.log("Query Params :: ", queryParams);
-    const response = await apiRequest({
-      method: "GET",
-      endpoint: "round-details/transactionlogs",
-      params: queryParams,
-      requireCookie: true,
-    });
-
-    return response?.data?.transactionLogs ?? [];
-  } catch (error) {
-    return [];
-  }
 }

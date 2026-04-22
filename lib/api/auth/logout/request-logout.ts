@@ -1,11 +1,10 @@
-import { axiosClient } from "@/lib/api/axios-client";
 import axios from "axios";
 
 export async function c_logout() {
   try {
-    const response = await axios.post("/auth/logout", {});
-    return response.data?.data;
+    await axios.post("/portal/api/auth/logout", {});
   } catch (error: any) {
+    console.log(error);
     throw new Error(error?.message || "Failed to logout");
   }
 }

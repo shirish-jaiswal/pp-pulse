@@ -1,5 +1,6 @@
 const nextConfig = {
   basePath: "/portal",
+  assetPrefix: "/portal",
 
   async headers() {
     return [

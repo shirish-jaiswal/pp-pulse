@@ -16,15 +16,17 @@ type RoundDetailsWrapperProps = {
     roundId?: string;
     gameId?: string;
     userId?: string;
+    isBulk?: boolean;
 };
 
 import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
 import RoundDetailsSkeleton from "./round-details-skeleton";
 
-export function RoundDetailsWrapper({ roundId, gameId, userId }: RoundDetailsWrapperProps) {
+export function RoundDetailsWrapper({ roundId, gameId, userId, isBulk }: RoundDetailsWrapperProps) {
     const {
         setRoundDetailsInput,
         isBulkMode,
+        setBulkMode,
         roundDetails,
         setRoundDetails,
         setRoundOverview
@@ -39,7 +41,8 @@ export function RoundDetailsWrapper({ roundId, gameId, userId }: RoundDetailsWra
             game_id: gameId,
             user_id: userId
         });
-    }, [roundId, gameId, userId, setRoundDetailsInput]);
+        setBulkMode(isBulk || false);
+    }, [roundId, gameId, userId, isBulk, setRoundDetailsInput]);
 
     useEffect(() => {
         const fetchData = async () => {

@@ -7,6 +7,7 @@ interface PageProps {
         roundId?: string;
         gameId?: string;
         userId?: string;
+        isBulk?: boolean;
     }>;
 }
 
@@ -16,12 +17,13 @@ export interface RoundDetailsResponse {
 }
 
 export default async function Page({ searchParams }: PageProps) {
-    const { roundId, gameId, userId } = await searchParams;
+    const { roundId, gameId, userId, isBulk } = await searchParams;
     return (
         <RoundDetailsWrapper
             roundId={roundId}
             gameId={gameId}
             userId={userId}
+            isBulk={isBulk}
         />
     );
 }
