@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy } from "lucide-react";
 
-import { CopyWarningDialog } from "@/components/custom/text-editor/copy-warning-dialog";
+import { CopyWarningDialog } from "@/components/custom/text-editor/toolbar/copy-html/copy-warning-dialog";
 
 type CopyHtmlButtonProps = {
   getHtml: () => Promise<{ html: string; text: string }>;

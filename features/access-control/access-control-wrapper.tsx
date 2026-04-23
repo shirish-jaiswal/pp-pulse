@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useTableManager } from "../excel-db/hooks/use-table-manager";
 import RoleTable from "./role-tab-content";
+import { useTableManager } from "./hooks/use-table-manager";
+import FeatureTable from "./FeatureTable";
 
 // helper to convert snake_case or camelCase to Regular Case
 function formatTableName(name: string) {
@@ -36,23 +37,18 @@ function formatTableName(name: string) {
 // map table name -> component
 const tableComponentMap: Record<string, React.FC<any>> = {
   roles: RoleTable,
+  feature_list: FeatureTable,
 };
 
 export default function TableTabs({ dbName }: { dbName: string }) {
   const [selectedTable, setSelectedTable] = useState<string>("");
   const [newTableName, setNewTableName] = useState("");
 
-  const { tables, loading, submitting, handleCreate } = useTableManager(
+  const { tables, loading } = useTableManager(
     dbName,
     selectedTable,
     setSelectedTable
   );
-
-  const onCreate = async () => {
-    if (!newTableName.trim()) return;
-    const success = await handleCreate(newTableName, ["column1"]);
-    if (success) setNewTableName("");
-  };
 
   return (
     <div className="p-4 space-y-4">
@@ -62,9 +58,6 @@ export default function TableTabs({ dbName }: { dbName: string }) {
           value={newTableName}
           onChange={(e) => setNewTableName(e.target.value)}
         />
-        <Button onClick={onCreate} disabled={submitting}>
-          Create
-        </Button>
       </div>
 
       {loading ? (
@@ -78,32 +71,22 @@ export default function TableTabs({ dbName }: { dbName: string }) {
               </TabsTrigger>
             ))}
           </TabsList>
-
           {tables.map((table) => {
             const TableComponent = tableComponentMap[table.name];
 
             return (
               <TabsContent key={table.name} value={table.name}>
                 <div className="p-4 border rounded-2xl shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
                     <div className="font-semibold">
                       {formatTableName(table.name)}
                     </div>
+                                <div>{table.name} </div>
 
-                    {/* Only allowed action now: update role (placeholder) */}
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        console.log("Update role for table:", table.name);
-                      }}
-                    >
-                      Update Role
-                    </Button>
-                  </div>
-
-                  {/* dynamic table renderer */}
                   {TableComponent ? (
-                    <TableComponent table={table} />
+                    <TableComponent
+                      dbName={dbName}
+                      tableName={table.name}
+                    />
                   ) : (
                     <div className="text-sm text-muted-foreground">
                       No UI defined for this table

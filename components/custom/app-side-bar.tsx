@@ -4,6 +4,7 @@ import {
   DatabaseIcon,
   DicesIcon,
   FileCog,
+  GalleryHorizontal,
   HistoryIcon,
   HomeIcon,
   UserIcon,
@@ -33,6 +34,7 @@ export const sideBarMenu = [
   { title: "Dashboard", url: "/home", icon: HomeIcon },
   { title: "Round Activity", url: "/round-activity", icon: DicesIcon },
   { title: "Player History", url: "/player-history", icon: HistoryIcon },
+  { title: "Template Gallery", url: "/template-gallery", icon: GalleryHorizontal },
   { title: "Resolution Templates", url: "/resolution-template", icon: FileCog },
   { title: "Excel DB", url: "/excel-db", icon: DatabaseIcon },
 ];

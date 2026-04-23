@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { createCommand, LexicalCommand, $insertNodes, COMMAND_PRIORITY_EDITOR } from "lexical";
-import { $createFieldNode, FieldNode } from "@/components/custom/text-editor/field-node";
+import { $createFieldNode, FieldNode } from "@/components/custom/text-editor/toolbar/field-variables/field-node";
 
 
 export const INSERT_FIELD_COMMAND: LexicalCommand<{ key: string; value: string }> = 

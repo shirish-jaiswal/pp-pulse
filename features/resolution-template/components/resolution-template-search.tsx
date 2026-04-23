@@ -8,13 +8,15 @@ import { Input } from "@/components/ui/input";
 interface ResolutionTemplateSearchProps {
   searchTerm: string;
   setSearchTerm: (val: string) => void;
-  onCreate: () => void;
+  onCreate?: () => void;
+  showCreate?: boolean;
 }
 
 export default function ResolutionTemplateSearch({
   searchTerm,
   setSearchTerm,
   onCreate,
+  showCreate = true
 }: ResolutionTemplateSearchProps) {
   return (
     <div className="flex items-center justify-between gap-3">
@@ -28,10 +30,17 @@ export default function ResolutionTemplateSearch({
         />
       </div>
 
-      <Button className="gap-2" onClick={onCreate}>
-        <Plus className="w-4 h-4" />
-        New Template
-      </Button>
+      {
+        showCreate && (
+          <Button
+            className="flex items-center gap-2"
+            onClick={() => onCreate?.()}
+          >
+            <Plus className="w-4 h-4" />
+            Add
+          </Button>
+        )
+      }
     </div>
   );
 }

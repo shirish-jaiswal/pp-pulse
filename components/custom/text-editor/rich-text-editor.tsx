@@ -14,11 +14,11 @@ import { LinkNode } from "@lexical/link";
 import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { TablePlugin } from "@lexical/react/LexicalTablePlugin";
 
-import { ImageNode } from "@/components/custom/text-editor/image-node";
-import { Toolbar } from "@/components/custom/text-editor/toolbar";
-import ImagesPlugin from "@/components/custom/text-editor/image-plugin";
-import FieldPlugin from "@/components/custom/text-editor/field-plugin";
-import { FieldNode } from "@/components/custom/text-editor/field-node";
+import { ImageNode } from "@/components/custom/text-editor/toolbar/image/image-node";
+import { Toolbar } from "@/components/custom/text-editor/toolbar/toolbar";
+import ImagesPlugin from "@/components/custom/text-editor/toolbar/image/image-plugin";
+import FieldPlugin from "@/components/custom/text-editor/toolbar/field-variables/field-plugin";
+import { FieldNode } from "@/components/custom/text-editor/toolbar/field-variables/field-node";
 
 
 export default function RichTextEditor({
@@ -26,11 +26,13 @@ export default function RichTextEditor({
   placeholder = "Start typing...",
   initialValue,
   copyPopup = false,
+  showFieldPlugin = true
 }: {
   onChange?: (val: string) => void;
   placeholder?: string;
   initialValue?: string;
   copyPopup?: boolean;
+  showFieldPlugin?: boolean
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -83,7 +85,7 @@ export default function RichTextEditor({
     <LexicalComposer initialConfig={editorConfig}>
       <div className="border rounded-md shadow-sm bg-white overflow-auto max-w-4xl max-h-full mx-auto">
 
-        <Toolbar copyPopup={copyPopup} />
+        <Toolbar copyPopup={copyPopup} showFieldPlugin={showFieldPlugin} />
         <div className="relative">
           <RichTextPlugin
             contentEditable={
@@ -98,7 +100,6 @@ export default function RichTextEditor({
           />
         </div>
         <FieldPlugin />
-
         <HistoryPlugin />
         <LinkPlugin />
         <TablePlugin />

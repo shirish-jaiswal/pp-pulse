@@ -19,8 +19,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { INSERT_FIELD_COMMAND } from "@/components/custom/text-editor/field-plugin";
-import { getVariablesAction } from "@/components/custom/text-editor/variables";
+import { INSERT_FIELD_COMMAND } from "@/components/custom/text-editor/toolbar/field-variables/field-plugin";
+import { getVariablesAction } from "@/components/custom/text-editor/toolbar/field-variables/variables";
 
 export function FieldDropdown() {
   const [editor] = useLexicalComposerContext();

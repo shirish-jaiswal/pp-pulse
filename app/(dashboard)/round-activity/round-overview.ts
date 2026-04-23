@@ -66,7 +66,7 @@ export default function generateRoundOverview(
   });
 
   const betsPlacedError: ValueType[] = (() => {
-    const errors = settledTxns
+    const errors = placedTxns
       .filter(txn => isValidErrorCode(txn.error_code))
       .map(txn => ({
         label: txn.error_description,
@@ -204,7 +204,7 @@ export default function generateRoundOverview(
         {
           label: "Round ID",
           value: roundId || "N/A",
-          ...createLink(roundId, EXTERNAL_LINKS.round),
+          copyable: true
         },
       ],
     }

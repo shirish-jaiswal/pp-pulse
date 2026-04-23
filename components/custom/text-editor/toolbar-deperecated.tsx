@@ -34,11 +34,16 @@ import {
   Trash2, Rows, Columns, Image as ImageIcon, Check, Copy, ChevronDown
 } from "lucide-react";
 
-import { INSERT_IMAGE_COMMAND } from "@/components/custom/text-editor/image-commands";
-import { FieldDropdown } from "@/components/custom/text-editor/field-dropdown";
-import { CopyHtmlButton } from "./copy-html-button";
+import { INSERT_IMAGE_COMMAND } from "@/components/custom/text-editor/toolbar/image/image-commands";
+import { FieldDropdown } from "@/components/custom/text-editor/toolbar/field-variables/field-dropdown";
+import { CopyHtmlButton } from "./toolbar/copy-html/copy-html-button";
 
-export function Toolbar({ copyPopup }: { copyPopup: boolean }) {
+interface ToolbarProps {
+  copyPopup?: boolean;
+  showFieldPlugin?: boolean;
+}
+
+export function Toolbar({ copyPopup, showFieldPlugin }: ToolbarProps) {
   const [editor] = useLexicalComposerContext();
 
   const [isBold, setIsBold] = useState(false);
@@ -250,9 +255,11 @@ export function Toolbar({ copyPopup }: { copyPopup: boolean }) {
           <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
 
           {/* Group 4: Custom Fields */}
-          <div className="flex items-center">
-            <FieldDropdown />
-          </div>
+          {
+            showFieldPlugin && <div className="flex items-center">
+              <FieldDropdown />
+            </div>
+          }
         </div>
 
         {/* Action Section (Right Side) */}

@@ -3,6 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { RoundRow } from "@/features/bet-history/components/bet-table/transform-bets";
+import { Checkbox } from "@/components/ui/checkbox"
 import Link from "next/link";
 
 export const columns: ColumnDef<RoundRow>[] = [
@@ -90,7 +91,11 @@ export const columns: ColumnDef<RoundRow>[] = [
     {
         accessorKey: "errorDescription",
         header: "Error Description",
-        enableSorting: false,
+        cell: ({ row }) => (
+            <div className="max-w-52 whitespace-normal wrap-break-words">
+                {row.original.errorDescription}
+            </div>
+        ), enableSorting: false,
     },
     {
         accessorKey: "retryCounter",
@@ -103,3 +108,36 @@ export const columns: ColumnDef<RoundRow>[] = [
         enableSorting: false,
     },
 ];
+
+
+export function getSelectionColumn<RoundRow>(): ColumnDef<RoundRow, any> {
+    return {
+        id: "select",
+        header: ({ table }) => (
+            <Checkbox
+                checked={
+                    table.getIsAllPageRowsSelected()
+                        ? true
+                        : table.getIsSomePageRowsSelected()
+                        ? "indeterminate"
+                        : false
+                }
+                onCheckedChange={(value) =>
+                    table.toggleAllPageRowsSelected(!!value)
+                }
+                aria-label="Select all"
+            />
+        ),
+        cell: ({ row }) => (
+            <Checkbox
+                checked={row.getIsSelected()}
+                onCheckedChange={(value) =>
+                    row.toggleSelected(!!value)
+                }
+                aria-label="Select row"
+            />
+        ),
+        enableSorting: false,
+        enableHiding: false,
+    }
+}

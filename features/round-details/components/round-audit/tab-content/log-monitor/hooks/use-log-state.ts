@@ -3,27 +3,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTransactionLogs } from "@/hooks/use-transactionlogs";
 import { getDeepKeys } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+import { getServiceName } from "@/app/(dashboard)/round-details/backoffice-dashboard/kibana/utils";
 
 const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
   platformLogs: [
-    "app.responseLog.log",
-    "app.serviceMethod",
-    "app.requestLog.log",
-    "app.url",
+    "raw.app.responseLog.log",
+    "raw.app.serviceMethod",
+    "raw.app.requestLog.log",
+    "raw.app.url",
+  ],
+  lcTransactionLogs: [
+    "message",
+    "raw.contextMap",
   ],
   default: ["message"],
 };
 
 export function useLogState(roundId: string, timeStamp: any) {
-  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp });
+  const { roundDetails } = useRoundDetails();
+  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp, game_id: roundDetails?.tptInfo?.at(0)?.game_id as string, user_id: roundDetails?.tptInfo?.at(0)?.user_id as string, game_type: roundDetails?.tptInfo?.at(0)?.game_mode as string });
 
   const [activeTab, setActiveTab] = useState<string | null>("");
   const [query, setQuery] = useState("");
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([]);
 
-  /**
-   * Track per-tab user overrides (optional but important)
-   */
   const [tabColumnState, setTabColumnState] = useState<
     Record<string, string[]>
   >({});
@@ -46,7 +49,7 @@ export function useLogState(roundId: string, timeStamp: any) {
   }, [availableTabs, activeTab]);
 
   /**
-   * Extract logs + keys
+   * Extract logs + sidebar keys
    */
   const { logs, sidebarKeys } = useMemo(() => {
     if (!data || !activeTab) return { logs: [], sidebarKeys: [] };
@@ -59,7 +62,15 @@ export function useLogState(roundId: string, timeStamp: any) {
 
       if (log.raw) {
         getDeepKeys(log.raw).forEach((k) => {
-          if (!k.includes("@timestamp")) keySet.add(k);
+          if (!k.includes("@timestamp")) {
+            keySet.add(`raw.${k}`);
+          }
+        });
+      }
+
+      if (log.app) {
+        getDeepKeys(log.app).forEach((k) => {
+          keySet.add(`app.${k}`);
         });
       }
     });
@@ -71,87 +82,110 @@ export function useLogState(roundId: string, timeStamp: any) {
   }, [data, activeTab]);
 
   /**
-   * 🔥 KEY FIX: apply defaults whenever tab changes
+   * Resolve default columns (FIXED MATCHING LOGIC)
    */
-  useEffect(() => {
-    if (!activeTab || !sidebarKeys.length) return;
+  const computedDefaultColumns = useMemo(() => {
+    if (!activeTab || !sidebarKeys.length) return [];
 
-    const saved = tabColumnState[activeTab];
-
-    // If user previously modified this tab → restore it
-    if (saved?.length) {
-      setVisibleColumns(saved);
-      return;
-    }
-
-    // Otherwise apply defaults for this tab
     const defaults =
       DEFAULT_COLUMNS_BY_TAB[activeTab] ||
       DEFAULT_COLUMNS_BY_TAB.default;
 
-    const validDefaults = defaults.filter((c) =>
-      sidebarKeys.includes(c)
+    return defaults.filter((c) =>
+      sidebarKeys.some(
+        (k) => k === c || k.startsWith(c + ".")
+      )
     );
-
-    setVisibleColumns(validDefaults);
   }, [activeTab, sidebarKeys]);
 
   /**
-   * Persist user changes per tab
+   * Final visible columns (source of truth)
    */
-  const updateVisibleColumns = (updater: any) => {
-    setVisibleColumns((prev) => {
-      const next =
-        typeof updater === "function" ? updater(prev) : updater;
+  const visibleColumns = useMemo(() => {
+    if (!activeTab) return [];
 
-      if (activeTab) {
-        setTabColumnState((s) => ({
-          ...s,
-          [activeTab]: next,
-        }));
-      }
+    const saved = tabColumnState[activeTab];
 
-      return next;
-    });
+    if (saved?.length) return saved;
+
+    if (computedDefaultColumns.length) return computedDefaultColumns;
+
+    return ["message"];
+  }, [activeTab, tabColumnState, computedDefaultColumns]);
+
+  /**
+   * Update visible columns (persist per tab)
+   */
+  const setVisibleColumns = (updater: any) => {
+    const next =
+      typeof updater === "function"
+        ? updater(visibleColumns)
+        : updater;
+
+    if (activeTab) {
+      setTabColumnState((prev) => ({
+        ...prev,
+        [activeTab]: next,
+      }));
+    }
   };
 
   /**
-   * Logs filter
+   * Filter logs
    */
   const filteredLogs = useMemo(() => {
     const q = query.toLowerCase();
 
     return (logs || [])
-      .filter((l: any) =>
-        !q ? true : JSON.stringify(l).toLowerCase().includes(q)
-      )
+      .filter((h: any) => {
+        if (!q.trim()) return true;
+
+        const fullText = `${h?.message ?? ""} ${h?._index ?? ""}`.toLowerCase();
+
+        try {
+          const tokenRegex =
+            /"([^"]+)"|\b(and|or)\b|([\(\)])|([^\s\(\)]+)/gi;
+
+          const expression = q.replace(
+            tokenRegex,
+            (match, phrase, logical, paren, word) => {
+              if (phrase) return `fullText.includes("${phrase}")`;
+              if (logical === "and" || logical === "&&" || logical === "AND") return " && ";
+              if (logical === "or" || logical === "||" || logical === "OR") return " || ";
+              if (paren) return paren;
+              if (word) return `fullText.includes("${word}")`;
+              return match;
+            }
+          );
+
+          const checkLogic = new Function(
+            "fullText",
+            `return ${expression};`
+          );
+
+          return checkLogic(fullText);
+        } catch (e) {
+          return fullText.includes(q.replace(/"/g, ""));
+        }
+      })
       .sort(
         (a: any, b: any) =>
-          new Date(a.raw?.["@timestamp"] || 0).getTime() -
-          new Date(b.raw?.["@timestamp"] || 0).getTime()
+          new Date(a?.raw?.["@timestamp"] || 0).getTime() -
+          new Date(b?.raw?.["@timestamp"] || 0).getTime()
       );
   }, [logs, query]);
 
   /**
-   * Reset to default for current tab
+   * Reset columns
    */
   const resetToDefault = () => {
     if (!activeTab) return;
 
-    const defaults =
-      DEFAULT_COLUMNS_BY_TAB[activeTab] ||
-      DEFAULT_COLUMNS_BY_TAB.default;
-
-    const validDefaults = defaults.filter((k) =>
-      sidebarKeys.includes(k)
-    );
-
-    setTabColumnState((s) => ({
-      ...s,
-      [activeTab]: validDefaults,
-    }));
-
-    setVisibleColumns(validDefaults);
+    setTabColumnState((prev) => {
+      const updated = { ...prev };
+      delete updated[activeTab]; // remove override
+      return updated;
+    });
   };
 
   return {
@@ -162,7 +196,7 @@ export function useLogState(roundId: string, timeStamp: any) {
     query,
     setQuery,
     visibleColumns,
-    setVisibleColumns: updateVisibleColumns,
+    setVisibleColumns,
     availableTabs,
     sidebarKeys,
     filteredLogs,

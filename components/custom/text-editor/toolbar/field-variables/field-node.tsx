@@ -8,7 +8,7 @@ import {
   $applyNodeReplacement,
 } from "lexical";
 import * as React from "react";
-import { FieldComponent } from "@/components/custom/text-editor/field-component";
+import { FieldComponent } from "@/components/custom/text-editor/toolbar/field-variables/field-component";
 
 export type SerializedFieldNode = Spread<
   { keyName: string; display: string },

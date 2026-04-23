@@ -15,13 +15,13 @@ export default function PremiumLogMonitor({ roundId, timeStamp }: any) {
   }
 
   return (
-    <div className="h-fit w-full flex flex-col text-[13px]">
+    <div className="h-screen w-full flex flex-col text-[13px] overflow-hidden">
       <LogHeader {...state} />
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <LogSidebar {...state} />
 
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           <LogTable {...state} />
         </main>
       </div>

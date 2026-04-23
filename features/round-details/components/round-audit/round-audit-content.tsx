@@ -105,8 +105,8 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
             {activeTab === "logs" && (
               <FullScreenWrapper title="Execution Logs">
                 <PremiumLogMonitor
-                  roundId={roundDetails?.betInfo?.[0].round_id || ""}
-                  timeStamp={roundDetails?.betInfo?.[0].betting_req_time || ""}
+                  roundId={roundDetails?.tptInfo?.[0].round_id || ""}
+                  timeStamp={roundDetails?.tptInfo?.[0].trans_date || ""}
                 />
               </FullScreenWrapper>
             )}

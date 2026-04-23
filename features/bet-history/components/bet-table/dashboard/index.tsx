@@ -35,7 +35,6 @@ export default function DashboardPage() {
         status={status}
         setStatus={setStatus}
       />
-
       <DataTable columns={columns} data={rows} />
     </div>
   );

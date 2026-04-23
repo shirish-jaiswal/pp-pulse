@@ -16,7 +16,7 @@ type Mode = "round" | "game";
 export function MultiRoundTabs() {
   const { multiIds, setRoundDetails, setRoundOverview } =
     useRoundDetails();
-
+  console.log("multiIds", multiIds);
   const mode: Mode = useMemo(() => {
     return multiIds.game_ids?.length ? "game" : "round";
   }, [multiIds]);

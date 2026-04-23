@@ -9,7 +9,7 @@ interface Props {
     isOpen: boolean;
     onOpenChange: (open: boolean) => void;
     initialData: ResolutionTemplate | null;
-    onSave: (data: any) => Promise<void>;
+    onSave?: (data: any) => Promise<void>;
 }
 
 export function useResolutionForm({
@@ -34,7 +34,7 @@ export function useResolutionForm({
         try {
             setIsPending(true);
 
-            await onSave({
+            await onSave?.({
                 title,
                 isFreshDesk,
                 content,
