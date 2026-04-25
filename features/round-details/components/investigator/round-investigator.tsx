@@ -21,10 +21,10 @@ export function RoundInvestigator() {
   } = useRoundDetails();
 
   useEffect(() => {
-    if (isBulkMode) {
-      router.push("/round-activity/?isBulk=true");
-      setMultiIds({ round_ids: [], game_ids: [], user_id: "" });
-    }
+    // if (isBulkMode) {
+    //   router.push("/round-activity/?isBulk=true");
+    //   setMultiIds({ round_ids: [], game_ids: [], user_id: "" });
+    // }
   }, [isBulkMode, router, setMultiIds]);
 
   const handleSubmit = (data: RoundDetailsInputProps) => {

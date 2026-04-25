@@ -1,17 +1,20 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
 import { Column } from "@tanstack/react-table";
+import { useMemo, useState, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 import { Filter } from "lucide-react";
 
@@ -27,23 +30,21 @@ function useDebounce<T>(value: T, delay = 300) {
   return debounced;
 }
 
-/* ------------------ Component ------------------ */
-export default function ColumnFilter<TData>({
+interface ColumnFilterProps<TData, TValue> {
+  column: Column<TData, TValue>;
+}
+
+export default function ColumnFilter<TData, TValue>({
   column,
-}: {
-  column: Column<TData, unknown>;
-}) {
+}: ColumnFilterProps<TData, TValue>) {
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
-  /* ✅ Stable faceted values */
-  const facetedValues = useMemo(
-    () => column.getFacetedUniqueValues(),
-    [column]
-  );
+  /* ✅ IMPORTANT: DO NOT memoize this */
+  const facetedValues = column.getFacetedUniqueValues();
 
   const MAX_OPTIONS = 500;
 
@@ -72,7 +73,7 @@ export default function ColumnFilter<TData>({
   const clearAll = () => column.setFilterValue([]);
   const selectAll = () => column.setFilterValue(options);
 
-  /* ✅ Focus input on open */
+  /* focus search input when open */
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -83,8 +84,8 @@ export default function ColumnFilter<TData>({
   }, [open]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
+      <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
           size="xs"
@@ -95,11 +96,11 @@ export default function ColumnFilter<TData>({
             <span className="text-xs">({filterValue.length})</span>
           )}
         </Button>
-      </PopoverTrigger>
+      </DropdownMenuTrigger>
 
-      <PopoverContent align="start" className="w-64 p-2 gap-px shadow-2xl">
+      <DropdownMenuContent align="start" className="w-64 p-2">
         {/* HEADER */}
-        <div className="text-xs flex justify-between items-center">
+        <DropdownMenuLabel className="text-xs flex justify-between p-0">
           <span>Filter values</span>
 
           <div className="flex gap-1">
@@ -110,7 +111,7 @@ export default function ColumnFilter<TData>({
               Clear
             </Button>
           </div>
-        </div>
+        </DropdownMenuLabel>
 
         {/* SEARCH */}
         <Input
@@ -121,26 +122,31 @@ export default function ColumnFilter<TData>({
           className="h-7 text-xs mt-2"
         />
 
+        <DropdownMenuSeparator />
+
         {/* OPTIONS */}
-        <div className="max-h-48 overflow-auto space-y-1 pr-1 mt-2">
+        <div className="max-h-48 overflow-auto space-y-1 pr-1">
           {options.length === 0 ? (
             <p className="text-xs text-muted-foreground p-2">
               No options
             </p>
           ) : (
             options.map((value) => (
-              <div
+              <DropdownMenuItem
                 key={value}
-                className="flex items-center gap-2 text-xs px-2 py-1 rounded hover:bg-accent cursor-pointer"
-                onClick={() => toggleValue(value)}
+                onSelect={(e) => e.preventDefault()}
+                className="flex items-center gap-2 text-xs"
               >
-                <Checkbox checked={filterValue.includes(value)} />
+                <Checkbox
+                  checked={filterValue.includes(value)}
+                  onCheckedChange={() => toggleValue(value)}
+                />
                 <span className="truncate">{value}</span>
-              </div>
+              </DropdownMenuItem>
             ))
           )}
         </div>
-      </PopoverContent>
-    </Popover>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

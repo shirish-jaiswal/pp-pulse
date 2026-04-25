@@ -208,6 +208,7 @@ export function ResolutionEditorContent({
                 onChange={setEditorContent}
                 placeholder={`Write ${category.toLowerCase()}...`}
                 copyPopup={true}
+                showFieldPlugin={false}
               />
             )}
           </div>

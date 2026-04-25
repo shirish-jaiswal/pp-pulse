@@ -4,7 +4,7 @@ import {
 } from "@/features/round-details/types/round-details-input";
 import apiRequest from "@/lib/api/api-request";
 
-export async function c_getRoundDetails(rawData: RoundDetailsInputProps) : Promise<any> {
+export async function c_getRoundDetails(rawData: RoundDetailsInputProps): Promise<any> {
   try {
     const data = RoundDetailsInputFormSchema.parse(rawData);
 
@@ -17,7 +17,7 @@ export async function c_getRoundDetails(rawData: RoundDetailsInputProps) : Promi
       if (data.user_id) queryParams.userId = data.user_id;
     }
 
-    const [tptInfo, betInfo] = await Promise.all([
+    const [tptInfo, betInfo, gameDetails] = await Promise.all([
       apiRequest({
         method: "GET",
         endpoint: "tpttableinfo",
@@ -30,11 +30,18 @@ export async function c_getRoundDetails(rawData: RoundDetailsInputProps) : Promi
         params: queryParams,
         requireCookie: true,
       }),
+      apiRequest({
+        method: "GET",
+        endpoint: "gamedetails",
+        params: queryParams,
+        requireCookie: true,
+      })
     ]);
 
     return {
-      tptInfo : tptInfo?.data,
-      betInfo : betInfo?.data,
+      tptInfo: tptInfo?.data,
+      betInfo: betInfo?.data,
+      gameDetails: gameDetails?.data
     };
   } catch (error) {
     return {

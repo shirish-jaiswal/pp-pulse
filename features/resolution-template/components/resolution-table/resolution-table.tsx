@@ -74,11 +74,6 @@ export function ResolutionTable({ data, onEdit, onDelete }: Props) {
                           column.columnDef.header,
                           header.getContext()
                         )}
-
-                        {/* badge */}
-                        {column.getCanFilter() && filterCount > 0 && (
-                          <Badge variant="outline">{filterCount}</Badge>
-                        )}
                       </div>
 
                       {/* filter UI */}

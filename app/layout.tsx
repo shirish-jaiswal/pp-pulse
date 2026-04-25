@@ -4,7 +4,6 @@ import "./globals.css";
 import QueryProvider from "@/lib/providers/query-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "sonner";
-import { ProfileProvider } from "@/context/use-profile";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 

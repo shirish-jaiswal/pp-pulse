@@ -20,6 +20,12 @@ type MultiIdsState = {
   user_id: string;
 };
 
+export type GameMetaData = {
+  label: string;
+  value: string;
+  isTechnical: boolean
+}
+
 type RoundDetailsContextType = {
   roundDetailsInput: RoundDetailsInputProps | null;
   setRoundDetailsInput: Dispatch<SetStateAction<RoundDetailsInputProps | null>>;
@@ -42,6 +48,9 @@ type RoundDetailsContextType = {
 
   roundOverview: InfoCardProps[] | null;
   setRoundOverview: (val: InfoCardProps[] | null) => void;
+
+  gameMetadata: GameMetaData[] | null;
+  setGameMetadata: (val: GameMetaData[] | null) => void;
 };
 
 const RoundDetailsContext =
@@ -73,6 +82,9 @@ export function RoundDetailsProvider({
       user_id: "",
     });
 
+  const [gameMetadata, setGameMetadataData] =
+    useState<GameMetaData[] | null>(null);
+
   const setMultiIds = useCallback(
     (val: Partial<MultiIdsState> | ((prev: MultiIdsState) => MultiIdsState)) => {
       setMultiIdsState((prev) => {
@@ -103,6 +115,10 @@ export function RoundDetailsProvider({
     []
   );
 
+  const setGameMetadata = useCallback((val: GameMetaData[] | null) => {
+    setGameMetadataData(val);
+  }, []);
+
   const value = useMemo(
     () => ({
       roundDetailsInput,
@@ -122,6 +138,9 @@ export function RoundDetailsProvider({
 
       roundOverview,
       setRoundOverview,
+
+      gameMetadata,
+      setGameMetadata,
     }),
     [
       roundDetailsInput,
@@ -130,11 +149,13 @@ export function RoundDetailsProvider({
       resolutionEditorOpen,
       roundDetails,
       roundOverview,
+      gameMetadata,
       setRoundDetailsInput,
       setBulkMode,
       setResolutionEditorOpen,
       setRoundDetails,
       setRoundOverview,
+      setGameMetadata,
     ]
   );
 

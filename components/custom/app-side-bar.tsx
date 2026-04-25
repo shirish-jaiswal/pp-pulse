@@ -51,13 +51,10 @@ export function AppSidebar() {
       collapsible="icon"
       className="border-r border-border bg-background p-0"
     >
-      <SidebarHeader className="px-3 py-1.5 flex border-b border-border">
+      <SidebarHeader className="flex bg-slate-700 p-0">
         {!isCollapsed && (
-          <div className="flex gap-2">
-            <Image src="/portal/logo.png" alt="logo" className="bg-black" width={64} height={20} />
-            <span className="text-base font-semibold tracking-tight">
-              PP Pulse
-            </span>
+          <div className="items-center">
+            <Image src="/portal/logo.png" alt="logo" width={80} height={40}  />
           </div>
         )}
       </SidebarHeader>

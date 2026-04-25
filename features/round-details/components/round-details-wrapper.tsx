@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+
 import { ResolutionEditor } from "@/features/round-details/components/resolution-sheet/resolution-editor";
 import { RoundInvestigator } from "@/features/round-details/components/investigator/round-investigator";
 import { MultiRoundTabs } from "@/features/round-details/components/round-overview/multi-round-tab";
@@ -11,97 +12,165 @@ import RoundAudit from "@/features/round-details/components/round-audit/round-au
 import EmptyRoundData from "@/features/round-details/components/empty-round-data";
 import { RoundFetchError } from "@/features/round-details/components/round-fetch-error";
 import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overview";
-
-type RoundDetailsWrapperProps = {
-    roundId?: string;
-    gameId?: string;
-    userId?: string;
-    isBulk?: boolean;
-};
-
 import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
 import RoundDetailsSkeleton from "./round-details-skeleton";
+import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata";
 
-export function RoundDetailsWrapper({ roundId, gameId, userId, isBulk }: RoundDetailsWrapperProps) {
-    const {
-        setRoundDetailsInput,
-        isBulkMode,
-        setBulkMode,
-        roundDetails,
-        setRoundDetails,
-        setRoundOverview
-    } = useRoundDetails();
+type RoundDetailsWrapperProps = {
+  roundId?: string;
+  gameId?: string;
+  userId?: string;
+  isBulk?: boolean;
+  roundIds?: string[];
+};
 
-    const [error, setError] = useState(false);
-    const [loading, setLoading] = useState(false);
+export function RoundDetailsWrapper({
+  roundId,
+  gameId,
+  userId,
+  isBulk,
+  roundIds,
+}: RoundDetailsWrapperProps) {
+  const {
+    setRoundDetailsInput,
+    isBulkMode,
+    setBulkMode,
+    roundDetails,
+    setRoundDetails,
+    setRoundOverview,
+    setGameMetadata,
+    setMultiIds,
+  } = useRoundDetails();
 
-    useEffect(() => {
-        setRoundDetailsInput({
-            round_id: roundId,
-            game_id: gameId,
-            user_id: userId
-        });
-        setBulkMode(isBulk || false);
-    }, [roundId, gameId, userId, isBulk, setRoundDetailsInput]);
+  const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-    useEffect(() => {
-        const fetchData = async () => {
-            const hasRequiredParams = roundId || (gameId && userId);
-            if (!hasRequiredParams) return;
+  // -----------------------------
+  // Sync props → global context
+  // -----------------------------
+  useEffect(() => {
+    setBulkMode(!!isBulk);
 
-            setLoading(true);
-            setError(false);
+    if (isBulk && roundIds?.length) {
+      setMultiIds({
+        round_ids: roundIds,
+        game_ids: [],
+        user_id: userId || "",
+      });
+    } else {
+      setRoundDetailsInput({
+        round_id: roundId,
+        game_id: gameId,
+        user_id: userId,
+      });
+    }
+  }, [
+    roundId,
+    gameId,
+    userId,
+    isBulk,
+    roundIds,
+    setRoundDetailsInput,
+    setBulkMode,
+    setMultiIds,
+  ]);
 
-            try {
-                const payload = roundId
-                    ? { round_id: roundId }
-                    : { game_id: gameId, user_id: userId };
+  // -----------------------------
+  // Fetch Data
+  // -----------------------------
+  useEffect(() => {
+    const fetchData = async () => {
+      const activeRoundId =
+        roundId || (isBulk && roundIds?.length ? roundIds[0] : null);
 
-                const data = await c_getRoundDetails(payload);
+      const hasRequiredParams = activeRoundId || (gameId && userId);
+      if (!hasRequiredParams) return;
 
-                setRoundDetails(data);
+      setLoading(true);
+      setError(false);
 
-                const { roundOverview } = generateRoundOverview(data);
-                setRoundOverview(roundOverview);
+      try {
+        const payload = activeRoundId
+          ? { round_id: activeRoundId }
+          : { game_id: gameId, user_id: userId };
 
-            } catch (err) {
-                setError(true);
-                setRoundDetails(null);
-                setRoundOverview(null);
-            } finally {
-                setLoading(false);
-            }
-        };
+        const data = await c_getRoundDetails(payload);
 
-        fetchData();
-    }, [roundId, gameId, userId, setRoundDetails, setRoundOverview]);
+        setRoundDetails(data);
 
-    return (
-        <div className="flex flex-col gap-2">
-            <RoundInvestigator />
+        // safe overview generation
+        const overview = generateRoundOverview(data);
+        setRoundOverview(overview?.roundOverview ?? []);
 
-            {error && (
-                <RoundFetchError
-                    roundId={roundId}
-                    gameId={gameId}
-                    userId={userId}
-                />
-            )}
+        // safe metadata generation
+        const meta = generateGameMetaData(data?.gameDetails ?? []);
+        setGameMetadata(meta);
+      } catch (err) {
+        console.error("Failed to fetch round details:", err);
+        setError(true);
+        setRoundDetails(null);
+        setRoundOverview(null);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-            {isBulkMode && <MultiRoundTabs />}
+    fetchData();
+  }, [
+    roundId,
+    gameId,
+    userId,
+    isBulk,
+    roundIds,
+    setRoundDetails,
+    setRoundOverview,
+    setGameMetadata,
+  ]);
 
-            {loading ? (
-                <RoundDetailsSkeleton />
-            ) : roundDetails ? (
-                <>
-                    <GameMetadata />
-                    <RoundOverview />
-                    <RoundAudit />
-                    <ResolutionEditor gameName={"All"} />
-                </>
-            ) : (
-                <EmptyRoundData />
-            )}
-        </div>
-    );
+  // -----------------------------
+  // Cancel Reason (UI block)
+  // -----------------------------
+  const cancelReason =
+    roundDetails?.gameDetails?.[0]?.cancelReason;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <RoundInvestigator />
+
+      {error && (
+        <RoundFetchError
+          roundId={roundId}
+          gameId={gameId}
+          userId={userId}
+        />
+      )}
+
+      {/* Bulk Tabs */}
+      {isBulkMode && <MultiRoundTabs />}
+
+      {/* Loading */}
+      {loading ? (
+        <RoundDetailsSkeleton />
+      ) : roundDetails ? (
+        <>
+          <GameMetadata />
+
+          {/* Cancel Reason (centered + red) */}
+          {cancelReason && (
+            <div className="w-full flex justify-center">
+              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-1 rounded-md text-sm font-medium">
+                {cancelReason}
+              </div>
+            </div>
+          )}
+
+          <RoundOverview />
+          <RoundAudit />
+          <ResolutionEditor gameName={"All"} />
+        </>
+      ) : (
+        <EmptyRoundData />
+      )}
+    </div>
+  );
 }

@@ -1,17 +1,21 @@
 import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { InfoCardProps, ValueType } from "@/features/round-details/components/round-overview/info-card";
-import { ro } from "date-fns/locale";
 
 const DOMAIN_URL = process.env.NEXT_PUBLIC_NEXT_URL;
+
 export interface RoundOverviewData {
   roundOverview: InfoCardProps[];
 }
+
 const EXTERNAL_LINKS = {
   casino: (id: string) => `${DOMAIN_URL}/casinos/${id}`,
   user: (id: string) => `${DOMAIN_URL}/users/${id}`,
   round: (id: string) => `${DOMAIN_URL}/round-activity?roundId=${id}`,
 };
 
+// ------------------
+// Helpers
+// ------------------
 const formatAmount = (amount: unknown): string =>
   new Intl.NumberFormat("en-US").format(Number(amount) || 0);
 
@@ -19,22 +23,98 @@ const safeString = (value: unknown): string =>
   (value ?? "").toString().trim();
 
 const isValidErrorCode = (code: unknown) =>
-  code !== null &&
-  code !== undefined &&
-  code !== "0" &&
-  code !== "";
+  code !== null && code !== undefined && code !== "0" && code !== "";
 
+const isEmptyArray = (arr: unknown) =>
+  !Array.isArray(arr) || arr.length === 0;
+
+const hasValidData = (arr: any[]) =>
+  Array.isArray(arr) &&
+  arr.length > 0 &&
+  arr.some(item => Object.keys(item || {}).length > 0);
+
+const createLink = (
+  id: string,
+  url: (id: string) => string
+): Pick<InfoCardProps["items"][number], "link" | "copyable"> | {} =>
+  id
+    ? {
+        link: {
+          href: url(id),
+          target: "_blank",
+        },
+        copyable: true,
+      }
+    : {};
+
+const appendCurrency = (values: ValueType[], currency: string): ValueType[] => [
+  ...values,
+  { label: currency, variant: "default" },
+];
+
+const mapTxnValues = (txns: any[]): ValueType[] =>
+  txns.map(txn => ({
+    label: formatAmount(txn.amount),
+    variant: isValidErrorCode(txn.error_code) ? "error" : "success",
+  }));
+
+const mapTxnErrors = (txns: any[]): ValueType[] => {
+  const errors = txns
+    .filter(txn => isValidErrorCode(txn.error_code))
+    .map(txn => ({
+      label: txn.error_description,
+      variant: "error" as const,
+    }));
+
+  return errors.length > 0
+    ? errors
+    : txns.length > 0
+    ? [{ label: "OK", variant: "success" }]
+    : [];
+};
+
+const buildTxnSection = (
+  title: string,
+  icon: string,
+  txns: any[],
+  currency: string,
+  variant?: InfoCardProps["variant"]
+): InfoCardProps | null => {
+  if (txns.length === 0) return null;
+
+  return {
+    iName: icon,
+    items: [
+      {
+        label: title,
+        value: appendCurrency(mapTxnValues(txns), currency),
+      },
+      {
+        label: "Error",
+        value: mapTxnErrors(txns),
+      },
+    ],
+    ...(variant ? { variant } : {}),
+  };
+};
+
+// ------------------
+// Main Function
+// ------------------
 export default function generateRoundOverview(
   roundDetails?: RoundDetailsResponse | null
 ): RoundOverviewData {
-  if (!roundDetails) {
-    return { roundOverview: [] };
-  }
+  if (!roundDetails) return { roundOverview: [] };
 
   const { betInfo = [], tptInfo = [] } = roundDetails;
 
-  const firstBet = betInfo[0];
-  const firstTpt = tptInfo[0];
+  // 🚨 Early exit
+  if (!hasValidData(betInfo) && !hasValidData(tptInfo)) {
+    return { roundOverview: [] };
+  }
+
+  const firstBet = betInfo[0] ?? {};
+  const firstTpt = tptInfo[0] ?? {};
 
   const currency = firstBet?.currency_code || "-";
 
@@ -42,108 +122,21 @@ export default function generateRoundOverview(
   const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id);
 
+  // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
   const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
 
-  const appendCurrencyInValueType = (value: ValueType[]): ValueType[] => {
-    return [
-      ...value,
-      {
-        label: currency,
-        variant: "default",
-      },
-    ];
-  };
-
-  const betsPlacedItems: ValueType[] = placedTxns.map(txn => {
-    const hasError = isValidErrorCode(txn.error_code);
-
-    return {
-      label: formatAmount(txn.amount),
-      variant: hasError ? "error" : "success",
-    };
-  });
-
-  const betsPlacedError: ValueType[] = (() => {
-    const errors = placedTxns
-      .filter(txn => isValidErrorCode(txn.error_code))
-      .map(txn => ({
-        label: txn.error_description,
-        variant: "error" as const,
-      }));
-
-    return errors.length > 0
-      ? errors
-      : [
-        {
-          label: "OK",
-          variant: "success",
-        },
-      ];
-  })();
-
-  const betsSettledItems: ValueType[] = settledTxns.map(txn => {
-    const hasError = isValidErrorCode(txn.error_code);
-
-    return {
-      label: formatAmount(txn.amount),
-      variant: hasError ? "error" : "success",
-    };
-  });
-
-  const betsSettledError: ValueType[] = (() => {
-    const errors = settledTxns
-      .filter(txn => isValidErrorCode(txn.error_code))
-      .map(txn => ({
-        label: txn.error_description,
-        variant: "error" as const,
-      }));
-
-    return errors.length > 0
-      ? errors
-      : [
-        {
-          label: "OK",
-          variant: "success",
-        },
-      ];
-  })();
-
-  const unknownTxnsItems: ValueType[] = unknownTxns.map(txn => {
-    const hasError = isValidErrorCode(txn.error_code);
-
-    return {
-      label: formatAmount(txn.amount),
-      variant: hasError ? "error" : "success",
-    };
-  });
-
-  const unknownTxnsError: ValueType[] = (() => {
-    const errors = unknownTxns
-      .filter(txn => isValidErrorCode(txn.error_code))
-      .map(txn => ({
-        label: txn.error_description,
-        variant: "error" as const,
-      }));
-
-    return errors.length > 0
-      ? errors
-      : [];
-  })();
-
-  const placedTxn = placedTxns[0];
-
-  const settledTxn = settledTxns[0];
-
-  const hasSettledError = Boolean(
-    settledTxn &&
-    settledTxn.status_code !== "0" &&
-    isValidErrorCode(settledTxn.error_code)
-  );
-
+  // Status logic
   const hasPlacedError = placedTxns.some(txn =>
     isValidErrorCode(txn.error_code)
+  );
+
+  const settledTxn = settledTxns[0];
+  const hasSettledError = Boolean(
+    settledTxn &&
+      settledTxn.status_code !== "0" &&
+      isValidErrorCode(settledTxn.error_code)
   );
 
   const isSettled = settledTxns.length > 0;
@@ -152,30 +145,15 @@ export default function generateRoundOverview(
     hasPlacedError
       ? "error"
       : !isSettled
-        ? "default"
-        : hasSettledError
-          ? "error"
-          : "success";
+      ? "default"
+      : hasSettledError
+      ? "error"
+      : "success";
 
-  const createLink = (
-    id: string,
-    url: (id: string) => string
-  ): Pick<InfoCardProps["items"][number], "link" | "copyable"> | {} =>
-    id
-      ? {
-        link: {
-          href: url(id),
-          target: "_blank",
-        },
-        copyable: true,
-      }
-      : {};
-
-  // -------------------------------
-  // FINAL OUTPUT
-  // -------------------------------
-  const roundOverview: InfoCardProps[] = [];
-  roundOverview.push(
+  // ------------------
+  // Build Sections
+  // ------------------
+  const sections: (InfoCardProps | null)[] = [
     {
       iName: "landmark",
       items: [
@@ -190,9 +168,7 @@ export default function generateRoundOverview(
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
-    }
-  );
-  roundOverview.push(
+    },
     {
       iName: "fingerprint",
       items: [
@@ -204,66 +180,22 @@ export default function generateRoundOverview(
         {
           label: "Round ID",
           value: roundId || "N/A",
-          copyable: true
+          copyable: true,
         },
       ],
-    }
-  );
+    },
+    buildTxnSection("Placed BETs", "coins", placedTxns, currency),
+    buildTxnSection(
+      "Settled BETs",
+      "hand_coins",
+      settledTxns,
+      currency,
+      transactionVariant
+    ),
+    buildTxnSection("Unknown BETs", "coins", unknownTxns, currency),
+  ];
 
-  if (betsPlacedItems.length > 0 || betsPlacedError.length > 0) {
-    roundOverview.push(
-      {
-        iName: "coins",
-        items: [
-          {
-            label: "Placed BETs",
-            value: appendCurrencyInValueType(betsPlacedItems),
-          },
-          {
-            label: "Error",
-            value: betsPlacedError,
-          },
-        ],
-      },
-    )
+  return {
+    roundOverview: sections.filter(Boolean) as InfoCardProps[],
   };
-  if (betsSettledItems.length > 0 || betsSettledError.length > 0) {
-    roundOverview.push(
-      {
-        iName: "hand_coins",
-        items: [
-          {
-            label: "Settled BETs",
-            value: appendCurrencyInValueType(betsSettledItems),
-          },
-          {
-            label: "Error",
-            value: betsSettledError,
-          },
-        ],
-        variant: transactionVariant,
-      }
-    )
-  };
-  console.log(unknownTxnsItems)
-  console.log(unknownTxnsError)
-  if (unknownTxnsItems.length > 0 || unknownTxnsError.length > 0) {
-    roundOverview.push(
-      {
-        iName: "coins",
-        items: [
-          {
-            label: "Unknown BETs",
-            value: appendCurrencyInValueType(unknownTxnsItems),
-          },
-          {
-            label: "Error",
-            value: unknownTxnsError,
-          },
-        ],
-      }
-    )
-  };
-
-  return { roundOverview };
 }

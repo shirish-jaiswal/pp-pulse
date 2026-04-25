@@ -79,13 +79,13 @@ export function useTableManager(dbName: string, selectedTable: string | null, on
     }
   };
 
-  return { 
-    tables, 
-    loading, 
-    submitting, 
-    load, 
-    handleCreate, 
-    handleRename, 
-    handleDelete 
+  return {
+    tables,
+    loading,
+    submitting,
+    load,
+    handleCreate,
+    handleRename,
+    handleDelete
   };
 }

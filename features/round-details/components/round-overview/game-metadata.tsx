@@ -1,22 +1,16 @@
 import { useState } from "react";
 import { cn } from "@/utils/cn";
 import { Copy, Check } from "lucide-react";
+import { useRoundDetails } from "../../context/round-details-context";
 
 const GameMetadata = () => {
   const [copied, setCopied] = useState(false);
 
-  const data = [
-    { label: "Game Type", value: "Free Bet Blackjack", isTechnical: false },
-    { label: "Session Time", value: "2026-03-21 06:05:13.977", isTechnical: true },
-    { label: "Table ID", value: "fbj0000000000092", isTechnical: true },
-    { label: "Table Name", value: "SO-BJ-06.2", isTechnical: true },
-    { label: "Mega Slot", value: "--", isTechnical: false },
-    { label: "Mega Multiplier", value: "--", isTechnical: false },
-    { label: "Platform", value: "Blackjack Mobile", isTechnical: false },
-  ];
+  const { gameMetadata } = useRoundDetails();
 
   const handleCopy = () => {
-    const textToCopy = data
+    if (!gameMetadata) return;
+    const textToCopy = gameMetadata
       .map((item) => `${item.label}: ${item.value}`)
       .join("\n");
 
@@ -26,15 +20,16 @@ const GameMetadata = () => {
     });
   };
 
+  if (!gameMetadata) return null;
   return (
     <div className="w-full flex items-center border-2 bg-muted/20 rounded-md">
 
       {/* METADATA */}
       <div className="flex-1 flex items-center overflow-x-auto no-scrollbar px-2 py-2">
-        {data.map((item, index) => (
+        {gameMetadata.map((item, index) => (
           <div key={index} className="flex items-center shrink-0">
 
-            <div className="flex items-baseline gap-1.5 px-3">
+            <div className="flex items-baseline gap-1.5 px-1">
 
               {/* Label */}
               <span className="text-[11px] text-muted-foreground">
@@ -55,8 +50,8 @@ const GameMetadata = () => {
             </div>
 
             {/* Divider */}
-            {index !== data.length - 1 && (
-              <div className="h-3 w-px bg-border/40 mx-1" />
+            {index !== gameMetadata.length - 1 && (
+              <div className="h-3 w-px bg-border mx-1" />
             )}
           </div>
         ))}

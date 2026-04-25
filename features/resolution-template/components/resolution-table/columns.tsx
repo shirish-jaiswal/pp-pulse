@@ -27,6 +27,7 @@ export const getResolutionColumns = ({
   {
     accessorKey: "title",
     header: "Title",
+    enableColumnFilter: false,
   },
 
   {
