@@ -1,0 +1,51 @@
+import { GameMetaData } from "@/features/round-details/context/round-details-context";
+
+export default function generateGameMetaData(
+  data?: any | null
+): GameMetaData[] {
+  if (!data) return [];
+
+  const d = Array.isArray(data) ? data[0] : data;
+
+  return [
+    {
+      label: "Game",
+      value: d.game_type ?? "-",
+      isTechnical: false,
+    },
+    {
+      label: "Table",
+      value: d.table_name ?? "-",
+      isTechnical: false,
+    },
+    {
+      label: "Table ID",
+      value: d.table_id ?? "-",
+      isTechnical: true,
+    },
+    {
+      label: "Game Time",
+      value: d.game_time
+        ? new Date(d.game_time).toLocaleString()
+        : "-",
+      isTechnical: false,
+    },
+    {
+      label: "IP",
+      value: d.IP ?? "-",
+      isTechnical: true,
+    },
+    {
+      label: "Result",
+      value: d.Description ?? "-",
+      isTechnical: false,
+    },
+    {
+      label: "Result Time",
+      value: d.result_time
+        ? new Date(d.result_time).toLocaleString()
+        : "-",
+      isTechnical: false,
+    },
+  ];
+}
