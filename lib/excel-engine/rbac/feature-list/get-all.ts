@@ -13,7 +13,6 @@ export interface FeatureListTemplate {
     updated_at?: string;
 }
 
-
 export async function getAllFeatureList(): Promise<FeatureListTemplate[]> {
     try {
         const rawRows = await ExcelEngine.getRows(DB_NAME, TABLE_NAME);

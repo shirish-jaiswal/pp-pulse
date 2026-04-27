@@ -11,6 +11,5 @@ export async function saveProfile(data: { game: string; category: string; conten
   } else {
     result = await ExcelEngine.insertRow(DB_NAME, TABLE_NAME, data);
   }
-
   return JSON.parse(JSON.stringify(result));
 }

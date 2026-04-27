@@ -45,7 +45,7 @@ export const RBAC_CONFIG = {
     },
     profile: {
       name: "profile",
-      schema: ["id", "name", "email", "role", "settings","created_at", "updated_at"]
+      schema: ["id", "name", "email", "role", "settings", "created_at", "updated_at"]
     }
   }
 };

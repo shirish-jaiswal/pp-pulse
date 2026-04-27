@@ -17,6 +17,9 @@ export const TransactionSchema = z.object({
   retry_counter: z.number().int(),
   trans_date: z.string().datetime(),
   payoff: z.number(),
+  casino_id: z.string(),
+  casino_name: z.string(),
+  Wallet_Type: z.string(),
 });
 
 export const TPTTableInfoSchema = z.array(TransactionSchema);

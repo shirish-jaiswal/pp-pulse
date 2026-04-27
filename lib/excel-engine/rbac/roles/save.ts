@@ -12,6 +12,5 @@ export async function saveRole(data: { title: string; }, id?: number | null) {
   } else {
     result = await ExcelEngine.insertRow(DB_NAME, TABLE_NAME, data);
   }
-
   return JSON.parse(JSON.stringify(result));
 }

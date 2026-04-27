@@ -1,5 +1,3 @@
-// Excel Engine - Resolution Template Query Keys
-
 const gamesQueryKey: string = "games";
 
 export const gamesKeys = {

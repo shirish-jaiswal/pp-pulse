@@ -16,6 +16,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
+
 import { c_login } from "@/lib/api/auth/login/request-login";
 import { c_requestUserCookie } from "@/lib/api/auth/user/request-user-cookie";
 
@@ -25,16 +26,16 @@ export default function LoginPage() {
 
   const form = useForm({
     defaultValues: {
-      identifier: "",
+      email: "",
       password: "",
     },
     onSubmit: async ({ value }) => {
       try {
         const res = await c_login({
-          email: value.identifier,
+          email: value.email,
           password: value.password,
         });
-
+        console.log("res", res);
         if (res?.success && res?.authenticated) {
           await c_requestUserCookie(res.user);
           toast.success("Welcome back!");
@@ -70,9 +71,9 @@ export default function LoginPage() {
             }}
             className="space-y-4"
           >
-            {/* IDENTIFIER FIELD */}
+            {/* EMAIL / USERNAME FIELD */}
             <form.Field
-              name="identifier"
+              name="email"
               validators={{
                 onChange: ({ value }) =>
                   !value ? "Required" : undefined,
@@ -92,7 +93,7 @@ export default function LoginPage() {
                     <Input
                       id={field.name}
                       type="text"
-                      placeholder="you@example.com or username"
+                      placeholder="Enter email or username"
                       className={`pl-9 h-10 ${
                         field.state.meta.errors.length
                           ? "border-destructive focus-visible:ring-destructive"
@@ -162,6 +163,7 @@ export default function LoginPage() {
               )}
             />
 
+            {/* SUBMIT */}
             <form.Subscribe
               selector={(state) => [
                 state.canSubmit,

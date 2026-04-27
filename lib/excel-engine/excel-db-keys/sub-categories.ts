@@ -1,5 +1,3 @@
-// Excel Engine - Resolution Template Query Keys
-
 const subCategoriesQueryKey: string = "subcategories";
 
 export const subCategoriesKeys = {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import { ResolutionEditor } from "@/features/round-details/components/resolution-sheet/resolution-editor";
 import { RoundInvestigator } from "@/features/round-details/components/investigator/round-investigator";
@@ -15,6 +15,7 @@ import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overvi
 import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
 import RoundDetailsSkeleton from "./round-details-skeleton";
 import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata";
+import { toast } from "sonner";
 
 type RoundDetailsWrapperProps = {
   roundId?: string;
@@ -32,6 +33,7 @@ export function RoundDetailsWrapper({
   roundIds,
 }: RoundDetailsWrapperProps) {
   const {
+    roundDetailsInput,
     setRoundDetailsInput,
     isBulkMode,
     setBulkMode,
@@ -44,6 +46,9 @@ export function RoundDetailsWrapper({
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Use a ref to track the last processed round ID to prevent double toasts
+  const lastToastedIdRef = useRef<string | null>(null);
 
   // -----------------------------
   // Sync props → global context
@@ -128,10 +133,29 @@ export function RoundDetailsWrapper({
   ]);
 
   // -----------------------------
+  // Logic: Handle Toast Notification
+  // -----------------------------
+  useEffect(() => {
+    const walletType = roundDetails?.tptInfo?.[0]?.Wallet_Type?.toLowerCase();
+
+    // We use either the specific roundId prop or the ID from the fetched data
+    const currentRoundId = roundId || roundDetails?.tptInfo?.[0]?.round_id as string;
+
+    if (walletType === "bt" && currentRoundId !== lastToastedIdRef.current) {
+      toast.info("BT operator No Slots Logs");
+      lastToastedIdRef.current = currentRoundId;
+    }
+
+    // If roundDetails is cleared, reset the ref so the next fetch can trigger a toast
+    if (!roundDetails) {
+      lastToastedIdRef.current = null;
+    }
+  }, [roundDetails, roundId]);
+
+  // -----------------------------
   // Cancel Reason (UI block)
   // -----------------------------
-  const cancelReason =
-    roundDetails?.gameDetails?.[0]?.cancelReason;
+  const cancelReason = roundDetails?.gameDetails?.[0]?.cancelReason;
 
   return (
     <div className="flex flex-col gap-2">

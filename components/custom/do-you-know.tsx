@@ -203,7 +203,7 @@ export default function DoYouKnow() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                        Priority {toast.priority || 1}
+                        Do You Know?
                       </span>
                     </div>
                     <p className="text-sm font-medium leading-relaxed text-zinc-700 dark:text-zinc-200">

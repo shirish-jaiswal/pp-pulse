@@ -1,6 +1,5 @@
-import TableTabs from "@/features/access-control/access-control-wrapper";
 
 function RBAC() {
-    return <TableTabs dbName="rbac" />;
+    return <div>shirish</div>;
 }
 export default RBAC

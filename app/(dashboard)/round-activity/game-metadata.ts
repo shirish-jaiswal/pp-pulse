@@ -24,16 +24,16 @@ export default function generateGameMetaData(
       isTechnical: true,
     },
     {
+      label: "IP",
+      value: d.IP ?? "-",
+      isTechnical: true,
+    },
+    {
       label: "Game Time",
       value: d.game_time
         ? new Date(d.game_time).toLocaleString()
         : "-",
       isTechnical: false,
-    },
-    {
-      label: "IP",
-      value: d.IP ?? "-",
-      isTechnical: true,
     },
     {
       label: "Result",

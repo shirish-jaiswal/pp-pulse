@@ -120,7 +120,7 @@ export default function generateRoundOverview(
 
   const userId = safeString(firstTpt?.user_id || firstTpt?.user_id);
   const roundId = safeString(firstTpt?.round_id || firstTpt?.round_id);
-  const casinoId = safeString(firstBet?.casino_id);
+  const casinoId = safeString(firstTpt?.casino_id);
 
   // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
@@ -172,7 +172,7 @@ export default function generateRoundOverview(
         },
         {
           label: "Casino Name",
-          value: firstBet?.casino_desc?.trim() || "N/A",
+          value: firstBet?.casino_desc?.trim() + " - " + firstTpt.Wallet_Type || "N/A",
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
