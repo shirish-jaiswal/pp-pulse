@@ -2,6 +2,7 @@
 
 import {
   BookOpen,
+  Building2,
   DatabaseIcon,
   DicesIcon,
   FileCog,
@@ -9,6 +10,7 @@ import {
   HistoryIcon,
   HomeIcon,
   UserIcon,
+  Users,
 } from "lucide-react";
 
 import {
@@ -39,6 +41,8 @@ export const sideBarMenu = [
   { title: "Dashboard", url: "/home", icon: HomeIcon, group: "WORK" },
   { title: "Round Activity", url: "/round-activity", icon: DicesIcon, group: "WORK" },
   { title: "Player History", url: "/player-history", icon: HistoryIcon, group: "WORK" },
+  { title: "Casino Details", url: "/casino-details", icon: Building2, group: "WORK" },
+  { title: "User Management", url: "/user-management", icon: Users, group: "WORK" },
 
   { title: "Template Gallery", url: "/template-gallery", icon: GalleryHorizontal, group: "ASSETS" },
   { title: "Resolution Templates", url: "/resolution-template", icon: FileCog, group: "TOOLS" },

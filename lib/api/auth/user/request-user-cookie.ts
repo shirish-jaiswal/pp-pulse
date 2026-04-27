@@ -4,7 +4,7 @@ import { axiosClient } from "@/lib/api/axios-client";
 export const RequestUserCookieSchema = z.object({
   email: z.string().min(1),
   name: z.string().min(1),
-role: z.string().min(1),
+  role: z.string().min(1),
 });
 
 export type RequestUserCookieProps = z.infer<typeof RequestUserCookieSchema>;
