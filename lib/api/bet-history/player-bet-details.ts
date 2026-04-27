@@ -14,9 +14,9 @@ export async function getPlayerBetHistory(
         method: "GET",
         endpoint: "/playerbetsinfo",
         params: {
-            playerid: params.playerId,
-            from: params.from,
-            to: params.to,
+            UserId: params.playerId,
+            StartTime: params.from,
+            EndTime: params.to,
         },
         requireCookie: true,
     });
