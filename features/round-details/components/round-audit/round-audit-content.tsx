@@ -1,16 +1,17 @@
 "use client";
 
-import { useRoundDetails } from "@/features/round-details/context/round-details-context";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, Edit } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import BetTable from "@/features/round-details/components/round-audit/tab-content/bet-details";
+import PremiumLogMonitor from "@/features/round-details/components/round-audit/tab-content/log-monitor";
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
-import { useState } from "react";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
-import PremiumLogMonitor from "./tab-content/log-monitor";
-import AddationalDetailsWrapper from "./tab-content/addational-details-wrapper";
+import AddationalDetailsWrapper from "@/features/round-details/components/round-audit/tab-content/addational-details-wrapper";
 import { toast } from "sonner";
+import { usePrefetchTransactionLogs } from "./tab-content/log-monitor/hooks/use-prefetch-logs";
 
 interface ContentProps {
   activeTab: string;
@@ -22,6 +23,14 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
   const { roundDetails, resolutionEditorOpen, setResolutionEditorOpen } = useRoundDetails();
   const [copied, setCopied] = useState(false);
   const shortId = gameId.split("-").pop();
+
+   usePrefetchTransactionLogs({
+    roundId: roundDetails?.tptInfo?.[0]?.round_id,
+    timeStamp: roundDetails?.tptInfo?.[0]?.trans_date,
+    game_id: roundDetails?.tptInfo?.[0]?.game_id,
+    user_id: roundDetails?.tptInfo?.[0]?.user_id,
+    game_type: roundDetails?.gameDetails?.[0]?.game_type,
+  });
 
   const handleCopy = async () => {
     try {
@@ -35,19 +44,12 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
 
   return (
     <div className="flex-1 flex flex-col min-w-0 bg-card/10 max-h-[calc(100dvh-30dvh)]">
-
-      {/* HEADER - Removed border-b and reduced background opacity */}
       <header className="px-6 py-2.5 flex items-center justify-between bg-card-foreground/5">
-
-        {/* LEFT */}
         <div className="flex items-center gap-3">
-
-          {/* Title */}
           <h3 className="text-sm font-medium text-foreground/90">
             {activeLabel}
           </h3>
 
-          {/* Game ID - Simplified border to border-transparent or ultra-thin */}
           <button
             onClick={handleCopy}
             className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 text-xs font-mono text-muted-foreground hover:bg-accent/30 transition-colors"
@@ -76,12 +78,11 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
         </div>
       </header>
 
-      {/* CONTENT - Added slight top padding to compensate for removed border */}
       <div className="flex-1 p-2 pt-3 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 2 }} // Changed x to y for a smoother subtle lift
+            initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -2 }}
             transition={{ duration: 0.12 }}

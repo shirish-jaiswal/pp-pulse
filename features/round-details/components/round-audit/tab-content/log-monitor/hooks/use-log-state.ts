@@ -21,7 +21,7 @@ const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
 
 export function useLogState(roundId: string, timeStamp: any) {
   const { roundDetails } = useRoundDetails();
-  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp, game_id: roundDetails?.tptInfo?.at(0)?.game_id as string, user_id: roundDetails?.tptInfo?.at(0)?.user_id as string, game_type: roundDetails?.tptInfo?.at(0)?.game_mode as string });
+  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp, game_id: roundDetails?.tptInfo?.at(0)?.game_id as string, user_id: roundDetails?.tptInfo?.at(0)?.user_id as string, game_type: roundDetails?.gameDetails?.at(0)?.game_type as string });
 
   const [activeTab, setActiveTab] = useState<string | null>("");
   const [query, setQuery] = useState("");
@@ -30,26 +30,17 @@ export function useLogState(roundId: string, timeStamp: any) {
     Record<string, string[]>
   >({});
 
-  /**
-   * Tabs
-   */
   const availableTabs = useMemo(() => {
     if (!data) return [];
     return Object.keys(data).filter((k) => Array.isArray(data[k]));
   }, [data]);
 
-  /**
-   * Auto-select first tab
-   */
   useEffect(() => {
     if (availableTabs.length && !activeTab) {
       setActiveTab(availableTabs[0]);
     }
   }, [availableTabs, activeTab]);
 
-  /**
-   * Extract logs + sidebar keys
-   */
   const { logs, sidebarKeys } = useMemo(() => {
     if (!data || !activeTab) return { logs: [], sidebarKeys: [] };
 
