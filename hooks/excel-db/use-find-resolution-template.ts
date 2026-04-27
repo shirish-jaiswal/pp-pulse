@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
-import { findResolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/find-resolution-template";
+import { findResolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/resolution-template/find-resolution-template";
 import { findResolutionTemplatesAction } from "@/lib/excel-engine/resolution-template/resolution/find";
 
 export function useFindResolutionTemplates(filters: {
