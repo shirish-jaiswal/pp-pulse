@@ -116,16 +116,17 @@ export default function generateRoundOverview(
   const firstBet = betInfo[0] ?? {};
   const firstTpt = tptInfo[0] ?? {};
 
-  const currency = firstBet?.currency_code || "-";
+  const currency = firstTpt?.currency_code || "-";
 
-  const userId = safeString(firstBet?.user_id || firstTpt?.user_id);
-  const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
+  const userId = safeString(firstTpt?.user_id || firstTpt?.user_id);
+  const roundId = safeString(firstTpt?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id);
 
   // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
   const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
+  const cancelledTxns = tptInfo.filter(txn => txn.action_type === "Cancelled");
 
   // Status logic
   const hasPlacedError = placedTxns.some(txn =>
@@ -149,6 +150,13 @@ export default function generateRoundOverview(
       : hasSettledError
       ? "error"
       : "success";
+
+  const hasCancelled = cancelledTxns.length > 0;
+  const hasCancelledError = cancelledTxns.some(txn =>
+    isValidErrorCode(txn.error_code)
+  );
+  const cancelledVariant: InfoCardProps["variant"] =
+    hasCancelledError ? "error" : "default";
 
   // ------------------
   // Build Sections
@@ -193,6 +201,7 @@ export default function generateRoundOverview(
       transactionVariant
     ),
     buildTxnSection("Unknown BETs", "coins", unknownTxns, currency),
+    buildTxnSection("Cancelled BETs", "alert", cancelledTxns, currency, cancelledVariant),
   ];
 
   return {

@@ -91,10 +91,13 @@ export async function deleteRow(dbName: string, tableName: string, id: number) {
 }
 
 export const downloadDb = async (fileName: string) => {
-  const res = await fetch(`/api/excel-db/download?file=${fileName}`);
+  const res = await fetch(
+    `/portal/api/excel-db/download?file=${encodeURIComponent(fileName)}`
+  );
 
   if (!res.ok) {
-    throw new Error("Download failed");
+    const text = await res.text();
+    throw new Error(`Download failed: ${res.status} - ${text}`);
   }
 
   const blob = await res.blob();
@@ -103,19 +106,27 @@ export const downloadDb = async (fileName: string) => {
   const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
-  a.click();
 
-  window.URL.revokeObjectURL(url);
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+
+  setTimeout(() => {
+    window.URL.revokeObjectURL(url);
+  }, 1000);
 };
 
 export async function uploadDb(file: File) {
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch("/api/excel-db/upload", {
-    method: "POST",
-    body: formData,
-  });
+  const res = await fetch(
+    `/portal/api/excel-db/upload`,
+    {
+      method: "POST",
+      body: formData,
+    }
+  );
 
   const data = await res.json();
 

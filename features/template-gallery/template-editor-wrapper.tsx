@@ -4,7 +4,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { Tabs } from "@/components/ui/tabs";
 import { ResolutionHeader } from "@/features/resolution-template/components/form/resolution-header";
 import { useResolutionForm } from "@/features/resolution-template/context/use-resolution-form";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 import { TemplateEditor } from "@/features/template-gallery/components/editor/template-editor";
 
 interface TemplateEditorWrapperProps {

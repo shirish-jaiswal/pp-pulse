@@ -70,8 +70,8 @@ export function TemplateGalleryTable<TData>({
                     key={header.id}
                     className="h-9 px-2 text-xs text-muted-foreground"
                   >
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 truncate">
+                    <div className="flex items-right gap-2">
+                      <div className="flex items-right gap-1 truncate">
                         {flexRender(
                           column.columnDef.header,
                           header.getContext()

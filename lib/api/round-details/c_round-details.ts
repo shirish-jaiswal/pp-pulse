@@ -3,8 +3,11 @@ import {
   RoundDetailsInputProps,
 } from "@/features/round-details/types/round-details-input";
 import apiRequest from "@/lib/api/api-request";
+import { isCardGame } from "@/utils/get-game-type";
 
-export async function c_getRoundDetails(rawData: RoundDetailsInputProps): Promise<any> {
+export async function c_getRoundDetails(
+  rawData: RoundDetailsInputProps
+): Promise<any> {
   try {
     const data = RoundDetailsInputFormSchema.parse(rawData);
 
@@ -35,18 +38,38 @@ export async function c_getRoundDetails(rawData: RoundDetailsInputProps): Promis
         endpoint: "gamedetails",
         params: queryParams,
         requireCookie: true,
-      })
+      }),
     ]);
 
+    const gameType = gameDetails?.data?.[0]?.game_type;
+
+    const cardGame = isCardGame(gameType);
+
+    let cardDetails = null;
+
+    if (cardGame) {
+      cardDetails = await apiRequest({
+        method: "GET",
+        endpoint: "carddetails",
+        params: queryParams,
+        requireCookie: true,
+      });
+    }
+
     return {
-      tptInfo: tptInfo?.data,
-      betInfo: betInfo?.data,
-      gameDetails: gameDetails?.data
+      tptInfo: tptInfo?.data ?? null,
+      betInfo: betInfo?.data ?? null,
+      gameDetails: gameDetails?.data ?? null,
+      cardDetails: cardDetails?.data ?? null,
+      isCardGame: cardGame,
     };
   } catch (error) {
     return {
       tptInfo: null,
       betInfo: null,
+      gameDetails: null,
+      cardDetails: null,
+      isCardGame: false,
     };
   }
 }

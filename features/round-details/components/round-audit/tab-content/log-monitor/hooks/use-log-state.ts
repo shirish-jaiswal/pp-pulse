@@ -4,14 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useTransactionLogs } from "@/hooks/use-transactionlogs";
 import { getDeepKeys } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
-import { getServiceName } from "@/app/(dashboard)/round-details/backoffice-dashboard/kibana/utils";
 
 const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
   platformLogs: [
-    "raw.app.responseLog.log",
     "raw.app.serviceMethod",
-    "raw.app.requestLog.log",
     "raw.app.url",
+    "raw.app.requestLog.log",
+    "raw.app.responseLog.log",
   ],
   lcTransactionLogs: [
     "message",

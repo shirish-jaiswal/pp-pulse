@@ -36,7 +36,7 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
       setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortKey(key);
-      setSortOrder("desc"); // default for new column
+      setSortOrder("desc");
     }
   };
 

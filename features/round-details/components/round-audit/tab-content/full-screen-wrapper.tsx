@@ -45,7 +45,13 @@ export default function FullScreenWrapper({
         {/* Expand Button */}
         <button
           onClick={() => setIsFullScreen(true)}
-          className="absolute right-2 top-2 z-10 p-1 rounded-md ring-1 ring-border bg-slate-800 text-shadow-muted-foreground text-slate-400 hover:text-white hover:bg-accent-foreground transition"
+          className={cn(
+            "absolute right-0 top-0 z-10 p-1 rounded-md",
+            "border border-border bg-background/80 backdrop-blur-sm",
+            "text-muted-foreground hover:text-foreground hover:bg-accent",
+            "opacity-0 group-hover:opacity-100 transition-all duration-200 ease-in-out", // Smooth reveal
+            "shadow-sm"
+          )}
           title="Expand"
         >
           <Maximize2 className="w-3.5 h-3.5" />

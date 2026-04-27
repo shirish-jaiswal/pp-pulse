@@ -9,6 +9,8 @@ import TransactionTable from "@/features/round-details/components/round-audit/ta
 import { useState } from "react";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
 import PremiumLogMonitor from "./tab-content/log-monitor";
+import AddationalDetailsWrapper from "./tab-content/addational-details-wrapper";
+import { toast } from "sonner";
 
 interface ContentProps {
   activeTab: string;
@@ -27,35 +29,35 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy!", err);
+      toast.error("Failed to copy Game ID");
     }
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-card/20 max-h-[calc(100dvh-30dvh)]">
+    <div className="flex-1 flex flex-col min-w-0 bg-card/10 max-h-[calc(100dvh-30dvh)]">
 
-      {/* HEADER */}
-      <header className="px-6 py-2.5 border-b border-border/50 flex items-center justify-between bg-card-foreground/10">
+      {/* HEADER - Removed border-b and reduced background opacity */}
+      <header className="px-6 py-2.5 flex items-center justify-between bg-card-foreground/5">
 
         {/* LEFT */}
         <div className="flex items-center gap-3">
 
           {/* Title */}
-          <h3 className="text-sm font-medium text-foreground">
+          <h3 className="text-sm font-medium text-foreground/90">
             {activeLabel}
           </h3>
 
-          {/* Game ID */}
+          {/* Game ID - Simplified border to border-transparent or ultra-thin */}
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-2 py-0.5 rounded-md border border-border/40 bg-muted/20 text-xs font-mono text-muted-foreground hover:bg-accent/30 transition-colors"
+            className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 text-xs font-mono text-muted-foreground hover:bg-accent/30 transition-colors"
             title="Copy full Game ID"
           >
-            <p>Game ID : <span>{shortId}</span> </p>
+            <p>Game ID : <span className="text-foreground/70">{shortId}</span> </p>
             {copied ? (
               <Check className="h-3 w-3 text-emerald-400" />
             ) : (
-              <Copy className="h-3 w-3 opacity-50" />
+              <Copy className="h-3 w-3 opacity-40" />
             )}
           </button>
         </div>
@@ -74,14 +76,14 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
         </div>
       </header>
 
-      {/* CONTENT */}
-      <div className="flex-1 p-1 overflow-y-auto">
+      {/* CONTENT - Added slight top padding to compensate for removed border */}
+      <div className="flex-1 p-2 pt-3 overflow-y-auto">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, x: 4 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -4 }}
+            initial={{ opacity: 0, y: 2 }} // Changed x to y for a smoother subtle lift
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -2 }}
             transition={{ duration: 0.12 }}
           >
             {activeTab === "bets" && (
@@ -89,7 +91,13 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
                 title="Bet History"
                 description="Player wagers overview"
               >
-                <BetTable items={roundDetails?.betInfo} />
+                <div className="gap-2 flex flex-col">
+                  <BetTable items={roundDetails?.betInfo} />
+                  <AddationalDetailsWrapper
+                    items={roundDetails?.cardDetails}
+                    isCardGame={roundDetails?.isCardGame}
+                  />
+                </div>
               </FullScreenWrapper>
             )}
 
@@ -107,6 +115,15 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
                 <PremiumLogMonitor
                   roundId={roundDetails?.tptInfo?.[0].round_id || ""}
                   timeStamp={roundDetails?.tptInfo?.[0].trans_date || ""}
+                />
+              </FullScreenWrapper>
+            )}
+
+            {activeTab === "addationalDetails" && (
+              <FullScreenWrapper title="Additional Details">
+                <AddationalDetailsWrapper
+                  items={roundDetails?.cardDetails}
+                  isCardGame={roundDetails?.isCardGame}
                 />
               </FullScreenWrapper>
             )}

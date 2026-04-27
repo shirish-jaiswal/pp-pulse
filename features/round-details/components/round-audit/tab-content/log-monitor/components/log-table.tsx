@@ -1,3 +1,4 @@
+import React, { useState, useRef } from "react";
 import {
     Table,
     TableBody,
@@ -6,25 +7,66 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-
 import { cn } from "@/utils/cn";
 import { getNestedValue } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
+
+
 export function LogTable({ filteredLogs, visibleColumns }: any) {
+    const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
+        Object.fromEntries(visibleColumns.map((col: string) => [col, 200]))
+    );
+
+    const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
+
+    const onMouseDown = (e: React.MouseEvent, col: string) => {
+        resizingRef.current = {
+            col,
+            startX: e.clientX,
+            startWidth: columnWidths[col] || 200,
+        };
+        document.addEventListener("mousemove", onMouseMove);
+        document.addEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "col-resize";
+    };
+
+    const onMouseMove = (e: MouseEvent) => {
+        if (!resizingRef.current) return;
+        const { col, startX, startWidth } = resizingRef.current;
+        const delta = e.clientX - startX;
+
+        setColumnWidths((prev) => ({
+            ...prev,
+            [col]: Math.max(80, startWidth + delta), // Minimum width of 80px
+        }));
+    };
+
+    const onMouseUp = () => {
+        resizingRef.current = null;
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        document.body.style.cursor = "default";
+    };
+
     return (
-        <div className="flex-1 overflow-auto">
+        <div className="flex-1 overflow-auto rounded-md border bg-background">
             <Table className="w-full table-fixed border-separate border-spacing-0">
-                <TableHeader className="sticky top-0 bg-background border-b border-border">
+                <TableHeader className="sticky top-0 z-10 bg-background border-b border-border">
                     <TableRow>
-                        <TableHead className="w-32 px-2 py-2 text-xs text-muted-foreground">
+                        <TableHead className="min-w-16 w-16 px-2 py-2 text-xs text-muted-foreground border-r">
                             Time
                         </TableHead>
 
                         {visibleColumns.map((col: string) => (
                             <TableHead
                                 key={col}
-                                className="px-2 py-2 text-xs text-muted-foreground wrap-break-words"
+                                style={{ width: columnWidths[col] || 200 }}
+                                className="relative px-2 py-2 text-xs text-muted-foreground border-r group"
                             >
-                                {col}
+                                <div className="truncate">{col}</div>
+                                <div
+                                    onMouseDown={(e) => onMouseDown(e, col)}
+                                    className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/50 active:bg-primary z-20"
+                                />
                             </TableHead>
                         ))}
                     </TableRow>
@@ -40,38 +82,29 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
                                 "hover:bg-muted/40"
                             )}
                         >
-                            {/* TIME */}
-                            <TableCell className="w-32 px-2 py-1.5 text-xs whitespace-nowrap">
-                                {log.raw?.["@timestamp"]?.split("T")[1]?.replace("Z", "") ||
-                                    "--"}
+                            <TableCell className="w-25 px-2 py-1.5 text-xs whitespace-nowrap font-mono align-top border-r">
+                                {log.raw?.["@timestamp"]?.split("T")[1]?.replace("Z", "") || "--"}
                             </TableCell>
 
-                            {/* DYNAMIC COLUMNS */}
                             {visibleColumns.map((col: string) => {
                                 const val = getNestedValue(log, col);
-
                                 return (
                                     <TableCell
                                         key={col}
-                                        className="
-                      px-2 py-1.5
-                      min-w-0
-                      max-w-[260px]
-                      whitespace-pre-wrap
-                      break-words
-                      align-top
-text-[11px]
-                    "
+                                        style={{ width: columnWidths[col] || 200 }}
+                                        className="px-2 py-1.5 text-[11px] align-top min-w-0 border-r"
                                     >
-                                        {typeof val === "object" ? (
-                                            <pre className="whitespace-pre-wrap break-words text-xs">
-                                                {JSON.stringify(val, null, 2)}
-                                            </pre>
-                                        ) : (
-                                            <span className="whitespace-pre-wrap break-words">
-                                                {String(val ?? "-")}
-                                            </span>
-                                        )}
+                                        <div className="w-full break-all whitespace-pre-wrap overflow-hidden">
+                                            {typeof val === "object" ? (
+                                                <pre className="text-[10px] bg-muted/30 p-1 rounded font-mono break-all whitespace-pre-wrap">
+                                                    {JSON.stringify(val, null, 2)}
+                                                </pre>
+                                            ) : (
+                                                <span className="block leading-tight">
+                                                    {String(val ?? "-")}
+                                                </span>
+                                            )}
+                                        </div>
                                     </TableCell>
                                 );
                             })}

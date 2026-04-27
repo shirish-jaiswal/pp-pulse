@@ -1,7 +1,7 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 
 interface GetColumnsProps {
   onEdit: (res: ResolutionTemplate) => void;

@@ -1,5 +1,5 @@
 import { SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 
 export function ResolutionHeader({ initialData }: { initialData: ResolutionTemplate | null }) {
     return (

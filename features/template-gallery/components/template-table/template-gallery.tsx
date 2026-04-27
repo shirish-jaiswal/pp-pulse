@@ -1,6 +1,6 @@
 "use client";
 
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 import { getColumns } from "@/features/template-gallery/components/template-table/columns";
 import { TemplateGalleryTable } from "@/features/template-gallery/components/template-table/template-gallery-table";
 

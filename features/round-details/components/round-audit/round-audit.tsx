@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Gamepad2, TicketPercent, Terminal, CircleDollarSign, InfoIcon } from "lucide-react";
+import { Gamepad2, TicketPercent, Terminal, CircleDollarSign, InfoIcon, ClubIcon } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoundAuditSidebar } from "@/features/round-details/components/round-audit/round-audit-sidebar";
 import { RoundAuditContent } from "@/features/round-details/components/round-audit/round-audit-content";
@@ -13,6 +13,7 @@ export default function RoundAudit() {
   const tabs = useMemo(() => {
     const items = [];
     if (roundDetails?.betInfo) items.push({ id: "bets", label: "Bet Details", icon: InfoIcon });
+    if (roundDetails?.cardDetails?.length) items.push({ id: "addationalDetails", label: "Additional Details", icon: ClubIcon });
     if (roundDetails?.tptInfo?.length) items.push({ id: "tx", label: "Transactions", icon: CircleDollarSign });
     if (roundDetails) items.push({ id: "logs", label: "Kibana Logs", icon: Terminal });
     return items;
@@ -40,7 +41,7 @@ export default function RoundAudit() {
         <RoundAuditContent
           activeTab={activeTab}
           activeLabel={activeLabel}
-          gameId={roundDetails?.betInfo?.[0]?.game_id || ""}
+          gameId={roundDetails?.tptInfo?.[0]?.game_id || ""}
         />
       </div>
     </TooltipProvider>

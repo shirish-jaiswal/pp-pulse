@@ -36,7 +36,7 @@ const RoundOverview = () => {
             : null;
 
           return (
-            <div key={idx} className="min-w-55 max-w-[320px] shrink-0">
+            <div key={idx} className="min-w-28 max-w-[320px] shrink-0">
               <InfoCard
                 icon={IconComponent ?? undefined}
                 className="h-full"

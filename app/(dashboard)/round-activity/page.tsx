@@ -1,6 +1,7 @@
 import { RoundDetailsWrapper } from "@/features/round-details/components/round-details-wrapper";
 import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
-import { RoundMetaArray } from "@/features/round-details/types/game-details";
+import { CardDetailsInfo } from "@/features/round-details/types/card-details";
+import { RoundMetaInfo } from "@/features/round-details/types/game-details";
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 
 interface PageProps {
@@ -16,7 +17,9 @@ interface PageProps {
 export interface RoundDetailsResponse {
     tptInfo?: TPTTableInfo,
     betInfo?: BetTableInfo,
-    gameDetails?: RoundMetaArray
+    gameDetails?: RoundMetaInfo
+    cardDetails?: CardDetailsInfo
+    isCardGame?: boolean
 }
 
 export default async function Page({ searchParams }: PageProps) {

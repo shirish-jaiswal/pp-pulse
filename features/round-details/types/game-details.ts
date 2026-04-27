@@ -34,4 +34,4 @@ export const RoundMetaArraySchema = z.array(RoundMetaSchema);
 // Types
 // ------------------
 export type RoundMeta = z.infer<typeof RoundMetaSchema>;
-export type RoundMetaArray = z.infer<typeof RoundMetaArraySchema>;
+export type RoundMetaInfo = z.infer<typeof RoundMetaArraySchema>;

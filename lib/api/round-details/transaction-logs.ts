@@ -3,9 +3,9 @@ import apiRequest from "@/lib/api/api-request";
 export type TransactionLogsProps = {
     roundId: string;
     timeStamp: string;
-    game_id: string;
-    user_id: string;
-    game_type: string;
+    game_id?: string;
+    user_id?: string;
+    game_type?: string;
 };
 
 export async function c_getTransactionLogs(

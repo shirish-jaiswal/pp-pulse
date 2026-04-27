@@ -5,7 +5,7 @@ import ResolutionTemplateSearch from "@/features/resolution-template/components/
 import ResolutionTableSkeleton from "@/features/resolution-template/components/resolution-table-skeleton";
 import NoTemplates from "@/features/resolution-template/components/no-templates";
 import { TemplateGallery } from "@/features/template-gallery/components/template-table/template-gallery";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 import { useResolutionTemplates } from "@/hooks/excel-db/use-resolution-templates";
 import { TemplateEditorWrapper } from "@/features/template-gallery/template-editor-wrapper";
 

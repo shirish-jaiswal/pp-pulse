@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 
 import { Badge } from "@/components/ui/badge";
-import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/get-all";
+import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 import { getResolutionColumns } from "@/features/resolution-template/components/resolution-table/columns";
 import ColumnFilter from "@/features/template-gallery/components/template-table/column-filters";
 
@@ -30,9 +30,6 @@ interface Props {
   onEdit: (res: ResolutionTemplate) => void;
   onDelete: (id: number) => void;
 }
-
-const getFilterCount = (value: unknown): number =>
-  Array.isArray(value) ? value.length : 0;
 
 export function ResolutionTable({ data, onEdit, onDelete }: Props) {
   const [columnFilters, setColumnFilters] =
@@ -64,12 +61,10 @@ export function ResolutionTable({ data, onEdit, onDelete }: Props) {
               {hg.headers.map((header) => {
                 const column = header.column;
                 const filterValue = column.getFilterValue();
-                const filterCount = getFilterCount(filterValue);
-
                 return (
                   <TableHead key={header.id} className="h-9 px-2 text-xs">
-                    <div className="flex items-center gap-2">
-                      <div className="flex items-center gap-1 truncate">
+                    <div className="flex items-right gap-2">
+                      <div className="flex gap-1 truncate">
                         {flexRender(
                           column.columnDef.header,
                           header.getContext()

@@ -1,5 +1,3 @@
-import { access } from "fs";
-
 export const RESOLUTION_TEMPLATE_CONFIG = {
   name: "resolution_template",
   tables: {
@@ -48,3 +46,26 @@ export const RBAC_CONFIG = {
   }
 };
 
+export const KNOWLEDGE_BASE_CONFIG = {
+  name: "knowledge_base",
+  tables: {
+    qna: {
+      name: "qna",
+      schema: ["id", "question", "answer", "options", "created_at", "updated_at"]
+    },
+    helpNotes: {
+      name: "help_notes",
+      schema: ["id", "notes", "priority", "created_at", "updated_at"]
+    },
+  }
+};
+
+export const GAMES_CONFIG = {
+  name: "games",
+  tables: {
+    baccarat: {
+      name: "baccarat_cards",
+      schema: ["id", "code", "suit", "rank", "name", "created_at", "updated_at"]
+    },
+  }
+};

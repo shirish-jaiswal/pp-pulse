@@ -220,28 +220,35 @@ export const ExcelEngine = {
 
     saveWorkbook(wb, getDBPath(dbName));
   },
+findRows(
+  dbName: string,
+  tableName: string,
+  filters: Record<string, string | string[]>
+) {
+  console.log("Finding rows with filters:", filters);
 
-  findRows(
-    dbName: string,
-    tableName: string,
-    filters: Record<string, string | string[]>
-  ) {
-    const wb = loadWB(dbName);
-    const sheet = wb.Sheets[tableName];
-    if (!sheet) throw new Error("Table not found");
+  const wb = loadWB(dbName);
+  const sheet = wb.Sheets[tableName];
+  if (!sheet) throw new Error("Table not found");
 
-    const rows = utils.sheet_to_json<Record<string, string>>(sheet);
+  const rows = utils.sheet_to_json<Record<string, any>>(sheet);
 
-    return rows.filter((row) =>
-      Object.entries(filters).every(([key, value]) => {
-        const rowValue = row[key];
+  return rows.filter((row) =>
+    Object.entries(filters).every(([key, value]) => {
+      const rowValue = row[key];
 
-        if (Array.isArray(value)) {
-          return value.includes(rowValue);
-        }
+      if (rowValue === undefined || rowValue === null) return false;
 
-        return rowValue === value;
-      })
-    );
-  }
+      const normalizedRowValue = String(rowValue).trim();
+
+      if (Array.isArray(value)) {
+        return value
+          .map(v => String(v).trim())
+          .includes(normalizedRowValue);
+      }
+
+      return normalizedRowValue === String(value).trim();
+    })
+  );
+}
 };

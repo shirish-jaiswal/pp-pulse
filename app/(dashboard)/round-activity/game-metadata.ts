@@ -36,14 +36,9 @@ export default function generateGameMetaData(
       isTechnical: true,
     },
     {
-      label: "Description",
+      label: "Game Result",
       value: d.Description ?? "-",
       isTechnical: false,
-    },
-    {
-      label: "Result Code",
-      value: d.resultcode_id ?? "-",
-      isTechnical: true,
     },
     {
       label: "Result Time",

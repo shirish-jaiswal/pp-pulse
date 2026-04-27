@@ -21,5 +21,6 @@ export function useTransactionLogs(
      */
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    retry: 1
   });
 }
