@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteResolutionAction } from "@/lib/excel-engine/resolution-template/resolution/delete";
-import { resolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/get-resolution-template";
+import { resolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/resolution-template/get-resolution-template";
 import { toast } from "sonner";
 
 export function useDeleteResolution() {

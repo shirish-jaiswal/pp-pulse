@@ -1,6 +1,6 @@
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { resolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/get-resolution-template";
+import { resolutionTemplatesKeys } from "@/lib/excel-engine/excel-db-keys/resolution-template/get-resolution-template";
 import { saveResolutionAction } from "@/lib/excel-engine/resolution-template/resolution/save";
 import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 

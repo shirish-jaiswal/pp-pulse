@@ -33,7 +33,7 @@ function UserResultCard({ user, index }: { user: UserData; index: number }) {
     const [expanded, setExpanded] = useState(false);
 
     const casinoType = resolveCasinoType(user.className);
-    const chatAllowed = user.chatAllowedFlag === 1 || user.chatAllowedFlag === true as any;
+    const chatAllowed = Boolean(user.chatAllowedFlag);
 
     return (
         <div className="rounded-md border border-border bg-card overflow-hidden">
@@ -169,7 +169,7 @@ export function UserManagementResultById({ data }: { data: UserData[] }) {
         <div className="space-y-3">
             {data.map((user, idx) => {
                 const casinoType = resolveCasinoType(user.className);
-                const chatAllowed = user.chatAllowedFlag === 1 || user.chatAllowedFlag === true as any;
+                const chatAllowed = Boolean(user.chatAllowedFlag);
 
                 return (
                     <div key={user.userId ?? idx} className="rounded-md border border-border bg-card p-3 space-y-0">

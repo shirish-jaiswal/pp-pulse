@@ -76,7 +76,7 @@ function buildShardedRows(data: NormalisedCasinoData): ShardedRow[] {
             .filter((e: SharedEnv) => {
                 // Keep rows that have at least an env id or env name
                 const hasEnv = e.env != null && e.env !== "";
-                const hasEnvId = e.env_id != null && e.env_id !== "";
+                const hasEnvId = e.env_id != null && (typeof e.env_id === "number" || e.env_id !== "");
                 const hasName = e.env_name && (e.env_name as string).trim();
                 return hasEnv || hasEnvId || hasName;
             })

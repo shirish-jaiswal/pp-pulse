@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CATEGORYTYPE, getCategories } from "@/lib/excel-engine/resolution-template/category/get";
-import { categoriesKeys } from "@/lib/excel-engine/excel-db-keys/categories";
+import { categoriesKeys } from "@/lib/excel-engine/excel-db-keys/resolution-template/categories";
 
 export function useCategories() {
     return useQuery<CATEGORYTYPE[], Error>({

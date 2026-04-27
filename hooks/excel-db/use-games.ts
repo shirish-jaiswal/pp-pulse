@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { DropdownOption } from "@/features/resolution-template/components/form/selector";
 import { GAMETYPE, getGamesAction } from "@/lib/excel-engine/resolution-template/games/get";
-import { gamesKeys } from "@/lib/excel-engine/excel-db-keys/games";
+import { gamesKeys } from "@/lib/excel-engine/excel-db-keys/resolution-template/games";
 
 export function useGames()  {
     return useQuery({
