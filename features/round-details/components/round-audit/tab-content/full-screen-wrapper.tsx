@@ -40,7 +40,7 @@ export default function FullScreenWrapper({
   return (
     <>
       {/* NORMAL MODE */}
-      <div className="relative group border border-border/50 rounded-md bg-background/40 flex flex-col">
+      <div className="relative group rounded-md bg-background/40 flex flex-col">
 
         {/* Expand Button */}
         <button

@@ -14,7 +14,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { RoundDetailsProvider } from "@/features/round-details/context/round-details-context";
 import { ProfileProvider } from "@/context/use-profile";
 import { useUser } from "@/hooks/use-user";
-import NotesToaster from "@/components/custom/NotesToaster";
+import DoYouKnow from "@/components/custom/do-you-know";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -40,7 +40,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
       <SidebarInset className="flex flex-col h-screen bg-background">
 
         {/* HEADER */}
-        <header className="sticky top-0 z-10 flex h-12 items-center gap-3 border-b bg-background/80 backdrop-blur px-4">
+        <header className="sticky top-0 z-10 flex h-12 py-1.5 items-center gap-3 border-b bg-background/80 backdrop-blur px-4">
           <SidebarTrigger className="-ml-1" />
 
           <div className="flex flex-col leading-tight">
@@ -57,7 +57,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
 
         {/* CONTENT */}
         <RoundDetailsProvider>
-          <NotesToaster />
+          <DoYouKnow />
 
           <ScrollArea className="flex-1 w-full">
             <div className="p-3 md:p-4">{children}</div>

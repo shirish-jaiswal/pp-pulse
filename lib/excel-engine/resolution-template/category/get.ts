@@ -1,7 +1,8 @@
 "use server";
 
 import { ExcelEngine } from "@/lib/excel-engine/excel-engine";
-import { DB_NAME, TABLE_NAME } from ".";
+import { TABLE_NAME } from ".";
+import { DB_NAME } from "..";
 
 export interface CATEGORYTYPE {
     id: number;

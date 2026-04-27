@@ -43,6 +43,10 @@ export const RBAC_CONFIG = {
         name: "exception",
         schema: ["id", "email", "feature_list", "created_at", "updated_at"]
     },
+    profile: {
+      name: "profile",
+      schema: ["id", "name", "email", "role", "settings","created_at", "updated_at"]
+    }
   }
 };
 

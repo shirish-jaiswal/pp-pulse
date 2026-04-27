@@ -9,19 +9,19 @@ export default function generateGameMetaData(
 
   return [
     {
-      label: "Table ID",
-      value: d.table_id ?? "-",
-      isTechnical: true,
+      label: "Game",
+      value: d.game_type ?? "-",
+      isTechnical: false,
     },
     {
-      label: "Table Name",
+      label: "Table",
       value: d.table_name ?? "-",
       isTechnical: false,
     },
     {
-      label: "Game Type",
-      value: d.game_type ?? "-",
-      isTechnical: false,
+      label: "Table ID",
+      value: d.table_id ?? "-",
+      isTechnical: true,
     },
     {
       label: "Game Time",
@@ -31,12 +31,12 @@ export default function generateGameMetaData(
       isTechnical: false,
     },
     {
-      label: "IP Address",
+      label: "IP",
       value: d.IP ?? "-",
       isTechnical: true,
     },
     {
-      label: "Game Result",
+      label: "Result",
       value: d.Description ?? "-",
       isTechnical: false,
     },
