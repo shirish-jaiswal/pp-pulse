@@ -10,13 +10,14 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata";
 
 type Mode = "round" | "game";
 
 export function MultiRoundTabs() {
-  const { multiIds, setRoundDetails, setRoundOverview } =
+  const { multiIds, setRoundDetails, setRoundOverview, setGameMetadata } =
     useRoundDetails();
-  console.log("multiIds", multiIds);
+
   const mode: Mode = useMemo(() => {
     return multiIds.game_ids?.length ? "game" : "round";
   }, [multiIds]);
@@ -24,7 +25,7 @@ export function MultiRoundTabs() {
   const [activeId, setActiveId] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Default active
+  // Default active tab
   useEffect(() => {
     if (mode === "round" && multiIds.round_ids.length) {
       setActiveId(multiIds.round_ids[0]);
@@ -67,43 +68,61 @@ export function MultiRoundTabs() {
     }
   }, [isError, activeId]);
 
+  // Round overview
   const roundOverviewData = useMemo(() => {
     if (!roundData) return null;
     return generateRoundOverview(roundData);
   }, [roundData]);
 
+  // Game metadata
+  const gameMetaData = useMemo(() => {
+    if (!roundData) return [];
+    return generateGameMetaData(roundData.gameDetails);
+  }, [roundData]);
+
+  // Sync to context
   useEffect(() => {
     if (roundData && !isLoading) {
       setRoundDetails(roundData);
+
       if (roundOverviewData) {
         setRoundOverview(roundOverviewData.roundOverview);
       }
+
+      // Only set game metadata in game mode
+      if (mode === "game" && gameMetaData.length) {
+        setGameMetadata(gameMetaData);
+      }
     }
-  }, [roundData, roundOverviewData, isLoading]);
+  }, [
+    roundData,
+    roundOverviewData,
+    gameMetaData,
+    isLoading,
+    mode,
+    setRoundDetails,
+    setRoundOverview,
+    setGameMetadata,
+  ]);
 
   if (!ids.length) return null;
 
   return (
     <div className="w-full bg-background/40">
-
       <Tabs value={activeId} onValueChange={setActiveId}>
         <TabsList className="flex w-full gap-1 px-2 overflow-x-auto no-scrollbar">
-
           {ids.map((id) => {
             const isActive = activeId === id;
             const isChecked = selectedIds.includes(id);
 
             return (
               <TabsTrigger key={id} value={id} asChild>
-
                 <div
                   className={cn(
                     "flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition whitespace-nowrap",
-
                     isActive
                       ? "bg-muted text-foreground"
                       : "text-muted-foreground hover:bg-muted/50",
-
                     "cursor-pointer"
                   )}
                 >
@@ -121,9 +140,7 @@ export function MultiRoundTabs() {
                       {mode === "round" ? "R" : "G"}:
                     </span>
 
-                    <span className="max-w-25">
-                      {id}
-                    </span>
+                    <span className="max-w-25">{id}</span>
                   </div>
 
                   {/* Loader */}
@@ -131,7 +148,6 @@ export function MultiRoundTabs() {
                     <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                   )}
                 </div>
-
               </TabsTrigger>
             );
           })}

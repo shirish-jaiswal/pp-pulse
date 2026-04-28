@@ -93,7 +93,7 @@ export default function DoYouKnow() {
     const notes = helpNotes?.notes || [];
     const now = Date.now();
 
-    // In Debug Mode, we ignore the "due" timing to allow instant testing
+    // 1. Filter for due notes
     const dueNotes = notes.filter((n: any) => {
       if (DEBUG_MODE) return true;
       const mem = memoryRef.current[n.notes];
@@ -102,13 +102,38 @@ export default function DoYouKnow() {
 
     if (!dueNotes.length) return null;
 
-    // WEIGHTED SELECTION: Higher priority notes get more "tickets"
-    const weighted = dueNotes.flatMap((n: any) => {
-      const weight = Math.max(1, Math.floor(n.priority || 1));
-      return Array(weight).fill(n);
+    // 2. Map notes to weighted objects
+    const weightedNotes = dueNotes.map((n: any) => {
+      const basePriority = Math.max(1, n.priority || 1);
+
+      // Calculate Age Factor (Recency)
+      const createdAt = n.created_at ? new Date(n.created_at).getTime() : 0;
+      const ageInDays = (now - createdAt) / (1000 * 60 * 60 * 24);
+
+      /**
+       * Recency Weight Formula:
+       * New notes (0 days old) get a 5x boost.
+       * The boost decays as the note gets older, leveling out at 1x.
+       */
+      const recencyBoost = Math.max(1, 5 / (1 + ageInDays * 0.1));
+
+      return {
+        note: n,
+        weight: basePriority * recencyBoost
+      };
     });
 
-    return weighted[Math.floor(Math.random() * weighted.length)];
+    // 3. Weighted Random Selection
+    const totalWeight = weightedNotes.reduce((acc, curr) => acc + curr.weight, 0);
+    let randomThreshold = Math.random() * totalWeight;
+
+    for (const item of weightedNotes) {
+      randomThreshold -= item.weight;
+      if (randomThreshold <= 0) {
+        return item.note;
+      }
+    }
+    return weightedNotes[0].note;
   };
 
   const removeToast = (id: number) => {

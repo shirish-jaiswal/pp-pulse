@@ -8,7 +8,6 @@ import {
   ArrowLeftRight,
   Hash,
   Gamepad2,
-  X,
   AlertCircle,
 } from "lucide-react";
 
@@ -21,6 +20,7 @@ import {
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { toast } from "sonner";
 import { IdList } from "@/features/round-details/components/investigator/id-list";
+import { useRouter } from "next/navigation";
 
 type Mode = "round" | "game";
 
@@ -33,6 +33,8 @@ interface Props {
 }
 
 export function MultiRoundDetailsForm({ onSubmit }: Props) {
+  const router = useRouter();
+
   const { setMultiIds, setRoundDetailsInput } = useRoundDetails();
 
   const form = useForm({
@@ -62,9 +64,9 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
         value.mode === "round"
           ? { round_id: value.round_id }
           : {
-            game_id: value.game_id,
-            user_id: value.user_id || undefined,
-          };
+              game_id: value.game_id,
+              user_id: value.user_id || undefined,
+            };
 
       const hasAny =
         (payload as any).round_id?.length ||
@@ -78,7 +80,25 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
         game_ids: payload.game_id ?? [],
         user_id: payload.user_id ?? "",
       });
+
       setRoundDetailsInput(null);
+
+      const params = new URLSearchParams();
+
+      if (payload.round_id?.length) {
+        params.set("roundIds", payload.round_id.join(","));
+        params.set("isBulk", "true");
+      }
+
+      if (payload.game_id?.length) {
+        params.set("gameIds", payload.game_id.join(","));
+        if (payload.user_id) {
+          params.set("userId", payload.user_id);
+        }
+        params.set("isBulk", "true");
+      }
+
+      router.push(`/round-activity/?${params.toString()}`);
 
       onSubmit?.(payload);
     },
@@ -90,7 +110,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
   const userId = useStore(form.store, (s) => s.values.user_id);
 
   /**
-   * BULK PROCESSOR
+   * BULK INPUT PARSER
    */
   const processBulkInput = (value: string) => {
     const parts = value.split(/[\s,]+/).filter(Boolean);
@@ -144,13 +164,9 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
   const removeId = (id: string) => {
     if (mode === "round") {
-      form.setFieldValue("round_id", (p) =>
-        p.filter((x) => x !== id)
-      );
+      form.setFieldValue("round_id", (p) => p.filter((x) => x !== id));
     } else {
-      form.setFieldValue("game_id", (p) =>
-        p.filter((x) => x !== id)
-      );
+      form.setFieldValue("game_id", (p) => p.filter((x) => x !== id));
     }
   };
 
@@ -177,9 +193,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
               variant="outline"
               onClick={() => {
                 const next: Mode =
-                  field.state.value === "round"
-                    ? "game"
-                    : "round";
+                  field.state.value === "round" ? "game" : "round";
 
                 field.handleChange(next);
 
@@ -189,10 +203,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                 form.setFieldValue("user_id", "");
               }}
             >
-              {field.state.value === "round"
-                ? "R_ID"
-                : "G_ID"}
-
+              {field.state.value === "round" ? "R_ID" : "G_ID"}
               <ArrowLeftRight className="h-4 w-4 ml-1 opacity-60" />
             </Button>
           )}
@@ -221,7 +232,8 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                       if (e.key === "Enter") {
                         e.preventDefault();
 
-                        const hasInput = field.state.value.trim().length > 0;
+                        const hasInput =
+                          field.state.value.trim().length > 0;
 
                         if (hasInput) {
                           processBulkInput(field.state.value);
