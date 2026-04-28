@@ -118,10 +118,10 @@ export default function generateRoundOverview(
 
   const currency = firstTpt?.currency_code || "-";
 
-  const userId = safeString(firstTpt?.user_id || firstTpt?.user_id);
-  const roundId = safeString(firstTpt?.round_id || firstTpt?.round_id);
-  const casinoId = safeString(firstTpt?.casino_id);
-
+  const userId = safeString(firstBet?.user_id || firstTpt?.user_id);
+  const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
+  const casinoId = safeString(firstBet?.casino_id || firstTpt?.casino_id);
+  const casinoName = safeString(firstBet?.casino_desc || firstTpt?.casino_name);
   // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
@@ -172,7 +172,7 @@ export default function generateRoundOverview(
         },
         {
           label: "Casino Name",
-          value: firstBet?.casino_desc?.trim() + " - " + firstTpt.Wallet_Type || "N/A",
+          value: casinoName + " - " + firstTpt.Wallet_Type || "N/A",
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
