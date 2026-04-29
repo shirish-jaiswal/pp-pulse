@@ -18,6 +18,8 @@ import {
 import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { c_login } from "@/lib/api/auth/login/request-login";
 import { c_requestUserCookie } from "@/lib/api/auth/user/request-user-cookie";
+import { findProfile } from "@/lib/excel-engine/rbac/profile/find";
+import axios from "axios";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -34,9 +36,16 @@ export default function LoginPage() {
           email: value.email,
           password: value.password,
         });
-        console.log("res", res);
+        const user = await axios.get("/portal/api/excel-db/rbac/tables/profile/rows", {
+          params: { email: res.user.email },
+        });
+        console.log("user", user);
         if (res?.success && res?.authenticated) {
-          await c_requestUserCookie(res.user);
+          await c_requestUserCookie({
+            email: user.data.data.rows[0].email,
+            name: user.data.data.rows[0].name,
+            role: user.data.data.rows[0].role,
+          });
           toast.success("Welcome back!");
           router.push("/home");
           router.refresh();
@@ -93,11 +102,10 @@ export default function LoginPage() {
                       id={field.name}
                       type="text"
                       placeholder="Enter email or username"
-                      className={`pl-9 h-10 ${
-                        field.state.meta.errors.length
-                          ? "border-destructive focus-visible:ring-destructive"
-                          : ""
-                      }`}
+                      className={`pl-9 h-10 ${field.state.meta.errors.length
+                        ? "border-destructive focus-visible:ring-destructive"
+                        : ""
+                        }`}
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) =>
@@ -132,11 +140,10 @@ export default function LoginPage() {
                       id={field.name}
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
-                      className={`pl-9 pr-10 h-10 ${
-                        field.state.meta.errors.length
-                          ? "border-destructive"
-                          : ""
-                      }`}
+                      className={`pl-9 pr-10 h-10 ${field.state.meta.errors.length
+                        ? "border-destructive"
+                        : ""
+                        }`}
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) =>

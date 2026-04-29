@@ -4,7 +4,7 @@ import { ExcelEngine } from "@/lib/excel-engine/excel-engine";
 import { TABLE_NAME } from ".";
 import { DB_NAME } from "..";
 
-export async function saveProfile(data: { game: string; category: string; content: string }, id?: number | null) {
+export async function saveProfile(data: { name: string; email: boolean; role: string; settings: string; }, id?: number | null) {
   let result;
   if (id) {
     result = await ExcelEngine.updateRow(DB_NAME, TABLE_NAME, id, data);

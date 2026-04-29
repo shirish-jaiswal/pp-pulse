@@ -9,8 +9,8 @@ import {
   GalleryHorizontal,
   HistoryIcon,
   HomeIcon,
-  UserIcon,
   Users,
+  UserIcon,
 } from "lucide-react";
 
 import {
@@ -34,74 +34,86 @@ import { useProfile } from "@/context/use-profile";
 import Image from "next/image";
 
 /* =========================
-   BASE MENU (ALWAYS FALLBACK)
+   ICON MAP
 ========================= */
 
-export const sideBarMenu = [
-  { title: "Dashboard", url: "/home", icon: HomeIcon, group: "WORK" },
-  { title: "Round Activity", url: "/round-activity", icon: DicesIcon, group: "WORK" },
-  { title: "Player History", url: "/player-history", icon: HistoryIcon, group: "WORK" },
-  { title: "Casino Details", url: "/casino-details", icon: Building2, group: "WORK" },
-  { title: "User Management", url: "/user-management", icon: Users, group: "WORK" },
-
-  { title: "Template Gallery", url: "/template-gallery", icon: GalleryHorizontal, group: "ASSETS" },
-  { title: "Resolution Templates", url: "/resolution-template", icon: FileCog, group: "TOOLS" },
-  { title: "K-Boost", url: "/knowledge-boost", icon: BookOpen, group: "TOOLS" },
-  { title: "Excel DB", url: "/excel-db", icon: DatabaseIcon, group: "TOOLS" },
-];
-
-type DbMenuItem = {
-  url: string;
-  enabled: boolean;
+const ICON_MAP: Record<string, any> = {
+  HomeIcon,
+  DicesIcon,
+  HistoryIcon,
+  Building2,
+  Users,
+  GalleryHorizontal,
+  FileCog,
+  BookOpen,
+  DatabaseIcon,
+  UserIcon,
 };
 
-function buildSidebarMenu(dbMenu: DbMenuItem[] | null) {
-  if (!dbMenu || dbMenu.length === 0) return sideBarMenu;
+/* =========================
+   TYPES
+========================= */
 
-  const enabledMap = new Map(dbMenu.map((i) => [i.url, i.enabled]));
+type MenuItem = {
+  title: string;
+  url: string;
+  icon: string;
+  group: string;
+  enabled?: boolean;
+};
 
-  return sideBarMenu.filter((item) => {
-    if (!enabledMap.has(item.url)) return true;
-    return enabledMap.get(item.url);
-  });
-}
+/* =========================
+   PROPS
+========================= */
 
-function groupMenu(items: typeof sideBarMenu) {
-  return items.reduce((acc, item) => {
-    const group = item.group || "OTHER";
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(item);
-    return acc;
-  }, {} as Record<string, typeof sideBarMenu>);
-}
-
-export function AppSidebar({ dbMenu }: { dbMenu?: DbMenuItem[] }) {
+export function AppSidebar({
+  menu,
+}: {
+  menu: MenuItem[];
+}) {
   const { state } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
   const { user } = useProfile();
 
-  const finalMenu = buildSidebarMenu(dbMenu || null);
-  const grouped = groupMenu(finalMenu);
+  /* =========================
+     GROUP MENU (DYNAMIC)
+  ========================= */
 
-  const renderMenu = (items: typeof sideBarMenu) =>
+  const grouped = menu.reduce((acc, item) => {
+    if (item.enabled === false) return acc;
+
+    const group = item.group || "OTHER";
+
+    if (!acc[group]) acc[group] = [];
+    acc[group].push(item);
+
+    return acc;
+  }, {} as Record<string, MenuItem[]>);
+
+  /* =========================
+     RENDER MENU
+  ========================= */
+
+  const renderMenu = (items: MenuItem[]) =>
     items.map((item) => {
       const isActive = pathname.startsWith(item.url);
+      const Icon = ICON_MAP[item.icon];
 
       return (
-        <SidebarMenuItem key={item.title}>
+        <SidebarMenuItem key={item.url}>
           <SidebarMenuButton
             asChild
             tooltip={isCollapsed ? item.title : undefined}
             className={cn(
-              "h-9 px-2 text-sm font-medium flex items-center gap-2 rounded-md transition-all",
+              "h-9 px-2 flex items-center gap-2 rounded-md transition-all",
               "border border-transparent hover:bg-muted/60",
               isActive &&
                 "bg-muted text-foreground border-l-2 border-primary shadow-sm"
             )}
           >
             <Link href={item.url} className="flex items-center gap-2 w-full">
-              <item.icon className="w-4 h-4 shrink-0" />
+              {Icon && <Icon className="w-4 h-4 shrink-0" />}
               {!isCollapsed && (
                 <span className="truncate">{item.title}</span>
               )}
@@ -110,6 +122,10 @@ export function AppSidebar({ dbMenu }: { dbMenu?: DbMenuItem[] }) {
         </SidebarMenuItem>
       );
     });
+
+  /* =========================
+     UI
+  ========================= */
 
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r bg-background p-0">
@@ -129,9 +145,13 @@ export function AppSidebar({ dbMenu }: { dbMenu?: DbMenuItem[] }) {
             <p className="text-[11px] uppercase text-muted-foreground px-2 mb-1">
               {group}
             </p>
+
             <SidebarGroupContent>
-              <SidebarMenu>{renderMenu(items)}</SidebarMenu>
+              <SidebarMenu>
+                {renderMenu(items)}
+              </SidebarMenu>
             </SidebarGroupContent>
+
           </SidebarGroup>
         ))}
 
@@ -143,14 +163,14 @@ export function AppSidebar({ dbMenu }: { dbMenu?: DbMenuItem[] }) {
         {user && (
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip={isCollapsed ? user.name || "Profile" : undefined}
-              className="h-9 px-2 flex items-center gap-2 rounded-md hover:bg-muted/60"
+              tooltip={isCollapsed ? user.name : undefined}
+              className="h-9 px-2 flex items-center gap-2"
             >
-              <Link href="/profile" className="flex items-center gap-2 w-full">
+              <Link href="/profile" className="flex gap-2 w-full">
                 <UserIcon className="w-4 h-4" />
                 {!isCollapsed && (
                   <span className="truncate capitalize">
-                    {user.name || "Profile"}
+                    {user.name}
                   </span>
                 )}
               </Link>
@@ -160,6 +180,7 @@ export function AppSidebar({ dbMenu }: { dbMenu?: DbMenuItem[] }) {
 
         <LogoutButton isCollapsed={isCollapsed} />
       </SidebarFooter>
+
     </Sidebar>
   );
 }

@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { AppSidebar, sideBarMenu } from "@/components/custom/app-side-bar";
+import { AppSidebar } from "@/components/custom/app-side-bar";
 
 import {
   SidebarInset,
@@ -15,12 +15,16 @@ import { RoundDetailsProvider } from "@/features/round-details/context/round-det
 import { ProfileProvider } from "@/context/use-profile";
 import { useUser } from "@/hooks/use-user";
 import DoYouKnow from "@/components/custom/do-you-know";
+import { useRbacMenu } from "@/hooks/use-rbac-menu";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   useUser();
 
-  const currentRoute = sideBarMenu.find((item) =>
+  // 🔥 SINGLE SOURCE OF TRUTH
+  const { menu } = useRbacMenu();
+
+  const currentRoute = menu.find((item) =>
     pathname.startsWith(item.url)
   );
 
@@ -35,7 +39,8 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
         } as React.CSSProperties
       }
     >
-      <AppSidebar />
+      {/* ✅ PASS RBAC MENU TO SIDEBAR */}
+      <AppSidebar menu={menu} />
 
       <SidebarInset className="flex flex-col h-screen bg-background">
 
@@ -49,10 +54,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               Support Workspace
             </p>
           </div>
-
-          <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-            {/* future: status / alerts / workload */}
-          </div>
         </header>
 
         {/* CONTENT */}
@@ -63,6 +64,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
             <div className="p-3 md:p-4">{children}</div>
           </ScrollArea>
         </RoundDetailsProvider>
+
       </SidebarInset>
     </SidebarProvider>
   );

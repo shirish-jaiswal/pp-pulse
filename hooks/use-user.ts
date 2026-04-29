@@ -5,7 +5,7 @@ import { c_getUser } from "@/lib/api/auth/user/me";
 import { useEffect, useCallback } from "react";
 
 export function useUser() {
-  const { setUser, setLoading } = useProfile();
+  const { setUser } = useProfile();
 
   const fetchUser = useCallback(async () => {
     try {
@@ -13,10 +13,8 @@ export function useUser() {
       setUser(user);
     } catch (err) {
       setUser(null);
-    } finally {
-      setLoading(false);
     }
-  }, [setUser, setLoading]);
+  }, [setUser]);
 
   useEffect(() => {
     let isMounted = true;

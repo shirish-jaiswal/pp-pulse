@@ -9,6 +9,8 @@ export interface FeatureListTemplate {
     title: string;
     icon: string;
     path: string;
+    group: string;
+    roles: string;
     created_at?: string;
     updated_at?: string;
 }

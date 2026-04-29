@@ -35,6 +35,14 @@ export async function c_getTransactionLogs(
             gameLogQueryParams.to = to;
         }
 
+        if (data.timeStamp) {
+            const anchorTime = new Date(data.timeStamp || new Date());
+            const from = new Date(anchorTime.getTime() - 10 * 60 * 1000).toISOString();
+            const to = new Date(anchorTime.getTime() + 15 * 60 * 1000).toISOString();
+            gameLogQueryParams.from = from;
+            gameLogQueryParams.to = to;
+        }
+
         const [transactionLogs, gameLogs] = await Promise.all([
             apiRequest({
                 method: "GET",

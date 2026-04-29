@@ -7,13 +7,12 @@ import { DB_NAME } from "..";
 export interface Profile {
   id: number;
   name: string;
-  email: boolean;
+  email: string;
   role: string;
   settings: string;
   created_at?: string;
   updated_at?: string;
 }
-
 
 export async function getAllProfile() : Promise<Profile[]> {
   try {

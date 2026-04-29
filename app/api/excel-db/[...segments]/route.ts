@@ -36,25 +36,131 @@ function err(message: string, status = 400) {
 // ═══════════════════════════════════════════════════════════════════
 // GET
 // ═══════════════════════════════════════════════════════════════════
-export async function GET(_req: NextRequest, { params }: Ctx) {
+// export async function GET(_req: NextRequest, { params }: Ctx) {
+//   const { segments } = await params;
+//   const [dbName, , tableName, section] = segments ?? [];
+
+//   try {
+//     // GET /api/excel-db/:dbName/tables  → list tables
+//     if (dbName && !tableName) {
+//       const tables = ExcelEngine.getTables(dbName).map((name) => {
+//         const columns = ExcelEngine.getSchema(dbName, name);
+//         const rows = ExcelEngine.getRows(dbName, name);
+//         return { name, columnCount: columns.length, rowCount: rows.length, columns };
+//       });
+//       return ok(tables);
+//     }
+
+//     // GET /api/excel-db/:dbName/tables/:tableName/rows  → get rows
+//     if (tableName && section === "rows") {
+//       const rows = ExcelEngine.getRows(dbName, tableName);
+//       const columns = ExcelEngine.getSchema(dbName, tableName);
+//       return ok({ rows, columns });
+//     }
+
+//     return err("Not found", 404);
+//   } catch (e: any) {
+//     return err(e.message, 500);
+//   }
+// }
+
+// export async function GET(req: NextRequest, { params }: Ctx) {
+//   const { segments } = await params;
+//   const [dbName, , tableName, section] = segments ?? [];
+
+//   try {
+//     // GET tables
+//     if (dbName && !tableName) {
+//       const tables = ExcelEngine.getTables(dbName).map((name) => {
+//         const columns = ExcelEngine.getSchema(dbName, name);
+//         const rows = ExcelEngine.getRows(dbName, name);
+//         return {
+//           name,
+//           columnCount: columns.length,
+//           rowCount: rows.length,
+//           columns,
+//         };
+//       });
+//       return ok(tables);
+//     }
+
+//     // ✅ GET rows WITH filters
+//     if (tableName && section === "rows") {
+//       const { searchParams } = new URL(req.url);
+
+//       const filters: Record<string, string | string[]> = {};
+
+//       searchParams.forEach((value, key) => {
+//         if (filters[key]) {
+//           const existing = filters[key];
+//           filters[key] = Array.isArray(existing)
+//             ? [...existing, value]
+//             : [existing, value];
+//         } else {
+//           filters[key] = value;
+//         }
+//       });
+
+//       const rows =
+//         Object.keys(filters).length > 0
+//           ? ExcelEngine.findRows(dbName, tableName, filters)
+//           : ExcelEngine.getRows(dbName, tableName);
+
+//       const columns = ExcelEngine.getSchema(dbName, tableName);
+
+//       return ok({ rows, columns });
+//     }
+
+//     return err("Not found", 404);
+//   } catch (e: any) {
+//     return err(e.message, 500);
+//   }
+// }
+
+export async function GET(req: NextRequest, { params }: Ctx) {
   const { segments } = await params;
   const [dbName, , tableName, section] = segments ?? [];
 
   try {
-    // GET /api/excel-db/:dbName/tables  → list tables
+    // GET tables
     if (dbName && !tableName) {
       const tables = ExcelEngine.getTables(dbName).map((name) => {
         const columns = ExcelEngine.getSchema(dbName, name);
         const rows = ExcelEngine.getRows(dbName, name);
-        return { name, columnCount: columns.length, rowCount: rows.length, columns };
+        return {
+          name,
+          columnCount: columns.length,
+          rowCount: rows.length,
+          columns,
+        };
       });
       return ok(tables);
     }
 
-    // GET /api/excel-db/:dbName/tables/:tableName/rows  → get rows
+    // ✅ GET rows WITH filters
     if (tableName && section === "rows") {
-      const rows = ExcelEngine.getRows(dbName, tableName);
+      const { searchParams } = new URL(req.url);
+
+      const filters: Record<string, string | string[]> = {};
+
+      searchParams.forEach((value, key) => {
+        if (filters[key]) {
+          const existing = filters[key];
+          filters[key] = Array.isArray(existing)
+            ? [...existing, value]
+            : [existing, value];
+        } else {
+          filters[key] = value;
+        }
+      });
+
+      const rows =
+        Object.keys(filters).length > 0
+          ? ExcelEngine.findRows(dbName, tableName, filters)
+          : ExcelEngine.getRows(dbName, tableName);
+
       const columns = ExcelEngine.getSchema(dbName, tableName);
+
       return ok({ rows, columns });
     }
 
@@ -169,4 +275,3 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     return err(e.message);
   }
 }
-

@@ -220,7 +220,38 @@ export const ExcelEngine = {
 
     saveWorkbook(wb, getDBPath(dbName));
   },
-findRows(
+  // findRows(
+  //   dbName: string,
+  //   tableName: string,
+  //   filters: Record<string, string | string[]>
+  // ) {
+  //   console.log("Finding rows with filters:", filters);
+
+  //   const wb = loadWB(dbName);
+  //   const sheet = wb.Sheets[tableName];
+  //   if (!sheet) throw new Error("Table not found");
+
+  //   const rows = utils.sheet_to_json<Record<string, any>>(sheet);
+
+  //   return rows.filter((row) =>
+  //     Object.entries(filters).every(([key, value]) => {
+  //       const rowValue = row[key];
+
+  //       if (rowValue === undefined || rowValue === null) return false;
+
+  //       const normalizedRowValue = String(rowValue).trim();
+
+  //       if (Array.isArray(value)) {
+  //         return value
+  //           .map(v => String(v).trim())
+  //           .includes(normalizedRowValue);
+  //       }
+
+  //       return normalizedRowValue === String(value).trim();
+  //     })
+  //   );
+  // }
+  findRows(
   dbName: string,
   tableName: string,
   filters: Record<string, string | string[]>
@@ -235,19 +266,36 @@ findRows(
 
   return rows.filter((row) =>
     Object.entries(filters).every(([key, value]) => {
-      const rowValue = row[key];
+      // 🔥 detect LIKE mode
+      const isLike = key.endsWith("_like");
+      const actualKey = isLike ? key.replace("_like", "") : key;
 
+      const rowValue = row[actualKey];
       if (rowValue === undefined || rowValue === null) return false;
 
-      const normalizedRowValue = String(rowValue).trim();
+      const normalizedRowValue = String(rowValue).trim().toLowerCase();
 
+      const normalize = (v: string) => String(v).trim().toLowerCase();
+
+      // ✅ ARRAY handling
       if (Array.isArray(value)) {
-        return value
-          .map(v => String(v).trim())
-          .includes(normalizedRowValue);
+        if (isLike) {
+          return value.some((v) =>
+            normalizedRowValue.includes(normalize(v))
+          );
+        }
+
+        // ✅ EXISTING exact behavior (unchanged)
+        return value.map(normalize).includes(normalizedRowValue);
       }
 
-      return normalizedRowValue === String(value).trim();
+      // ✅ SINGLE value
+      if (isLike) {
+        return normalizedRowValue.includes(normalize(value));
+      }
+
+      // ✅ EXISTING exact behavior (unchanged)
+      return normalizedRowValue === normalize(value);
     })
   );
 }
