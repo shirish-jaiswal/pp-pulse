@@ -12,9 +12,10 @@ export async function proxy(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
   const session = req.cookies.get("JSESSIONID")?.value;
   const userToken = req.cookies.get("user_token")?.value;
+  console.log("pathname", pathname)
 
   const isPublicRoute =
-    pathname === "/portal/login" ||
+    pathname === "/login" ||
     pathname === "/not-allowed" ||
     pathname === "/not-found";
 
@@ -25,7 +26,7 @@ export async function proxy(req: NextRequest) {
 
   if (isPublicRoute || isPublicAsset) {
     // If logged in and trying to access login, send to home
-    if (pathname === "/portal/login" && session) {
+    if (pathname === "/login" && session) {
       return NextResponse.redirect(new URL("/portal/home", req.url));
     }
     return NextResponse.next();

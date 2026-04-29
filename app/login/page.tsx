@@ -20,43 +20,59 @@ import { c_login } from "@/lib/api/auth/login/request-login";
 import { c_requestUserCookie } from "@/lib/api/auth/user/request-user-cookie";
 import { findProfile } from "@/lib/excel-engine/rbac/profile/find";
 import axios from "axios";
+import { c_logout } from "@/lib/api/auth/logout/request-logout";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
   const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        const res = await c_login({
-          email: value.email,
-          password: value.password,
-        });
-        const user = await axios.get("/portal/api/excel-db/rbac/tables/profile/rows", {
-          params: { email: res.user.email },
-        });
-        console.log("user", user);
-        if (res?.success && res?.authenticated) {
-          await c_requestUserCookie({
-            email: user.data.data.rows[0].email,
-            name: user.data.data.rows[0].name,
-            role: user.data.data.rows[0].role,
-          });
-          toast.success("Welcome back!");
-          router.push("/home");
-          router.refresh();
-        } else {
-          toast.error("Login failed: Invalid credentials");
-        }
-      } catch (error: any) {
-        toast.error(error.message || "Something went wrong. Please try again.");
+  defaultValues: {
+    email: "",
+    password: "",
+  },
+
+  onSubmit: async ({ value }) => {
+    try {
+      const res = await c_login({
+        email: value.email,
+        password: value.password,
+      });
+
+      if (!res?.success || !res?.authenticated) {
+        toast.error("Login failed: Invalid credentials");
+        return;
       }
-    },
-  });
+
+      const userRes = await axios.get(
+        "/portal/api/excel-db/rbac/tables/profile/rows",
+        {
+          params: { email: res.user.email },
+        }
+      );
+
+      const user = userRes?.data?.data?.rows?.[0];
+
+      if (!user) {
+        toast.error("User profile not Created at PP Pulse");
+        await c_logout();
+        return;
+      }
+
+      await c_requestUserCookie({
+        email: user.email,
+        name: user.name,
+        role: user.role,
+      });
+
+      toast.success("Welcome back!");
+      router.push("/home");
+      router.refresh();
+    } catch (error: any) {
+      toast.error(error.message || "Something went wrong. Please try again.");
+    }
+  },
+});
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
