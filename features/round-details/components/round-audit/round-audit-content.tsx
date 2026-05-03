@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, Edit } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -24,7 +24,7 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
   const [copied, setCopied] = useState(false);
   const shortId = gameId.split("-").pop();
 
-   usePrefetchTransactionLogs({
+  usePrefetchTransactionLogs({
     roundId: roundDetails?.tptInfo?.[0]?.round_id,
     timeStamp: roundDetails?.tptInfo?.[0]?.trans_date,
     game_id: roundDetails?.tptInfo?.[0]?.game_id,
@@ -46,16 +46,13 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
     <div className="flex-1 flex flex-col min-w-0 bg-card/10 max-h-[calc(100dvh-30dvh)]">
       <header className="px-6 py-2.5 flex items-center justify-between bg-card-foreground/5">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-medium text-foreground/90">
-            {activeLabel}
-          </h3>
-
+          <h3 className="text-sm font-medium text-foreground/90">{activeLabel}</h3>
           <button
             onClick={handleCopy}
             className="flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-muted/30 text-xs font-mono text-muted-foreground hover:bg-accent/30 transition-colors"
             title="Copy full Game ID"
           >
-            <p>Game ID : <span className="text-foreground/70">{shortId}</span> </p>
+            <p>Game ID : <span className="text-foreground/70">{shortId}</span></p>
             {copied ? (
               <Check className="h-3 w-3 text-emerald-400" />
             ) : (
@@ -64,7 +61,6 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
           </button>
         </div>
 
-        {/* RIGHT */}
         <div className="flex items-center gap-1">
           <Button
             title="Resolution Editor"
@@ -88,10 +84,7 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
             transition={{ duration: 0.12 }}
           >
             {activeTab === "bets" && (
-              <FullScreenWrapper
-                title="Bet History"
-                description="Player wagers overview"
-              >
+              <FullScreenWrapper title="Bet History" description="Player wagers overview">
                 <div className="gap-2 flex flex-col">
                   <BetTable items={roundDetails?.betInfo} />
                   <AddationalDetailsWrapper
@@ -103,10 +96,7 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
             )}
 
             {activeTab === "tx" && (
-              <FullScreenWrapper
-                title="Transaction Audit"
-                description="Transaction logs"
-              >
+              <FullScreenWrapper title="Transaction Audit" description="Transaction logs">
                 <TransactionTable transactions={roundDetails?.tptInfo} />
               </FullScreenWrapper>
             )}
@@ -114,8 +104,8 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
             {activeTab === "logs" && (
               <FullScreenWrapper title="Execution Logs">
                 <PremiumLogMonitor
-                  roundId={roundDetails?.tptInfo?.[0].round_id || ""}
-                  timeStamp={roundDetails?.tptInfo?.[0].trans_date || ""}
+                  roundId={roundDetails?.tptInfo?.[0]?.round_id || ""}
+                  timeStamp={roundDetails?.tptInfo?.[0]?.trans_date || ""}
                 />
               </FullScreenWrapper>
             )}

@@ -12,38 +12,36 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
   const [sortKey, setSortKey] = useState<SortKey>("win");
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  if (!items || items.length === 0) {
-    return (
-      <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
-        No bet data available.
-      </div>
-    );
-  }
-
   const getStatusConfig = (status: string) => {
     switch (status) {
       case "S":
-        return { label: "Settled", priority: 3, style: "bg-emerald-500/5 text-emerald-400 border-emerald-400/20" };
+        return {
+          label: "Settled",
+          priority: 3,
+          style: "bg-emerald-50 text-emerald-600 border-emerald-200",
+        };
       case "C":
-        return { label: "Cancelled", priority: 1, style: "bg-rose-500/5 text-rose-400 border-rose-400/20" };
+        return {
+          label: "Cancelled",
+          priority: 1,
+          style: "bg-rose-50 text-rose-600 border-rose-200",
+        };
       default:
-        return { label: "Unsettled", priority: 2, style: "bg-amber-500/5 text-amber-400 border-amber-400/20" };
+        return {
+          label: "Unsettled",
+          priority: 2,
+          style: "bg-amber-50 text-amber-600 border-amber-200",
+        };
     }
   };
 
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) {
-      setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
-    } else {
-      setSortKey(key);
-      setSortOrder("desc");
-    }
-  };
-
+  // ✅ Hooks must be called BEFORE any early returns
   const sortedItems = useMemo(() => {
+    if (!items || items.length === 0) return [];
+
     return [...items].sort((a, b) => {
-      let valueA: number = 0;
-      let valueB: number = 0;
+      let valueA = 0;
+      let valueB = 0;
 
       if (sortKey === "win") {
         valueA = a.payoff;
@@ -55,82 +53,99 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
         valueB = getStatusConfig(b.status).priority;
       }
 
-      if (sortOrder === "asc") return valueA - valueB;
-      return valueB - valueA;
+      return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
     });
   }, [items, sortKey, sortOrder]);
 
-  return (
-    <div className="overflow-x-auto border border-border/60 rounded-lg bg-background/40">
-      <table className="w-full text-sm border-collapse">
-        <thead>
-          <tr className="border-b border-border/50 bg-muted">
-            <th className="px-4 py-2 text-xs text-left">Bet Details</th>
-            <th className="px-4 py-2 text-xs text-left">Placed</th>
-            <th className="px-4 py-2 text-xs text-left">Settled</th>
-            <th className="px-4 py-2 text-xs text-right">Amount</th>
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortOrder("desc");
+    }
+  };
 
-            {/* WIN SORT */}
+  // ✅ Early return happens only after all hooks have been declared
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
+        No bet data available.
+      </div>
+    );
+  }
+
+  const SortIndicator = ({ active }: { active: boolean }) => (
+    <span className="ml-1 text-[10px] opacity-70">
+      {active ? (sortOrder === "asc" ? "▲" : "▼") : "⇅"}
+    </span>
+  );
+
+  return (
+    <div className="overflow-x-auto rounded-xl border bg-background shadow-sm">
+      <table className="w-full text-sm">
+        <thead className="bg-muted/50 border-b">
+          <tr className="text-xs text-muted-foreground">
+            <th className="px-4 py-3 text-left font-medium">Bet</th>
+            <th className="px-4 py-3 text-left font-medium">Placed</th>
+            <th className="px-4 py-3 text-left font-medium">Settled</th>
+            <th className="px-4 py-3 text-right font-medium">Amount</th>
             <th
               onClick={() => handleSort("win")}
-              className="px-4 py-2 text-xs text-right cursor-pointer select-none hover:text-foreground"
+              className="px-4 py-3 text-right font-medium cursor-pointer hover:text-foreground"
             >
-              Win {sortKey === "win" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+              Win
+              <SortIndicator active={sortKey === "win"} />
             </th>
-
-            {/* STATUS SORT */}
             <th
               onClick={() => handleSort("status")}
-              className="px-4 py-2 text-xs text-center cursor-pointer select-none hover:text-foreground"
+              className="px-4 py-3 text-center font-medium cursor-pointer hover:text-foreground"
             >
-              Status {sortKey === "status" ? (sortOrder === "asc" ? "↑" : "↓") : ""}
+              Status
+              <SortIndicator active={sortKey === "status"} />
             </th>
           </tr>
         </thead>
-
         <tbody>
           {sortedItems.map((bet, i) => {
             const { label, style } = getStatusConfig(bet.status);
+            const isWin = bet.payoff > 0;
 
             return (
               <tr
                 key={i}
                 className={cn(
-                  "border-b border-border/40 last:border-0 transition-colors",
-                  bet.payoff > 0 ? "bg-emerald-400/10 ring ring-emerald-400 honver:bg-emerald-500/60" : "hover:bg-accent",
+                  "border-b last:border-0 transition",
+                  "hover:bg-muted/40",
+                  isWin && "bg-emerald-50/50"
                 )}
               >
-                <td className="px-4 py-2">
-                  <span className="truncate max-w-56 text-sm font-medium">
+                <td className="px-4 py-3">
+                  <div className="max-w-[220px] truncate font-medium">
                     {bet.displayDescription}
-                  </span>
+                  </div>
                 </td>
-
-                <td className="px-4 py-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                <td className="px-4 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
                   {formatDate(bet.place_time)}
                 </td>
-
-                <td className="px-4 py-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                <td className="px-4 py-3 text-xs font-mono text-muted-foreground whitespace-nowrap">
                   {formatDate(bet.settle_time)}
                 </td>
-
-                <td className="px-4 py-2 text-right font-mono text-sm">
+                <td className="px-4 py-3 text-right font-mono">
                   {bet.amount.toFixed(2)}
                 </td>
-
                 <td
                   className={cn(
-                    "px-4 py-2 text-right font-mono text-sm",
-                    bet.payoff > 0 ? "text-emerald-400" : "text-muted-foreground"
+                    "px-4 py-3 text-right font-mono font-medium",
+                    isWin ? "text-emerald-600" : "text-muted-foreground"
                   )}
                 >
                   {bet.payoff.toFixed(2)}
                 </td>
-
-                <td className="px-4 py-2 text-center">
+                <td className="px-4 py-3 text-center">
                   <span
                     className={cn(
-                      "px-2 py-0.5 rounded-md border text-[11px] font-medium",
+                      "px-2.5 py-1 rounded-full text-[11px] font-medium border",
                       style
                     )}
                   >

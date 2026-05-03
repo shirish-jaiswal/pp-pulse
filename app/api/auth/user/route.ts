@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const { email, name, role } = body;
+        const { email, name, role, freshdesk } = body;
 
         if (!email || !name || !role) {
             return NextResponse.json(
@@ -15,7 +15,7 @@ export async function POST(req: Request) {
             );
         }
 
-        const user = { email, name, role };
+        const user = { email, name, role, freshdesk };
 
         // Create JWT
         const token = jwt.sign(user, SECRET_KEY, {

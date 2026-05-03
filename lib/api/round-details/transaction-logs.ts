@@ -37,7 +37,7 @@ export async function c_getTransactionLogs(
 
         if (data.timeStamp) {
             const anchorTime = new Date(data.timeStamp || new Date());
-            const from = new Date(anchorTime.getTime() - 10 * 60 * 1000).toISOString();
+            const from = new Date(anchorTime.getTime() - 5 * 60 * 1000).toISOString();
             const to = new Date(anchorTime.getTime() + 15 * 60 * 1000).toISOString();
             gameLogQueryParams.from = from;
             gameLogQueryParams.to = to;

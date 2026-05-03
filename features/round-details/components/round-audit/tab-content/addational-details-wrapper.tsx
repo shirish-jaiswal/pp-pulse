@@ -1,7 +1,7 @@
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { CardDetailsInfo } from "@/features/round-details/types/card-details";
 import { getGameType } from "@/utils/get-game-type";
-import BaccaratHandReport from "./card-details/baccarat/baccarat";
+import BaccaratHandReport from "@/features/round-details/components/round-audit/tab-content/card-details/baccarat/baccarat";
 export default function AddationalDetailsWrapper({
   items,
 }: {

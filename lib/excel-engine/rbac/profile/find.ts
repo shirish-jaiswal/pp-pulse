@@ -6,8 +6,6 @@ import { DB_NAME } from "..";
 export async function findProfile(filters: {
   email: string;
 }) {
-  debugger;
-  console.log("Finding profile with filters:", filters);
    try {
     const rows = await ExcelEngine.findRows(DB_NAME, TABLE_NAME, filters);
     console.log("ROWS FOUND:", rows);

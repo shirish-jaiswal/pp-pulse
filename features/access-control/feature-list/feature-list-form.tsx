@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -25,6 +26,7 @@ type Props = {
 export function FeatureListForm({
   form,
   setForm,
+  roleList,
   setRoleList,
   onSave,
   isEdit,
@@ -32,29 +34,43 @@ export function FeatureListForm({
   const { data: roles = [], isLoading } = useGetAllRoles();
 
   /**
-   * 1. DERIVE the current roles from the form string.
-   * This is the essential fix for Edit Mode duplicates.
+   * ✅ Hydrate roleList from form.roles (Edit mode)
    */
-  const currentRoles = form.roles
-    ? form.roles.split(",").map((r) => r.trim()).filter(Boolean)
-    : [];
+  useEffect(() => {
+    if (isEdit && form.roles) {
+      const parsed = form.roles
+        .split(",")
+        .map((r) => r.trim())
+        .filter(Boolean);
 
+      setRoleList(parsed);
+    }
+  }, [isEdit, form.roles, setRoleList]);
+
+  /**
+   * ✅ Toggle role (single source of truth)
+   */
   const toggleRole = (title: string) => {
-    const trimmedTitle = title.trim();
-    const exists = currentRoles.includes(trimmedTitle);
+    const trimmed = title.trim();
 
-    const updated = exists
-      ? currentRoles.filter((r) => r !== trimmedTitle)
-      : [...currentRoles, trimmedTitle];
+    const updated = roleList.includes(trimmed)
+      ? roleList.filter((r) => r !== trimmed)
+      : [...roleList, trimmed];
 
-    const unique = Array.from(new Set(updated));
+    setRoleList(updated);
+  };
 
-    // Update both states simultaneously
-    setRoleList(unique);
-    setForm({
+  /**
+   * ✅ Handle Save (convert array → string only here)
+   */
+  const handleSave = () => {
+    const updatedForm = {
       ...form,
-      roles: unique.join(", "),
-    });
+      roles: roleList.join(", "),
+    };
+
+    setForm(updatedForm);
+    onSave();
   };
 
   return (
@@ -65,7 +81,9 @@ export function FeatureListForm({
         <Input
           placeholder="Title"
           value={form.title || ""}
-          onChange={(e) => setForm({ ...form, title: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, title: e.target.value })
+          }
         />
       </div>
 
@@ -75,7 +93,9 @@ export function FeatureListForm({
         <Input
           placeholder="e.g. /dashboard"
           value={form.path || ""}
-          onChange={(e) => setForm({ ...form, path: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, path: e.target.value })
+          }
         />
       </div>
 
@@ -85,7 +105,9 @@ export function FeatureListForm({
         <Input
           placeholder="e.g. HomeIcon"
           value={form.icon || ""}
-          onChange={(e) => setForm({ ...form, icon: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, icon: e.target.value })
+          }
         />
       </div>
 
@@ -95,45 +117,54 @@ export function FeatureListForm({
         <Input
           placeholder="Group"
           value={form.group || ""}
-          onChange={(e) => setForm({ ...form, group: e.target.value })}
+          onChange={(e) =>
+            setForm({ ...form, group: e.target.value })
+          }
         />
       </div>
 
-      {/* ROLES MULTI SELECT */}
+      {/* ROLES */}
       <div className="space-y-2">
         <Label>Roles</Label>
 
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" className="w-full justify-start font-normal">
-              {currentRoles.length > 0 ? (
-                <span className="truncate">{currentRoles.join(", ")}</span>
+            <Button
+              variant="outline"
+              className="w-full justify-start font-normal"
+            >
+              {roleList.length > 0 ? (
+                <span className="truncate">
+                  {roleList.join(", ")}
+                </span>
               ) : (
-                <span className="text-muted-foreground">Select roles</span>
+                <span className="text-muted-foreground">
+                  Select roles
+                </span>
               )}
             </Button>
           </PopoverTrigger>
 
           <PopoverContent className="w-[250px] p-2" align="start">
             {isLoading ? (
-              <p className="text-sm p-2 text-center text-muted-foreground">Loading roles...</p>
+              <p className="text-sm p-2 text-center text-muted-foreground">
+                Loading roles...
+              </p>
             ) : (
               <div className="space-y-1 max-h-60 overflow-auto">
                 {roles.map((role) => {
-                  const isChecked = currentRoles.includes(role.title.trim());
+                  const title = role.title.trim();
+                  const isChecked = roleList.includes(title);
 
                   return (
                     <div
                       key={role.id}
                       className="flex items-center gap-2 p-2 hover:bg-accent rounded-sm cursor-pointer"
-                      onClick={() => toggleRole(role.title)}
+                      onClick={() => toggleRole(title)}
                     >
-                      <Checkbox
-                        checked={isChecked}
-                        onCheckedChange={() => {}}
-                      />
+                      <Checkbox checked={isChecked} />
                       <span className="text-sm select-none">
-                        {role.title}
+                        {title}
                       </span>
                     </div>
                   );
@@ -144,12 +175,12 @@ export function FeatureListForm({
         </Popover>
 
         <p className="text-[10px] text-muted-foreground italic">
-          Stored as: {form.roles || "none"}
+          Stored as: {roleList.join(", ") || "none"}
         </p>
       </div>
 
       {/* SAVE */}
-      <Button className="w-full" onClick={onSave}>
+      <Button className="w-full" onClick={handleSave}>
         {isEdit ? "Update Feature" : "Create Feature"}
       </Button>
     </div>

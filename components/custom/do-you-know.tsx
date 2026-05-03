@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { AlertTriangle, Flame, HelpCircle, X, Play } from "lucide-react";
+
+// Hooks
 import { useHelpNotes } from "@/features/knowledge-boost/hooks/help-notes/use-help-notes";
+import { useProfile } from "@/context/use-profile";
+import { useFindProfile } from "@/features/access-control/hooks/profile/use-find-profile";
 
 const DEBUG_MODE = false;
 const STORAGE_KEY = "sr_notes_memory_v1";
-const VISIBLE_DURATION = 60000;
-const COOLDOWN_DURATION = 5 * 60 * 1000;
+const LAST_SHOWN_KEY = "sr_notes_last_timestamp"; // Key for persistence
+const VISIBLE_DURATION = 60000; // 1 minute visibility
+const COOLDOWN_DURATION = 10 * 60 * 1000; // 10 minutes cooldown
 
 type ToastNote = {
   id: number;
@@ -26,15 +31,38 @@ type NoteMemory = {
 };
 
 export default function DoYouKnow() {
-  const helpNotes = useHelpNotes();
-  const { loaded } = (helpNotes as any) || {};
+  /* 1. Profile & Feature Gate Logic */
+  const { user } = useProfile();
+  const { data: profileData, isLoading: profileLoading } = useFindProfile({
+    email: user?.email as string,
+  });
 
+  const isEnabled = useMemo(() => {
+    const profile = profileData?.[0];
+    if (!profile?.settings) return false;
+
+    try {
+      const settings = typeof profile.settings === "string"
+        ? JSON.parse(profile.settings)
+        : profile.settings;
+
+      return !!settings?.doYouKnow?.on;
+    } catch (e) {
+      console.error("DoYouKnow: Error parsing settings", e);
+      return false;
+    }
+  }, [profileData]);
+
+  /* 2. Knowledge Base Hooks */
+  const helpNotes = useHelpNotes();
+  const { loaded: notesLoaded } = (helpNotes as any) || {};
+
+  /* 3. State & Refs */
   const [toasts, setToasts] = useState<ToastNote[]>([]);
-  const lastShownRef = useRef<number>(0);
   const memoryRef = useRef<Record<string, NoteMemory>>({});
 
   // -----------------------------
-  // Memory Management
+  // SRS Memory Management
   // -----------------------------
   const loadMemory = (): Record<string, NoteMemory> => {
     if (typeof window === "undefined") return {};
@@ -49,8 +77,10 @@ export default function DoYouKnow() {
   };
 
   useEffect(() => {
-    memoryRef.current = loadMemory();
-  }, []);
+    if (isEnabled) {
+      memoryRef.current = loadMemory();
+    }
+  }, [isEnabled]);
 
   const initNote = (text: string, priority: number = 1): NoteMemory => ({
     text,
@@ -63,7 +93,7 @@ export default function DoYouKnow() {
 
   const updateSchedule = (note: NoteMemory) => {
     const now = Date.now();
-    const quality = 4;
+    const quality = 4; // Assuming "Success" on every view
 
     if (quality >= 3) {
       if (note.repetitions === 0) note.interval = 1;
@@ -77,7 +107,6 @@ export default function DoYouKnow() {
 
     note.ease = Math.max(1.3, note.ease + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02)));
 
-    // DYNAMIC PRIORITY SCALING: Priority reduces interval length
     const priorityFactor = Math.max(1, note.priority || 1);
     const finalIntervalMinutes = Math.max(0.5, note.interval / priorityFactor);
 
@@ -86,14 +115,13 @@ export default function DoYouKnow() {
   };
 
   // -----------------------------
-  // Toast Logic
+  // Selection & Toast Trigger
   // -----------------------------
   const pickNote = () => {
-    if (!loaded) return null;
+    if (!notesLoaded) return null;
     const notes = helpNotes?.notes || [];
     const now = Date.now();
 
-    // 1. Filter for due notes
     const dueNotes = notes.filter((n: any) => {
       if (DEBUG_MODE) return true;
       const mem = memoryRef.current[n.notes];
@@ -102,36 +130,21 @@ export default function DoYouKnow() {
 
     if (!dueNotes.length) return null;
 
-    // 2. Map notes to weighted objects
     const weightedNotes = dueNotes.map((n: any) => {
       const basePriority = Math.max(1, n.priority || 1);
-
-      // Calculate Age Factor (Recency)
       const createdAt = n.created_at ? new Date(n.created_at).getTime() : 0;
       const ageInDays = (now - createdAt) / (1000 * 60 * 60 * 24);
-
-      /**
-       * Recency Weight Formula:
-       * New notes (0 days old) get a 5x boost.
-       * The boost decays as the note gets older, leveling out at 1x.
-       */
       const recencyBoost = Math.max(1, 5 / (1 + ageInDays * 0.1));
 
-      return {
-        note: n,
-        weight: basePriority * recencyBoost
-      };
+      return { note: n, weight: basePriority * recencyBoost };
     });
 
-    // 3. Weighted Random Selection
     const totalWeight = weightedNotes.reduce((acc, curr) => acc + curr.weight, 0);
     let randomThreshold = Math.random() * totalWeight;
 
     for (const item of weightedNotes) {
       randomThreshold -= item.weight;
-      if (randomThreshold <= 0) {
-        return item.note;
-      }
+      if (randomThreshold <= 0) return item.note;
     }
     return weightedNotes[0].note;
   };
@@ -143,17 +156,25 @@ export default function DoYouKnow() {
   const addToast = (ignoreCooldown: boolean = false) => {
     const now = Date.now();
 
-    // Prevent trigger if cooldown active (unless ignored via Debug button)
-    if (!ignoreCooldown && (now - lastShownRef.current < COOLDOWN_DURATION)) {
+    // PERSISTENT COOLDOWN CHECK
+    const lastShownStr = localStorage.getItem(LAST_SHOWN_KEY);
+    const lastShownTime = lastShownStr ? parseInt(lastShownStr) : 0;
+
+    if (!ignoreCooldown && (now - lastShownTime < COOLDOWN_DURATION)) {
+      if (DEBUG_MODE) {
+        console.log(`Cooldown active: ${Math.round((COOLDOWN_DURATION - (now - lastShownTime)) / 1000)}s left`);
+      }
       return;
     }
 
     const note = pickNote();
     if (!note) return;
 
+    // Update the timestamp in localStorage immediately
+    localStorage.setItem(LAST_SHOWN_KEY, now.toString());
+
     const id = now;
     const text = note.notes;
-    lastShownRef.current = now;
 
     let memory = memoryRef.current[text] || initNote(text, note.priority);
     memory = updateSchedule(memory);
@@ -163,26 +184,32 @@ export default function DoYouKnow() {
 
     setToasts([{ id, text, priority: note.priority }]);
 
-    // Auto-remove after 1 minute
     const timeoutId = setTimeout(() => removeToast(id), VISIBLE_DURATION);
     return () => clearTimeout(timeoutId);
   };
 
   // -----------------------------
-  // Effects
+  // Interval & Event Effects
   // -----------------------------
   useEffect(() => {
-    const handler = () => addToast();
-    window.addEventListener("show-random-note", handler);
-    return () => window.removeEventListener("show-random-note", handler);
-  }, [loaded]);
+    if (!isEnabled || !notesLoaded) return;
+
+    // Trigger on mount (addToast handles the 10-min check internally)
+    addToast();
+
+    // Check periodically (every 30 seconds) if it's time to show a new one
+    const interval = setInterval(() => addToast(), 30000);
+
+    return () => clearInterval(interval);
+  }, [isEnabled, notesLoaded]);
 
   useEffect(() => {
-    if (!loaded) return;
-    addToast();
-    const interval = setInterval(() => addToast(), COOLDOWN_DURATION);
-    return () => clearInterval(interval);
-  }, [loaded]);
+    if (!isEnabled || !notesLoaded) return;
+
+    const handler = () => addToast(true); // Ignore cooldown for manual events
+    window.addEventListener("show-random-note", handler);
+    return () => window.removeEventListener("show-random-note", handler);
+  }, [isEnabled, notesLoaded]);
 
   const getStyle = (priority: number = 1) => {
     if (priority >= 10) return { icon: <Flame className="w-5 h-5 text-red-600 animate-pulse" />, bar: "bg-red-600" };
@@ -191,16 +218,17 @@ export default function DoYouKnow() {
     return { icon: <HelpCircle className="w-5 h-5 text-sky-500" />, bar: "bg-sky-500" };
   };
 
+  if (profileLoading || !isEnabled) return null;
+
   return (
     <>
-      {/* DEBUG TRIGGER BUTTON */}
       {DEBUG_MODE && (
         <button
           onClick={() => addToast(true)}
-          className="fixed top-4 right-4 z-10 flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg font-bold text-xs transition-all active:scale-95"
+          className="fixed top-4 right-4 z-[60] flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full shadow-lg font-bold text-xs transition-all active:scale-95"
         >
           <Play className="w-3 h-3 fill-current" />
-          TEST INSTANT NOTE
+          FORCE SHOW NOTE
         </button>
       )}
 

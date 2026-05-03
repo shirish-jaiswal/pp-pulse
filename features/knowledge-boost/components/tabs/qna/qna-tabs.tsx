@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 
 import type { QNA } from "@/lib/excel-engine/knowledge-base/qna/get-all";
 
-import { useGetAllQna } from "@/features/knowledge-boost/hooks/qna/use-get-qna";
+import { useGetAllQna } from "@/features/knowledge-boost/hooks/qna/use-get-all-qna";
 import { useSaveQna } from "@/features/knowledge-boost/hooks/qna/use-save-qna";
 import { useDeleteQna } from "@/features/knowledge-boost/hooks/qna/use-delete-qna";
 

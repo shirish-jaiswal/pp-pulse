@@ -2,7 +2,7 @@
 
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overview";
-import useGetRoundDetails from "@/features/round-details/hook/round-details";
+import useGetRoundDetails from "@/features/round-details/hook/use-get-round-details";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState, useMemo, useEffect } from "react";
@@ -59,6 +59,8 @@ export function MultiRoundTabs() {
         ? multiIds.user_id
         : "",
   });
+
+  console.log("Fetched round data for ID:", activeId, roundData);
 
   const isLoading = isFetchingData || isFetching;
 

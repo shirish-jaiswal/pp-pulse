@@ -3,6 +3,16 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { Profile } from "@/lib/excel-engine/rbac/profile/get-all";
 
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+import { Pencil, Trash2 } from "lucide-react";
+
 type ColumnProps = {
   onEdit: (item: Profile) => void;
   onDelete: (id: number) => void;
@@ -14,7 +24,7 @@ export const getProfileColumns = ({
 }: ColumnProps): ColumnDef<Profile>[] => [
   {
     accessorKey: "name",
-    header: "Name",
+    header: "User",
     cell: ({ row }) => (
       <div className="min-w-0">
         <div className="text-sm font-medium truncate">
@@ -28,19 +38,6 @@ export const getProfileColumns = ({
   },
 
   {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ getValue }) => {
-      const value = getValue() as string;
-      return (
-        <span className="text-xs text-muted-foreground truncate">
-          {value || "-"}
-        </span>
-      );
-    },
-  },
-
-  {
     accessorKey: "role",
     header: "Role",
     cell: ({ getValue }) => {
@@ -50,18 +47,27 @@ export const getProfileColumns = ({
         return <span className="text-xs text-muted-foreground">-</span>;
       }
 
-      const isLong = value.length > 50;
+      const roles = value.split(",").map((r) => r.trim());
 
       return (
-        <div className="group relative">
-          <span className="text-xs text-muted-foreground">
-            {isLong ? value.slice(0, 50) + "..." : value}
-          </span>
+        <div className="flex flex-wrap gap-1 max-w-[200px]">
+          {roles.slice(0, 2).map((role) => (
+            <Badge key={role} variant="secondary" className="text-[10px]">
+              {role}
+            </Badge>
+          ))}
 
-          {isLong && (
-            <div className="absolute left-0 top-full mt-1 hidden group-hover:block z-50 bg-black text-white text-xs p-2 rounded shadow max-w-xs whitespace-pre-wrap">
-              {value}
-            </div>
+          {roles.length > 2 && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge variant="outline" className="text-[10px] cursor-pointer">
+                  +{roles.length - 2}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">
+                {roles.join(", ")}
+              </TooltipContent>
+            </Tooltip>
           )}
         </div>
       );
@@ -74,10 +80,12 @@ export const getProfileColumns = ({
     cell: ({ getValue }) => {
       const value = getValue() as string | undefined;
 
-      return (
-        <span className="text-xs text-muted-foreground">
-          {value || "-"}
-        </span>
+      return value ? (
+        <Badge variant="outline" className="text-[10px]">
+          Configured
+        </Badge>
+      ) : (
+        <span className="text-xs text-muted-foreground">-</span>
       );
     },
   },
@@ -100,20 +108,32 @@ export const getProfileColumns = ({
     id: "actions",
     header: "",
     cell: ({ row }) => (
-      <div className="flex justify-end gap-3">
-        <button
-          onClick={() => onEdit(row.original)}
-          className="text-xs text-blue-600 hover:underline"
-        >
-          Edit
-        </button>
+      <div className="flex justify-end gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onEdit(row.original)}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Edit</TooltipContent>
+        </Tooltip>
 
-        <button
-          onClick={() => onDelete(row.original.id)}
-          className="text-xs text-red-500 hover:underline"
-        >
-          Delete
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              size="icon"
+              variant="ghost"
+              onClick={() => onDelete(row.original.id)}
+            >
+              <Trash2 className="h-4 w-4 text-red-500" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Delete</TooltipContent>
+        </Tooltip>
       </div>
     ),
   },

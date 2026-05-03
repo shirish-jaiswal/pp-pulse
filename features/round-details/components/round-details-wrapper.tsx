@@ -13,7 +13,7 @@ import EmptyRoundData from "@/features/round-details/components/empty-round-data
 import { RoundFetchError } from "@/features/round-details/components/round-fetch-error";
 import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overview";
 import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
-import RoundDetailsSkeleton from "./round-details-skeleton";
+import RoundDetailsSkeleton from "@/features/round-details/components/round-details-skeleton";
 import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata";
 import { toast } from "sonner";
 
@@ -100,7 +100,6 @@ export function RoundDetailsWrapper({
           : { game_id: gameId, user_id: userId };
 
         const data = await c_getRoundDetails(payload);
-
         setRoundDetails(data);
 
         // safe overview generation
@@ -108,6 +107,7 @@ export function RoundDetailsWrapper({
         setRoundOverview(overview?.roundOverview ?? []);
 
         // safe metadata generation
+        console.log("Raw game metadata:", data?.gameDetails);
         const meta = generateGameMetaData(data?.gameDetails ?? []);
         setGameMetadata(meta);
       } catch (err) {

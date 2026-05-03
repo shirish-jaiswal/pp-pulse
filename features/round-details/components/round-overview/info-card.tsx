@@ -74,7 +74,7 @@ export default function InfoCard({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 px-3 py-2 border-2 bg-background/40 rounded-md",
+        "flex items-start gap-2 p-2 rounded-xl border bg-background shadow-sm hover:shadow-md transition",
         className
       )}
     >
@@ -82,9 +82,9 @@ export default function InfoCard({
       {Icon && (
         <div
           className={cn(
-            "flex h-7 w-7 items-center justify-center rounded-md text-muted-foreground",
-            isError && "text-red-400",
-            isSuccess && "text-emerald-400"
+            "flex h-9 w-9 items-center justify-center rounded-lg bg-muted",
+            isError && "bg-red-500/10 text-red-400",
+            isSuccess && "bg-emerald-500/10 text-emerald-400"
           )}
         >
           <Icon className="h-4 w-4" />
@@ -92,12 +92,15 @@ export default function InfoCard({
       )}
 
       {/* CONTENT */}
-      <div className="flex flex-col gap-2 w-full min-w-0">
+      <div className="flex flex-col gap-3 w-full min-w-0">
         {items.map((item, index) => (
-          <div key={index} className="flex items-start justify-between gap-3">
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4"
+          >
             {/* TEXT */}
             <div className="min-w-0">
-              <div className="text-[11px] text-muted-foreground">
+              <div className="text-xs text-muted-foreground mb-0.5">
                 {item.label}
               </div>
 
@@ -105,34 +108,32 @@ export default function InfoCard({
                 <Link
                   href={item.link.href}
                   target={item.link.target || "_blank"}
-                  className="text-sm font-mono text-foreground hover:underline"
+                  className="text-sm font-medium hover:underline break-all"
                 >
                   {renderValue(item.value)}
                 </Link>
               ) : (
-                <div className="text-sm font-mono truncate">
+                <div className="text-sm font-medium break-all">
                   {renderValue(item.value)}
                 </div>
               )}
             </div>
 
-            {/* ACTIONS */}
-            <div className="flex items-center gap-2 shrink-0">
-              {item.copyable && (
-                <button
-                  onClick={() =>
-                    handleCopy(getCopyText(item.value), index)
-                  }
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  {copiedIndex === index ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-400" />
-                  ) : (
-                    <Copy className="h-3.5 w-3.5" />
-                  )}
-                </button>
-              )}
-            </div>
+            {/* ACTION */}
+            {item.copyable && (
+              <button
+                onClick={() =>
+                  handleCopy(getCopyText(item.value), index)
+                }
+                className="p-1.5 rounded-md hover:bg-muted transition"
+              >
+                {copiedIndex === index ? (
+                  <Check className="h-4 w-4 text-emerald-400" />
+                ) : (
+                  <Copy className="h-4 w-4 text-muted-foreground" />
+                )}
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -140,9 +141,6 @@ export default function InfoCard({
   );
 }
 
-/**
- * Render value (handles ValueType[])
- */
 function renderValue(value: InfoItem["value"]) {
   if (Array.isArray(value)) {
     return value.map((val, i) => {
@@ -150,8 +148,8 @@ function renderValue(value: InfoItem["value"]) {
         val.variant === "error"
           ? "text-red-400"
           : val.variant === "success"
-          ? "text-emerald-400"
-          : "text-foreground";
+            ? "text-emerald-400"
+            : "text-foreground";
 
       return (
         <span key={i}>

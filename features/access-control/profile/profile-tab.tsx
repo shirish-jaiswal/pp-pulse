@@ -12,7 +12,7 @@ import { useSaveProfile } from "@/features/access-control/hooks/profile/use-save
 import { useDeleteProfile } from "@/features/access-control/hooks/profile/use-delete-profile";
 
 import { ProfileList } from "./profile-list";
-import { useGetAllProfiles } from "@/features/access-control/hooks/profile/use-profile";
+import { useGetAllProfiles } from "@/features/access-control/hooks/profile/use-get-all-profile";
 import { ProfileDeleteDialog } from "./profile-delete-dialog";
 
 export function ProfileTabs() {

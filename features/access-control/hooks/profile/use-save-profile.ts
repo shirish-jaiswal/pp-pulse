@@ -21,7 +21,7 @@ export function useSaveProfile() {
         ...data,
       } as Profile;
 
-      return saveProfile(payload, id ?? null);
+      return saveProfile(payload as any, id ?? null);
     },
 
     onSuccess: (_, variables) => {

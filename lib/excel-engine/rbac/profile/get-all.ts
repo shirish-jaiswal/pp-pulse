@@ -14,6 +14,11 @@ export interface Profile {
   updated_at?: string;
 }
 
+export type FeatureSettings = Record<string, boolean>;
+export type Permission = string;
+
+export type RolePermissionsMap = Record<string, Permission[]>;
+
 export async function getAllProfile() : Promise<Profile[]> {
   try {
     const rawRows = await ExcelEngine.getRows(DB_NAME, TABLE_NAME);

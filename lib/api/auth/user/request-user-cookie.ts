@@ -5,6 +5,7 @@ export const RequestUserCookieSchema = z.object({
   email: z.string().min(1),
   name: z.string().min(1),
   role: z.string().min(1),
+  freshdesk: z.string().optional(),
 });
 
 export type RequestUserCookieProps = z.infer<typeof RequestUserCookieSchema>;

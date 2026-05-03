@@ -33,10 +33,6 @@ import LogoutButton from "@/components/custom/logout-button";
 import { useProfile } from "@/context/use-profile";
 import Image from "next/image";
 
-/* =========================
-   ICON MAP
-========================= */
-
 const ICON_MAP: Record<string, any> = {
   HomeIcon,
   DicesIcon,
@@ -50,10 +46,6 @@ const ICON_MAP: Record<string, any> = {
   UserIcon,
 };
 
-/* =========================
-   TYPES
-========================= */
-
 type MenuItem = {
   title: string;
   url: string;
@@ -61,10 +53,6 @@ type MenuItem = {
   group: string;
   enabled?: boolean;
 };
-
-/* =========================
-   PROPS
-========================= */
 
 export function AppSidebar({
   menu,
@@ -76,10 +64,6 @@ export function AppSidebar({
   const isCollapsed = state === "collapsed";
   const { user } = useProfile();
 
-  /* =========================
-     GROUP MENU (DYNAMIC)
-  ========================= */
-
   const grouped = menu.reduce((acc, item) => {
     if (item.enabled === false) return acc;
 
@@ -90,10 +74,6 @@ export function AppSidebar({
 
     return acc;
   }, {} as Record<string, MenuItem[]>);
-
-  /* =========================
-     RENDER MENU
-  ========================= */
 
   const renderMenu = (items: MenuItem[]) =>
     items.map((item) => {
@@ -123,15 +103,11 @@ export function AppSidebar({
       );
     });
 
-  /* =========================
-     UI
-  ========================= */
-
   return (
     <Sidebar variant="inset" collapsible="icon" className="border-r bg-background p-0">
 
       {/* HEADER */}
-      <SidebarHeader className="flex items-center justify-center bg-slate-800 p-1.5">
+      <SidebarHeader className="flex items-center justify-center bg-slate-800 p-1.5 shadow-md">
         {!isCollapsed && (
           <Image src="/portal/logo.png" alt="logo" width={90} height={40} />
         )}
@@ -140,20 +116,21 @@ export function AppSidebar({
       {/* CONTENT */}
       <SidebarContent className="px-2 space-y-4">
 
-        {Object.entries(grouped).map(([group, items]) => (
-          <SidebarGroup key={group}>
-            <p className="text-[11px] uppercase text-muted-foreground px-2 mb-1">
-              {group}
-            </p>
+        {Object.entries(grouped)
+          .filter(([group]) => group !== "NA")
+          .map(([group, items]) => (
+            <SidebarGroup key={group}>
+              <p className="text-[11px] uppercase text-muted-foreground px-2 mb-1">
+                {group}
+              </p>
 
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {renderMenu(items)}
-              </SidebarMenu>
-            </SidebarGroupContent>
-
-          </SidebarGroup>
-        ))}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {renderMenu(items)}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          ))}
 
       </SidebarContent>
 

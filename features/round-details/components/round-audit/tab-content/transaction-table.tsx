@@ -1,3 +1,5 @@
+"use client";
+
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 import { cn } from "@/utils/cn";
 
@@ -30,51 +32,86 @@ export default function TransactionTable({
 }) {
   if (!transactions || transactions.length === 0) {
     return (
-      <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
-        No transaction data available.
+      <div className="text-center py-10 text-muted-foreground text-sm border rounded-xl bg-muted/20">
+        No transaction data available
       </div>
     );
   }
 
   const getActionStyle = (action: string) => {
     return action === "Settled"
-      ? "bg-emerald-500/5 text-emerald-400 border-emerald-400/20"
-      : "bg-blue-500/5 text-blue-400 border-blue-400/20";
+      ? "bg-emerald-50 text-emerald-600 border-emerald-200"
+      : "bg-blue-50 text-blue-600 border-blue-200";
   };
 
+  const isError = (tx: any) =>
+    !(tx.error_code === "0" || tx.error_code === null);
+
+  /**
+   * ✅ UNIVERSAL SAFE DATETIME PARSER
+   */
+  const getTime = (value: any) => {
+    if (!value) return 0;
+
+    // epoch number
+    if (typeof value === "number") return value;
+
+    // numeric string epoch
+    if (typeof value === "string" && /^\d+$/.test(value)) {
+      return Number(value);
+    }
+
+    // ISO / normal date string fallback
+    const time = new Date(value).getTime();
+
+    return isNaN(time) ? 0 : time;
+  };
+
+  /**
+   * ✅ SORTING: LATEST FIRST (HIGH → LOW)
+   */
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    return getTime(b.trans_date) - getTime(a.trans_date);
+  });
+
   return (
-    <div className="overflow-x-auto border border-border/60 rounded-lg bg-background/40">
-      <table className="w-full text-sm border-collapse">
+    <div className="overflow-x-auto rounded-xl border bg-background shadow-sm">
+      <table className="w-full text-sm">
 
         {/* HEADER */}
-        <thead>
-          <tr className="border-b border-border/50 bg-muted">
-            <th className="px-4 py-2 text-xs font-medium text-left">Transaction</th>
-            <th className="px-4 py-2 text-xs font-medium text-left">Action</th>
-            <th className="px-4 py-2 text-xs font-medium text-left">3rd Party</th>
-            <th className="px-4 py-2 text-xs font-medium text-left">Platform</th>
-            <th className="px-4 py-2 text-xs font-medium text-right">Amount</th>
-            <th className="px-4 py-2 text-xs font-medium text-center">Status</th>
-            <th className="px-4 py-2 text-xs font-medium text-center">Retry</th>
+        <thead className="bg-muted/50 border-b">
+          <tr className="text-xs text-muted-foreground">
+            <th className="px-4 py-3 text-left font-medium">Transaction</th>
+            <th className="px-4 py-3 text-left font-medium">Action</th>
+            <th className="px-4 py-3 text-left font-medium">3rd Party</th>
+            <th className="px-4 py-3 text-left font-medium">Platform</th>
+            <th className="px-4 py-3 text-right font-medium">Amount</th>
+            <th className="px-4 py-3 text-center font-medium">Status</th>
+            <th className="px-4 py-3 text-center font-medium">Retry</th>
           </tr>
         </thead>
 
         {/* BODY */}
         <tbody>
-          {transactions.map((tx, i) => {
-            const isError = !(tx.error_code === "0" || tx.error_code === null);
+          {sortedTransactions.map((tx, i) => {
+            const error = isError(tx);
             const retryVal = tx.retry_counter || 0;
             const currency = tx.currency_code?.trim();
 
             return (
               <tr
                 key={tx.transaction_id || i}
-                className="border-b border-border/40 last:border-0 hover:bg-accent/20 transition-colors"
+                className={cn(
+                  "border-b last:border-0 transition",
+                  "hover:bg-muted/30",
+                  error && "bg-rose-50/30"
+                )}
               >
+
                 {/* TRANSACTION */}
-                <td className="px-4 py-2">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="font-mono text-xs text-foreground truncate max-w-56">
+                <td className="px-4 py-3">
+                  <div className="flex flex-col">
+                    <span className="font-mono text-xs font-medium truncate max-w-52">
                       {tx.transaction_id}
                     </span>
                     <span className="text-[11px] text-muted-foreground font-mono">
@@ -83,10 +120,11 @@ export default function TransactionTable({
                   </div>
                 </td>
 
-                <td className="px-4 py-2">
+                {/* ACTION */}
+                <td className="px-4 py-3">
                   <span
                     className={cn(
-                      "px-2 py-0.5 rounded-md border text-[11px] font-medium",
+                      "px-2.5 py-1 rounded-full text-[11px] font-medium border",
                       getActionStyle(tx.action_type)
                     )}
                   >
@@ -94,52 +132,63 @@ export default function TransactionTable({
                   </span>
                 </td>
 
-                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
-                  {tx.third_party_txn_id && tx.third_party_txn_id !== "null"
+                {/* THIRD PARTY */}
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+                  {tx.third_party_txn_id &&
+                  tx.third_party_txn_id !== "null"
                     ? tx.third_party_txn_id
                     : "—"}
                 </td>
 
-                <td className="px-4 py-2 font-mono text-xs text-muted-foreground">
+                {/* PLATFORM */}
+                <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                   {tx.platform_trans_id || "—"}
                 </td>
 
-                <td className="px-4 py-2 text-right">
+                {/* AMOUNT */}
+                <td className="px-4 py-3 text-right">
                   <div className="flex flex-col items-end">
-                    <span className="font-mono text-sm text-foreground">
-                      {Number(tx.amount)}
+                    <span className="font-mono font-semibold">
+                      {Number(tx.amount).toLocaleString()}
                     </span>
-                    <span className="text-[10px] text-muted-foreground font-mono">
+                    <span className="text-[10px] text-muted-foreground">
                       {currency}
                     </span>
                   </div>
                 </td>
 
-                <td className="px-4 py-2 text-center">
+                {/* STATUS */}
+                <td className="px-4 py-3 text-center">
                   <span
                     className={cn(
-                      "text-[11px] font-medium",
-                      isError ? "text-rose-400" : "text-emerald-400"
+                      "text-xs font-medium",
+                      error ? "text-rose-600" : "text-emerald-600"
                     )}
                   >
-                    {isError ? "Failed" : "Success"}
-                    {isError && tx.error_description && ` (${tx.error_description})`}
+                    {error ? "Failed" : "Success"}
                   </span>
+
+                  {error && tx.error_description && (
+                    <div className="text-[10px] text-muted-foreground mt-1 max-w-35 truncate">
+                      {tx.error_description}
+                    </div>
+                  )}
                 </td>
 
                 {/* RETRY */}
-                <td className="px-4 py-2 text-center">
+                <td className="px-4 py-3 text-center">
                   <span
                     className={cn(
-                      "inline-flex items-center justify-center min-w-6 h-6 rounded-md text-[11px] font-mono border",
+                      "inline-flex items-center justify-center w-6 h-6 rounded-md text-[11px] font-mono border",
                       retryVal > 0
-                        ? "bg-amber-500/5 text-amber-400 border-amber-400/20"
-                        : "bg-muted/40 text-muted-foreground border-border"
+                        ? "bg-amber-50 text-amber-600 border-amber-200"
+                        : "bg-muted text-muted-foreground border-border"
                     )}
                   >
                     {retryVal}
                   </span>
                 </td>
+
               </tr>
             );
           })}

@@ -7,11 +7,12 @@ type ApiRequestOptions<T = unknown> = {
   params?: Record<string, any>;
   requireCookie?: boolean;
   headers?: Record<string, string>;
+  baseURL?: string;
 };
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
 
-if (!BASE_URL) {
+if (!DEFAULT_BASE_URL) {
   throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
 }
 
@@ -22,15 +23,19 @@ async function apiRequest<R = any, T = unknown>({
   params,
   requireCookie = true,
   headers = {},
+  baseURL,
 }: ApiRequestOptions<T>): Promise<R> {
   try {
     if (!endpoint) throw new Error("Endpoint is required");
 
     const cleanEndpoint = endpoint.replace(/^\//, "");
 
+    // ✅ Use passed baseURL or fallback
+    const finalBaseURL = (baseURL || DEFAULT_BASE_URL as string).replace(/\/$/, "");
+
     const config: AxiosRequestConfig = {
       method,
-      url: `${BASE_URL}/${cleanEndpoint}`,
+      url: `${finalBaseURL}/${cleanEndpoint}`,
       data,
       params,
       withCredentials: requireCookie,

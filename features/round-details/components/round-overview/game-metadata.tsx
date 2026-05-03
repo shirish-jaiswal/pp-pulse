@@ -22,58 +22,49 @@ const GameMetadata = () => {
 
   if (!gameMetadata) return null;
   return (
-    <div className="w-full flex items-center border-2 bg-muted/20 rounded-md">
+    <div className="w-full flex items-center justify-between rounded-xl border bg-background px-3 py-2 shadow-sm">
 
       {/* METADATA */}
-      <div className="flex-1 flex items-center overflow-x-auto no-scrollbar px-2 py-2">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 flex-1">
         {gameMetadata.map((item, index) => (
-          <div key={index} className="flex items-center shrink-0">
+          <div
+            key={index}
+            className="flex items-center gap-1.5 text-sm"
+          >
+            {/* Label */}
+            <span className="text-xs text-muted-foreground">
+              {item.label}
+            </span>
 
-            <div className="flex items-baseline gap-1.5 px-1">
-
-              {/* Label */}
-              <span className="text-[11px] text-muted-foreground">
-                {item.label}
-              </span>
-
-              {/* Value */}
-              <span
-                className={cn(
-                  "text-[12px] whitespace-nowrap",
-                  item.isTechnical
-                    ? "font-mono text-foreground"
-                    : "text-foreground"
-                )}
-              >
-                {item.value}
-              </span>
-            </div>
-
-            {/* Divider */}
-            {index !== gameMetadata.length - 1 && (
-              <div className="h-3 w-px bg-border mx-1" />
-            )}
+            {/* Value */}
+            <span
+              className={cn(
+                "font-medium",
+                item.isTechnical && "font-mono text-foreground"
+              )}
+            >
+              {item.value}
+            </span>
           </div>
         ))}
       </div>
 
       {/* COPY BUTTON */}
-      <div className="px-2 border-l border-border/40">
-        <button
-          onClick={handleCopy}
-          className="flex items-center gap-1 p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/40 transition"
-          title="Copy metadata"
-        >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[10px]">Copied</span>
-            </>
-          ) : (
-            <Copy className="w-3.5 h-3.5" />
-          )}
-        </button>
-      </div>
+      <button
+        onClick={handleCopy}
+        className="ml-3 flex items-center gap-1 px-2 py-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition"
+      >
+        {copied ? (
+          <>
+            <Check className="w-4 h-4 text-emerald-400" />
+            <span className="text-xs">Copied</span>
+          </>
+        ) : (
+          <>
+            <Copy className="w-4 h-4" />
+          </>
+        )}
+      </button>
     </div>
   );
 };

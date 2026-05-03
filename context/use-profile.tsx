@@ -15,6 +15,7 @@ type User = {
   name?: string;
   email?: string;
   role?: string;
+  freshdesk?: string;
 };
 
 type ProfileContextType = {
@@ -48,7 +49,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       } finally {
         if (alive) {
           setLoading(false);
-          setAuthReady(true); // 🔥 IMPORTANT
+          setAuthReady(true);
         }
       }
     };
