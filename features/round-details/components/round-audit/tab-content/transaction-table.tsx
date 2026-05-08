@@ -3,7 +3,7 @@
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 import { cn } from "@/utils/cn";
 
-export const formatDate = (dateStr: string | Date) => {
+export const formatDate_intl = (dateStr: string | Date) => {
   const date = new Date(dateStr);
 
   const timeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -23,6 +23,12 @@ export const formatDate = (dateStr: string | Date) => {
   const dayPeriod = parts.find((p) => p.type === "dayPeriod")?.value;
 
   return `${datePart}, ${hour}:${minute}:${second}.${ms} ${dayPeriod}`;
+};
+
+export const formatDate = (dateStr: string | Date) => {
+  const d = typeof dateStr === "string" ? dateStr : dateStr.toISOString();
+  const [date, time] = d.replace("Z", "").split("T");
+  return `${date} ${time}`;
 };
 
 export default function TransactionTable({

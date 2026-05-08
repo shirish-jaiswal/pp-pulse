@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { RoundRow } from "@/features/bet-history/components/bet-table/transform-bets";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
+import { formatDate } from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 
 export const columns: ColumnDef<RoundRow>[] = [
   {
@@ -37,7 +38,7 @@ export const columns: ColumnDef<RoundRow>[] = [
     sortingFn: "datetime",
     enableColumnFilter: false,
     cell: ({ row }) =>
-      new Date(row.original.time).toLocaleString(),
+      formatDate(row.original.time)
   },
   {
     accessorKey: "totalPlaced",
