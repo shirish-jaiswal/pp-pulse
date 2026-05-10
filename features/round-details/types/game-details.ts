@@ -17,6 +17,8 @@ export const RoundMetaSchema = z.object({
   IP: z.string().ip(),
 
   Description: z.string(),
+  multiplier: z.number().int().nullable(),
+
   cancelReason: z.string().nullable(),
 
   resultcode_id: z.string(),

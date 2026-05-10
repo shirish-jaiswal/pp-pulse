@@ -15,8 +15,12 @@ import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata
 type Mode = "round" | "game";
 
 export function MultiRoundTabs() {
-  const { multiIds, setRoundDetails, setRoundOverview, setGameMetadata } =
-    useRoundDetails();
+  const {
+    multiIds,
+    setRoundDetails,
+    setRoundOverview,
+    setGameMetadata
+  } = useRoundDetails();
 
   const mode: Mode = useMemo(() => {
     return multiIds.game_ids?.length ? "game" : "round";
@@ -25,27 +29,18 @@ export function MultiRoundTabs() {
   const [activeId, setActiveId] = useState<string>("");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Default active tab
+  const ids = mode === "round" ? multiIds.round_ids : multiIds.game_ids;
+
+  // 1. Set default active tab
   useEffect(() => {
     if (mode === "round" && multiIds.round_ids.length) {
       setActiveId(multiIds.round_ids[0]);
-    }
-    if (mode === "game" && multiIds.game_ids.length) {
+    } else if (mode === "game" && multiIds.game_ids.length) {
       setActiveId(multiIds.game_ids[0]);
     }
   }, [mode, multiIds]);
 
-  const toggleSelection = (id: string) => {
-    setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((i) => i !== id)
-        : [...prev, id]
-    );
-  };
-
-  const ids =
-    mode === "round" ? multiIds.round_ids : multiIds.game_ids;
-
+  // 2. Fetch data based on activeId
   const {
     data: roundData,
     isLoading: isFetchingData,
@@ -54,35 +49,24 @@ export function MultiRoundTabs() {
   } = useGetRoundDetails({
     game_id: mode === "game" ? activeId : "",
     round_id: mode === "round" ? activeId : "",
-    user_id:
-      mode === "game" && multiIds.user_id
-        ? multiIds.user_id
-        : "",
+    user_id: mode === "game" && multiIds.user_id ? multiIds.user_id : "",
   });
-
-  console.log("Fetched round data for ID:", activeId, roundData);
 
   const isLoading = isFetchingData || isFetching;
 
-  useEffect(() => {
-    if (isError) {
-      toast.error(`Failed to fetch: ${activeId}`);
-    }
-  }, [isError, activeId]);
-
-  // Round overview
+  // 3. Generate derived data
   const roundOverviewData = useMemo(() => {
     if (!roundData) return null;
     return generateRoundOverview(roundData);
   }, [roundData]);
 
-  // Game metadata
   const gameMetaData = useMemo(() => {
-    if (!roundData) return [];
+    // If roundData is null (loading new tab), return empty to clear previous state
+    if (!roundData?.gameDetails) return [];
     return generateGameMetaData(roundData.gameDetails);
   }, [roundData]);
 
-  // Sync to context
+  // 4. Sync to global context
   useEffect(() => {
     if (roundData && !isLoading) {
       setRoundDetails(roundData);
@@ -91,8 +75,9 @@ export function MultiRoundTabs() {
         setRoundOverview(roundOverviewData.roundOverview);
       }
 
-      // Only set game metadata in game mode
-      if (mode === "game" && gameMetaData.length) {
+      // UPDATED: Removed the 'mode === "game"' check so metadata
+      // reloads for every round/game clicked.
+      if (gameMetaData && gameMetaData.length > 0) {
         setGameMetadata(gameMetaData);
       }
     }
@@ -101,11 +86,23 @@ export function MultiRoundTabs() {
     roundOverviewData,
     gameMetaData,
     isLoading,
-    mode,
     setRoundDetails,
     setRoundOverview,
     setGameMetadata,
   ]);
+
+  // 5. Error handling
+  useEffect(() => {
+    if (isError) {
+      toast.error(`Failed to fetch data for ID: ${activeId}`);
+    }
+  }, [isError, activeId]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
 
   if (!ids.length) return null;
 
@@ -128,7 +125,6 @@ export function MultiRoundTabs() {
                     "cursor-pointer"
                   )}
                 >
-                  {/* Checkbox */}
                   <Checkbox
                     checked={isChecked}
                     onCheckedChange={() => toggleSelection(id)}
@@ -136,16 +132,13 @@ export function MultiRoundTabs() {
                     className="h-3 w-3"
                   />
 
-                  {/* Label */}
                   <div className="flex items-center gap-1 font-mono">
                     <span className="opacity-50">
                       {mode === "round" ? "R" : "G"}:
                     </span>
-
                     <span className="max-w-25">{id}</span>
                   </div>
 
-                  {/* Loader */}
                   {isLoading && isActive && (
                     <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
                   )}

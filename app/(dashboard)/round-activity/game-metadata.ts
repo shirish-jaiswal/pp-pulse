@@ -49,6 +49,7 @@ export default function generateGameMetaData(
       label: "Result",
       value: resultValue,
       isTechnical: false,
+      showPopupOf: gameType
     },
     {
       label: "Result Time",

@@ -164,6 +164,7 @@ export default function generateRoundOverview(
   const sections: (InfoCardProps | null)[] = [
     {
       iName: "landmark",
+      isIconButton: true,
       items: [
         {
           label: "Casino Id",
@@ -179,6 +180,7 @@ export default function generateRoundOverview(
     },
     {
       iName: "fingerprint",
+      isIconButton: true,
       items: [
         {
           label: "User ID",

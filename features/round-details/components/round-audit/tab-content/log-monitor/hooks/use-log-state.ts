@@ -12,16 +12,20 @@ const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
     "raw.app.requestLog.log",
     "raw.app.responseLog.log",
   ],
-  lcTransactionLogs: [
-    "message",
-    "raw.contextMap",
-  ],
+  lcTransactionLogs: ["message", "raw.contextMap"],
   default: ["message"],
 };
 
 export function useLogState(roundId: string, timeStamp: any) {
   const { roundDetails } = useRoundDetails();
-  const { data, isLoading } = useTransactionLogs({ roundId, timeStamp, game_id: roundDetails?.tptInfo?.at(0)?.game_id as string, user_id: roundDetails?.tptInfo?.at(0)?.user_id as string, game_type: roundDetails?.gameDetails?.at(0)?.game_type as string });
+
+  const { data, isLoading } = useTransactionLogs({
+    roundId,
+    timeStamp,
+    game_id: roundDetails?.tptInfo?.at(0)?.game_id as string,
+    user_id: roundDetails?.tptInfo?.at(0)?.user_id as string,
+    game_type: roundDetails?.gameDetails?.at(0)?.game_type as string,
+  });
 
   const [activeTab, setActiveTab] = useState<string | null>("");
   const [query, setQuery] = useState("");
@@ -30,6 +34,9 @@ export function useLogState(roundId: string, timeStamp: any) {
     Record<string, string[]>
   >({});
 
+  // =========================
+  // Tabs
+  // =========================
   const availableTabs = useMemo(() => {
     if (!data) return [];
     return Object.keys(data).filter((k) => Array.isArray(data[k]));
@@ -41,6 +48,43 @@ export function useLogState(roundId: string, timeStamp: any) {
     }
   }, [availableTabs, activeTab]);
 
+  // =========================
+  // Flatten logs for search
+  // =========================
+  const buildSearchableText = (h: any) => {
+    const parts: string[] = [];
+
+    if (h?.message) parts.push(h.message);
+    if (h?._index) parts.push(h._index);
+
+    const flatten = (obj: any, prefix = "") => {
+      Object.entries(obj).forEach(([key, value]) => {
+        const path = prefix ? `${prefix}.${key}` : key;
+
+        if (value && typeof value === "object") {
+          flatten(value, path);
+        } else {
+          parts.push(`${path}=${value}`);
+          parts.push(`${key}=${value}`);
+          parts.push(`${value}`);
+        }
+      });
+    };
+
+    if (h?.raw && typeof h.raw === "object") {
+      flatten(h.raw, "raw");
+    }
+
+    if (h?.app && typeof h.app === "object") {
+      flatten(h.app, "app");
+    }
+
+    return parts.join(" ").toLowerCase();
+  };
+
+  // =========================
+  // Logs + Sidebar keys
+  // =========================
   const { logs, sidebarKeys } = useMemo(() => {
     if (!data || !activeTab) return { logs: [], sidebarKeys: [] };
 
@@ -52,9 +96,7 @@ export function useLogState(roundId: string, timeStamp: any) {
 
       if (log.raw) {
         getDeepKeys(log.raw).forEach((k) => {
-          if (!k.includes("@timestamp")) {
-            keySet.add(`raw.${k}`);
-          }
+          if (!k.includes("@timestamp")) keySet.add(`raw.${k}`);
         });
       }
 
@@ -71,9 +113,9 @@ export function useLogState(roundId: string, timeStamp: any) {
     };
   }, [data, activeTab]);
 
-  /**
-   * Resolve default columns (FIXED MATCHING LOGIC)
-   */
+  // =========================
+  // Default columns
+  // =========================
   const computedDefaultColumns = useMemo(() => {
     if (!activeTab || !sidebarKeys.length) return [];
 
@@ -82,30 +124,21 @@ export function useLogState(roundId: string, timeStamp: any) {
       DEFAULT_COLUMNS_BY_TAB.default;
 
     return defaults.filter((c) =>
-      sidebarKeys.some(
-        (k) => k === c || k.startsWith(c + ".")
-      )
+      sidebarKeys.some((k) => k === c || k.startsWith(c + "."))
     );
   }, [activeTab, sidebarKeys]);
 
-  /**
-   * Final visible columns (source of truth)
-   */
   const visibleColumns = useMemo(() => {
     if (!activeTab) return [];
 
     const saved = tabColumnState[activeTab];
 
     if (saved?.length) return saved;
-
     if (computedDefaultColumns.length) return computedDefaultColumns;
 
     return ["message"];
   }, [activeTab, tabColumnState, computedDefaultColumns]);
 
-  /**
-   * Update visible columns (persist per tab)
-   */
   const setVisibleColumns = (updater: any) => {
     const next =
       typeof updater === "function"
@@ -120,41 +153,88 @@ export function useLogState(roundId: string, timeStamp: any) {
     }
   };
 
-  /**
-   * Filter logs
-   */
+  // =========================
+  // 🔥 FIXED FILTER LOGIC
+  // =========================
   const filteredLogs = useMemo(() => {
-    const q = query.toLowerCase();
+    const q = query.trim().toLowerCase();
 
     return (logs || [])
       .filter((h: any) => {
-        if (!q.trim()) return true;
+        if (!q) return true;
 
-        const fullText = `${h?.message ?? ""} ${h?._index ?? ""}`.toLowerCase();
+        const fullText = buildSearchableText(h);
 
         try {
-          const tokenRegex =
-            /"([^"]+)"|\b(and|or)\b|([\(\)])|([^\s\(\)]+)/gi;
+          const tokens =
+            q.match(/"[^"]+"|\(|\)|\band\b|\bor\b|[^\s()]+/gi) || [];
 
-          const expression = q.replace(
-            tokenRegex,
-            (match, phrase, logical, paren, word) => {
-              if (phrase) return `fullText.includes("${phrase}")`;
-              if (logical === "and" || logical === "&&" || logical === "AND") return " && ";
-              if (logical === "or" || logical === "||" || logical === "OR") return " || ";
-              if (paren) return paren;
-              if (word) return `fullText.includes("${word}")`;
-              return match;
+          let currentOp: "AND" | "OR" = "AND";
+          let result: boolean | null = null;
+
+          const evaluateToken = (token: string) => {
+            const clean = token.replace(/^"|"$/g, "").toLowerCase().trim();
+            if (!clean) return true;
+
+            // direct match
+            if (fullText.includes(clean)) return true;
+
+            // key=value support (seat="3")
+            if (fullText.includes(`${clean}=`)) return true;
+
+            // fuzzy match
+            const words = fullText.split(/\s+/);
+
+            return words.some((word) => {
+              if (word.includes(clean)) return true;
+
+              let i = 0,
+                j = 0,
+                mismatches = 0;
+
+              while (i < word.length && j < clean.length) {
+                if (word[i] === clean[j]) {
+                  i++;
+                  j++;
+                } else {
+                  mismatches++;
+                  i++;
+                }
+                if (mismatches > 2) return false;
+              }
+
+              return j === clean.length;
+            });
+          };
+
+          for (const rawToken of tokens) {
+            const token = rawToken.toLowerCase();
+
+            if (token === "and") {
+              currentOp = "AND";
+              continue;
             }
-          );
 
-          const checkLogic = new Function(
-            "fullText",
-            `return ${expression};`
-          );
+            if (token === "or") {
+              currentOp = "OR";
+              continue;
+            }
 
-          return checkLogic(fullText);
-        } catch (e) {
+            if (token === "(" || token === ")") continue;
+
+            const tokenResult = evaluateToken(token);
+
+            if (result === null) {
+              result = tokenResult;
+            } else if (currentOp === "AND") {
+              result = result && tokenResult;
+            } else {
+              result = result || tokenResult;
+            }
+          }
+
+          return result ?? true;
+        } catch {
           return fullText.includes(q.replace(/"/g, ""));
         }
       })
@@ -165,15 +245,15 @@ export function useLogState(roundId: string, timeStamp: any) {
       );
   }, [logs, query]);
 
-  /**
-   * Reset columns
-   */
+  // =========================
+  // Reset
+  // =========================
   const resetToDefault = () => {
     if (!activeTab) return;
 
     setTabColumnState((prev) => {
       const updated = { ...prev };
-      delete updated[activeTab]; // remove override
+      delete updated[activeTab];
       return updated;
     });
   };
@@ -190,6 +270,7 @@ export function useLogState(roundId: string, timeStamp: any) {
     availableTabs,
     sidebarKeys,
     filteredLogs,
+    logs,
     roundId,
     resetToDefault,
   };

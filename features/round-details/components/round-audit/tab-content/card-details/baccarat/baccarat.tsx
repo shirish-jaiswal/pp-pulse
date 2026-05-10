@@ -1,48 +1,46 @@
 "use client";
 
+import React, { useMemo } from "react";
+
 import {
   MiniPlayingCard,
   Rank,
   Suit,
 } from "@/components/custom/games/playing-card";
+
 import { CardDetailsInfo } from "@/features/round-details/types/card-details";
+
 import { useFindBaccaratCards } from "@/hooks/excel-db/use-baccarat-cards";
+
 import { cn } from "@/utils/cn";
-import React, { useMemo } from "react";
+
+import {
+  calculateBaccaratScore,
+  getBankerCodes,
+  getBaccaratWinner,
+  getPlayerCodes,
+} from "@/features/round-details/components/round-audit/tab-content/card-details/baccarat/baccarat-hand-report-rules";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 
 interface BaccaratHandReportProps {
   events?: CardDetailsInfo;
 }
 
-const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
-  events = [],
-}) => {
+const BaccaratHandReport: React.FC<BaccaratHandReportProps> = () => {
+  const { roundDetails } = useRoundDetails();
+  const events = roundDetails?.cardDetails || [];
   const resultCodes = useMemo(() => {
     if (!events) return [];
-    return events.map((e) => e.resultcode_id).filter(Boolean);
+
+    return events
+      .map((e) => e.resultcode_id)
+      .filter(Boolean);
   }, [events]);
 
-  const { data: cardDetails, isLoading } = useFindBaccaratCards({
-    code: resultCodes,
-  });
-
-  const calculateScore = (codes: string[]) => {
-    if (!cardDetails) return 0;
-
-    const total = codes.reduce((acc, code) => {
-      const card = cardDetails.find((c: any) => c.code === code);
-      if (!card) return acc;
-
-      const rank = String(card.rank);
-
-      if (rank === "A") return acc + 1;
-      if (["10", "J", "Q", "K", "0"].includes(rank)) return acc;
-
-      return acc + (parseInt(rank) || 0);
-    }, 0);
-
-    return total % 10;
-  };
+  const { data: cardDetails, isLoading } =
+    useFindBaccaratCards({
+      code: resultCodes,
+    });
 
   if (!events || events.length === 0) {
     return (
@@ -52,40 +50,44 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
     );
   }
 
-  const playerCodes = events
-    .filter(
-      (e) =>
-        e.event_type.includes("PLAYER") || e.state_indicator === 1
-    )
-    .map((e) => e.resultcode_id);
+  const playerCodes = getPlayerCodes(events);
 
-  const bankerCodes = events
-    .filter(
-      (e) =>
-        e.event_type.includes("CARD_DEALT") &&
-        e.state_indicator === 0
-    )
-    .map((e) => e.resultcode_id);
+  const bankerCodes = getBankerCodes(events);
 
-  const playerScore = calculateScore(playerCodes);
-  const bankerScore = calculateScore(bankerCodes);
-  const isTie = playerScore === bankerScore;
+  const playerScore = calculateBaccaratScore(
+    playerCodes,
+    cardDetails || []
+  );
 
-  const winner =
-    isTie ? "TIE" : playerScore > bankerScore ? "PLAYER" : "BANKER";
+  const bankerScore = calculateBaccaratScore(
+    bankerCodes,
+    cardDetails || []
+  );
+
+  const winner = getBaccaratWinner(
+    playerScore,
+    bankerScore
+  );
 
   /**
-   * CARD ROW (fix for spacing + rotation)
+   * CARD ROW
    */
-  const CardRow = ({ codes }: { codes: string[] }) => {
+  const CardRow = ({
+    codes,
+  }: {
+    codes: string[];
+  }) => {
     const firstTwo = codes.slice(0, 2);
+
     const third = codes[2];
 
     return (
       <div className="flex items-center gap-3">
-        {/* First 2 cards */}
         {firstTwo.map((code, i) => {
-          const card = cardDetails?.find((c: any) => c.code === code);
+          const card = cardDetails?.find(
+            (c: any) => c.code === code
+          );
+
           return card ? (
             <MiniPlayingCard
               key={i}
@@ -96,17 +98,18 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
           ) : null;
         })}
 
-        {/* Third card (separate → clean spacing) */}
         {third && (
           <div className="flex flex-col items-center ml-2">
             <span className="text-[9px] text-muted-foreground mb-1">
               3rd
             </span>
+
             <div className="rotate-90 scale-95">
               {(() => {
                 const card = cardDetails?.find(
                   (c: any) => c.code === third
                 );
+
                 return card ? (
                   <MiniPlayingCard
                     rank={card.rank as Rank}
@@ -122,9 +125,6 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
     );
   };
 
-  /**
-   * PLAYER / BANKER SECTION
-   */
   const Section = ({
     title,
     color,
@@ -139,7 +139,6 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
         isWinner && "ring-2 ring-emerald-400"
       )}
     >
-      {/* HEADER */}
       <div className="flex items-center justify-between mb-2">
         <span className={cn("text-sm font-semibold", color)}>
           {title}
@@ -150,39 +149,38 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
         </span>
       </div>
 
-      {/* CARDS */}
       <CardRow codes={codes} />
     </div>
   );
 
   return (
     <div className="rounded-xl p-2 bg-muted/20 border space-y-4">
-
-      {/* RESULT */}
       <div className="flex justify-center">
         <div
           className={cn(
             "px-4 py-1.5 rounded-full text-sm font-semibold",
-            winner === "PLAYER" && "bg-blue-100 text-blue-700",
-            winner === "BANKER" && "bg-red-100 text-red-700",
-            winner === "TIE" && "bg-muted text-foreground"
+            winner === "PLAYER" &&
+            "bg-blue-100 text-blue-700",
+            winner === "BANKER" &&
+            "bg-red-100 text-red-700",
+            winner === "TIE" &&
+            "bg-muted text-foreground"
           )}
         >
           {winner === "PLAYER"
             ? "Player Wins"
             : winner === "BANKER"
-            ? "Banker Wins"
-            : "Tie"}
+              ? "Banker Wins"
+              : "Tie"}
         </div>
       </div>
 
-      {/* MAIN */}
       {isLoading ? (
         <div className="text-center text-sm text-muted-foreground py-6">
           Loading cards...
         </div>
       ) : (
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-wrap gap-4">
           <Section
             title="PLAYER"
             color="text-blue-600"
@@ -201,7 +199,6 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = ({
         </div>
       )}
 
-      {/* FOOTER */}
       {winner === "TIE" && (
         <div className="text-center text-xs text-muted-foreground">
           Tie payout 8:1

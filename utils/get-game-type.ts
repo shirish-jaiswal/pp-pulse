@@ -5,6 +5,7 @@ export type GameType =
   | "roulette"
   | "game-show"
   | "crash-game"
+  | "sweet-bonanza"
   | "other-card-game"
   | "non-card"
   | "unknown";
@@ -49,6 +50,14 @@ export function getGameType(gameType?: string): GameType {
     return "roulette";
   }
 
+  // Sweet Bonanza
+  if (
+    /\bsweet\s*bonanza\b/.test(text) ||
+    /\bsweetbonanza\b/.test(text)
+  ) {
+    return "sweet-bonanza";
+  }
+
   // Game Shows
   if (
     /\bmega\s*wheel\b/.test(text) ||
@@ -85,8 +94,7 @@ const CARD_GAME_KEYWORDS: Array<RegExp> = [
   // Baccarat variations
   /\bbaccarat\b/i,
 
-  // Sic Bo variations (Often grouped with table/card apps,
-  // but strictly a dice game. Included here per original logic.)
+  // Sic Bo variations
   /\bsic\s*bo\b/i,
   /\bsicbo\b/i,
 ];
@@ -112,7 +120,12 @@ export function isCardGame(gameType?: string): boolean {
   return CARD_GAME_ALIASES.some((alias) => text.includes(alias));
 }
 
-export type BroadCategory = 'BLACKJACK' | 'BACCARAT' | 'CRASH' | 'OTHER';
+export type BroadCategory =
+  | "BLACKJACK"
+  | "BACCARAT"
+  | "CRASH"
+  | "SWEET_BONANZA"
+  | "OTHER";
 
 /**
  * Maps the detailed GameType into the four broad categories.
@@ -121,12 +134,17 @@ export function getBroadCategory(gameType: GameType): BroadCategory {
   switch (gameType) {
     case "blackjack":
       return "BLACKJACK";
+
     case "baccarat":
       return "BACCARAT";
+
     case "crash-game":
       return "CRASH";
+
+    case "sweet-bonanza":
+      return "SWEET_BONANZA";
+
     default:
-      // Includes roulette, sicbo, game-show, other-card-game, etc.
       return "OTHER";
   }
 }

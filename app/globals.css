@@ -4,6 +4,24 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@source inline(
+  "bg-red-400",
+  "bg-gray-800",
+  "bg-green-500",
+  "bg-blue-500",
+  "bg-red-500",
+
+  "border-red-900",
+  "border-gray-900",
+  "border-green-900",
+  "border-blue-900",
+  "border-pink-500",
+  "border-gray-700",
+
+  "text-white",
+  "text-black"
+);
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

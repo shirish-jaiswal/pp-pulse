@@ -6,7 +6,7 @@ import { ResolutionEditor } from "@/features/round-details/components/resolution
 import { RoundInvestigator } from "@/features/round-details/components/investigator/round-investigator";
 import { MultiRoundTabs } from "@/features/round-details/components/round-overview/multi-round-tab";
 import RoundOverview from "@/features/round-details/components/round-overview/round-overview";
-import GameMetadata from "@/features/round-details/components/round-overview/game-metadata";
+import GameMetadata from "@/features/round-details/components/game-metadata/game-metadata";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import RoundAudit from "@/features/round-details/components/round-audit/round-audit";
 import EmptyRoundData from "@/features/round-details/components/empty-round-data";

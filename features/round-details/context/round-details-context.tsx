@@ -23,7 +23,8 @@ type MultiIdsState = {
 export type GameMetaData = {
   label: string;
   value: string;
-  isTechnical: boolean
+  isTechnical: boolean;
+  showPopupOf?: string;
 }
 
 type RoundDetailsContextType = {

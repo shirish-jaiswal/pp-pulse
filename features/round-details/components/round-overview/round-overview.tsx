@@ -43,7 +43,6 @@ const RoundOverview = () => {
                 variant={section.variant || "default"}
                 items={section.items}
               />
-
             </div>
           );
         })}
