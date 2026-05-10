@@ -7,12 +7,11 @@ function parseJwt(token: string) {
     return null;
   }
 }
-
+const F_DOMAIN = process.env.NEXT_PUBLIC_NEXT_URL || "http://localhost:3000";
 export async function proxy(req: NextRequest) {
   const { pathname, origin } = req.nextUrl;
   const session = req.cookies.get("JSESSIONID")?.value;
   const userToken = req.cookies.get("user_token")?.value;
-  console.log("pathname", pathname)
 
   const isPublicRoute =
     pathname === "/login" ||
@@ -49,7 +48,7 @@ export async function proxy(req: NextRequest) {
     const query = roles.map((r: string) => `roles_like=${encodeURIComponent(r)}`).join("&");
 
     const res = await fetch(
-      `${origin}/portal/api/excel-db/rbac/tables/feature_list/rows?${query}`,
+      `${F_DOMAIN}/excel-db/rbac/tables/feature_list/rows?${query}`,
       {
         headers: { cookie: req.headers.get("cookie") || "" },
         cache: "no-store",

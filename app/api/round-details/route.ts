@@ -6,23 +6,19 @@ import { cookies } from "next/headers";
 const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export async function GET(request: NextRequest) {
-  console.log("➡️ Incoming request:", request.cookies);
 
   try {
     const { searchParams } = new URL(request.url);
-    console.log("🔍 Parsed searchParams:", Object.fromEntries(searchParams));
 
     const rawData = {
       round_id: searchParams.get("roundId"),
       game_id: searchParams.get("gameId"),
       user_id: searchParams.get("userId"),
     };
-    console.log("📦 Raw data:", rawData);
 
     const externalQueryParams: Record<string, string> = {};
 
     if (rawData.round_id) {
-      console.log("✅ Using round_id");
       externalQueryParams.roundId = rawData.round_id;
     } else {
       console.log("⚠️ No round_id, falling back to game_id/user_id");
