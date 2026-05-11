@@ -10,8 +10,8 @@ import PremiumLogMonitor from "@/features/round-details/components/round-audit/t
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
 import AddationalDetailsWrapper from "@/features/round-details/components/round-audit/tab-content/addational-details-wrapper";
+import { usePrefetchTransactionLogs } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-prefetch-logs";
 import { toast } from "sonner";
-import { usePrefetchTransactionLogs } from "./tab-content/log-monitor/hooks/use-prefetch-logs";
 
 interface ContentProps {
   activeTab: string;
@@ -64,12 +64,12 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
         <div className="flex items-center gap-1">
           <Button
             title="Resolution Editor"
-            variant="ghost"
-            size="xs"
+            variant="default"
+            size="sm"
             onClick={() => setResolutionEditorOpen(!resolutionEditorOpen)}
-            className="gap-1 text-muted-foreground hover:text-foreground"
+            className="gap-1 text-white/80 hover:text-white rounded-full py-0"
           >
-            <Edit className="h-3.5 w-3.5" />
+            <Edit className="h-6 w-6" />
           </Button>
         </div>
       </header>

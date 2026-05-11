@@ -4,6 +4,7 @@ export type GameType =
   | "sicbo"
   | "roulette"
   | "game-show"
+  | "treasure-island"
   | "crash-game"
   | "sweet-bonanza"
   | "other-card-game"
@@ -26,59 +27,109 @@ export function getGameType(gameType?: string): GameType {
 
   const text = normalize(gameType);
 
+  // -----------------------
   // Blackjack
+  // -----------------------
   if (
-    /\bblack\s*jack\b/.test(text) ||
-    /\bblackjack\b/.test(text) ||
+    text.includes("blackjack") ||
+    text.includes("black jack") ||
     /\bbj\b/.test(text)
   ) {
     return "blackjack";
   }
 
+  // -----------------------
   // Baccarat
-  if (/\bbaccarat\b/.test(text)) {
+  // -----------------------
+  if (text.includes("baccarat") || /\bbaccarat\b/.test(text)) {
     return "baccarat";
   }
 
+  // -----------------------
   // Sic Bo
-  if (/\bsic\s*bo\b/.test(text) || /\bsicbo\b/.test(text)) {
+  // -----------------------
+  if (
+    text.includes("sicbo") ||
+    text.includes("sic bo") ||
+    /\bsic\s*bo\b/.test(text)
+  ) {
     return "sicbo";
   }
 
+  // -----------------------
   // Roulette
-  if (/\broulette\b/.test(text)) {
+  // -----------------------
+  const ROULETTE_LIKE_GAMES = [
+    /\broulette\b/,
+    /\bgates\s*of\s*olympus\b/,
+    /\bgatesofolympus\b/,
+  ];
+
+  if (
+    text.includes("roulette") ||
+    text.includes("gates of olympus") ||
+    text.includes("gatesofolympus") ||
+    ROULETTE_LIKE_GAMES.some((regex) => regex.test(text))
+  ) {
     return "roulette";
   }
 
+  // -----------------------
   // Sweet Bonanza
+  // -----------------------
   if (
-    /\bsweet\s*bonanza\b/.test(text) ||
-    /\bsweetbonanza\b/.test(text)
+    text.includes("sweet bonanza") ||
+    text.includes("sweetbonanza") ||
+    /\bsweet\s*bonanza\b/.test(text)
   ) {
     return "sweet-bonanza";
   }
 
-  // Game Shows
+  // -----------------------
+  // Treasure Island (IMPORTANT: before game-show)
+  // -----------------------
   if (
+    text.includes("treasure island") ||
+    /\btreasure\s*island\b/.test(text)
+  ) {
+    return "treasure-island";
+  }
+
+  // -----------------------
+  // Game Shows
+  // -----------------------
+  if (
+    text.includes("mega wheel") ||
+    text.includes("money time") ||
     /\bmega\s*wheel\b/.test(text) ||
-    /\btreasure\s*island\b/.test(text) ||
     /\bmoney\s*time\b/.test(text)
   ) {
     return "game-show";
   }
 
+  // -----------------------
   // Crash Games
+  // -----------------------
   if (
+    text.includes("spaceman") ||
+    text.includes("high flyer") ||
+    text.includes("highflyer") ||
     /\bspaceman\b/.test(text) ||
-    /\bhigh\s*flyer\b/.test(text) ||
-    /\bhighflyer\b/.test(text)
+    /\bhigh\s*flyer\b/.test(text)
   ) {
     return "crash-game";
   }
 
-  // Fallback heuristics for card games
+  // -----------------------
+  // Card game fallback heuristics
+  // -----------------------
   const hasCardLikeKeywords =
-    /\bcard\b/.test(text) || /\bdealer\b/.test(text) || /\bhand\b/.test(text);
+    text.includes("card") ||
+    text.includes("dealer") ||
+    text.includes("hand") ||
+    /\bcard\b/.test(text) ||
+    /\bdealer\b/.test(text) ||
+    /\bhand\b/.test(text);
 
   if (hasCardLikeKeywords) return "other-card-game";
 
@@ -86,15 +137,10 @@ export function getGameType(gameType?: string): GameType {
 }
 
 const CARD_GAME_KEYWORDS: Array<RegExp> = [
-  // Blackjack variations
   /\bblack\s*jack\b/i,
   /\bblackjack\b/i,
   /\bbj\b/i,
-
-  // Baccarat variations
   /\bbaccarat\b/i,
-
-  // Sic Bo variations
   /\bsic\s*bo\b/i,
   /\bsicbo\b/i,
 ];
@@ -111,12 +157,22 @@ export function isCardGame(gameType?: string): boolean {
 
   const text = normalize(gameType);
 
-  // Regex-based detection
-  const matchesKeyword = CARD_GAME_KEYWORDS.some((regex) => regex.test(text));
+  if (
+    text.includes("blackjack") ||
+    text.includes("black jack") ||
+    text.includes("baccarat") ||
+    text.includes("sicbo") ||
+    text.includes("sic bo")
+  ) {
+    return true;
+  }
+
+  const matchesKeyword = CARD_GAME_KEYWORDS.some((regex) =>
+    regex.test(text)
+  );
 
   if (matchesKeyword) return true;
 
-  // Alias-based detection
   return CARD_GAME_ALIASES.some((alias) => text.includes(alias));
 }
 
@@ -125,10 +181,11 @@ export type BroadCategory =
   | "BACCARAT"
   | "CRASH"
   | "SWEET_BONANZA"
+  | "TREASURE_ISLAND"
   | "OTHER";
 
 /**
- * Maps the detailed GameType into the four broad categories.
+ * Maps the detailed GameType into the broad categories.
  */
 export function getBroadCategory(gameType: GameType): BroadCategory {
   switch (gameType) {
@@ -143,6 +200,9 @@ export function getBroadCategory(gameType: GameType): BroadCategory {
 
     case "sweet-bonanza":
       return "SWEET_BONANZA";
+
+    case "treasure-island":
+      return "TREASURE_ISLAND";
 
     default:
       return "OTHER";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { Gamepad2, TicketPercent, Terminal, CircleDollarSign, InfoIcon, ClubIcon } from "lucide-react";
+import { Terminal, CircleDollarSign, InfoIcon, ClubIcon } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoundAuditSidebar } from "@/features/round-details/components/round-audit/round-audit-sidebar";
 import { RoundAuditContent } from "@/features/round-details/components/round-audit/round-audit-content";

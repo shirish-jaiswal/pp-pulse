@@ -151,7 +151,8 @@ const GameMetadata = () => {
             ) : (
               <span
                 className={cn(
-                  "text-xl font-bold tracking-wide text-center",
+                  "w-full h-full flex items-center justify-center text-center font-bold tracking-wide leading-none px-1",
+                  "text-[clamp(10px,2.2vw,18px)]",
                   floatingResult.textClassName
                 )}
               >

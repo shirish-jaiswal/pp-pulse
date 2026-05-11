@@ -33,7 +33,6 @@ export function RoundDetailsWrapper({
   roundIds,
 }: RoundDetailsWrapperProps) {
   const {
-    roundDetailsInput,
     setRoundDetailsInput,
     isBulkMode,
     setBulkMode,
@@ -179,11 +178,10 @@ export function RoundDetailsWrapper({
         <>
           <GameMetadata />
 
-          {/* Cancel Reason (centered + red) */}
           {cancelReason && (
             <div className="w-full flex justify-center">
-              <div className="bg-red-50 border border-red-200 text-red-600 px-3 py-1 rounded-md text-sm font-medium">
-                {cancelReason}
+              <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-xl text-sm w-full">
+                <span className="font-semibold pb-1 mb-2">Cancel Reason :: </span><span className="font-mono"> </span> {cancelReason || "--"}
               </div>
             </div>
           )}

@@ -10,11 +10,15 @@ import {
 import { cn } from "@/utils/cn";
 import { getNestedValue } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
 
-
 export function LogTable({ filteredLogs, visibleColumns }: any) {
-    const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(
-        Object.fromEntries(visibleColumns.map((col: string) => [col, 200]))
-    );
+    // Initializing widths for both the "Time" column and all dynamic columns
+    const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(() => {
+        const widths: { [key: string]: number } = { time: 120 }; // Base width for timestamp
+        visibleColumns.forEach((col: string) => {
+            widths[col] = 200;
+        });
+        return widths;
+    });
 
     const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
 
@@ -22,7 +26,7 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
         resizingRef.current = {
             col,
             startX: e.clientX,
-            startWidth: columnWidths[col] || 200,
+            startWidth: columnWidths[col] || (col === 'time' ? 120 : 200),
         };
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
@@ -36,7 +40,7 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
 
         setColumnWidths((prev) => ({
             ...prev,
-            [col]: Math.max(80, startWidth + delta), // Minimum width of 80px
+            [col]: Math.max(col === 'time' ? 100 : 80, startWidth + delta),
         }));
     };
 
@@ -52,10 +56,19 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
             <Table className="w-full table-fixed border-separate border-spacing-0">
                 <TableHeader className="sticky top-0 z-10 bg-background border-b border-border">
                     <TableRow>
-                        <TableHead className="min-w-16 w-16 px-2 py-2 text-xs text-muted-foreground border-r">
-                            Time
+                        {/* Time Header with Resizer */}
+                        <TableHead
+                            style={{ width: columnWidths["time"] }}
+                            className="relative px-2 py-2 text-xs text-muted-foreground border-r group"
+                        >
+                            <div className="truncate">Time</div>
+                            <div
+                                onMouseDown={(e) => onMouseDown(e, "time")}
+                                className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/50 active:bg-primary z-20"
+                            />
                         </TableHead>
 
+                        {/* Dynamic Column Headers */}
                         {visibleColumns.map((col: string) => (
                             <TableHead
                                 key={col}
@@ -82,10 +95,24 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
                                 "hover:bg-muted/40"
                             )}
                         >
-                            <TableCell className="w-25 px-2 py-1.5 text-xs whitespace-nowrap font-mono align-top border-r">
-                                {log.raw?.["@timestamp"]?.split("T")[1]?.replace("Z", "") || "--"}
+                            {/* Time Cell - Width matches Header */}
+                            <TableCell
+                                style={{ width: columnWidths["time"] }}
+                                className="px-2 py-1.5 text-[11px] whitespace-nowrap font-mono align-top border-r overflow-hidden"
+                            >
+                                <div className="flex flex-col leading-tight">
+                                    <span>
+                                        {log.raw?.["@timestamp"]?.split("T")[0] || "--"}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {log.raw?.["@timestamp"]
+                                            ?.split("T")[1]
+                                            ?.replace("Z", "") || "--"}
+                                    </span>
+                                </div>
                             </TableCell>
 
+                            {/* Dynamic Value Cells */}
                             {visibleColumns.map((col: string) => {
                                 const val = getNestedValue(log, col);
                                 return (

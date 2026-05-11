@@ -93,8 +93,8 @@ export function RoundDetailsProvider({
           typeof val === "function" ? val(prev) : { ...prev, ...val };
 
         return {
-          round_ids: next.round_ids?.slice(0, 10) ?? [],
-          game_ids: next.game_ids?.slice(0, 10) ?? [],
+          round_ids: next.round_ids?.slice(0, 20) ?? [],
+          game_ids: next.game_ids?.slice(0, 20) ?? [],
           user_id: next.user_id ?? "",
         };
       });

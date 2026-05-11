@@ -32,7 +32,7 @@ export function RoundAuditSidebar({
       animate={{ width: isCollapsed ? 64 : 164 }}
       className="bg-muted/20 border-r border-border/50 flex flex-col transition-all duration-200"
     >
-      <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between min-h-11 bg-card-foreground/10">
+      <div className="px-3 py-3 border-b border-border/50 flex items-center justify-between min-h-11 bg-card-foreground/10">
         {!isCollapsed && (
           <motion.span
             initial={{ opacity: 0 }}

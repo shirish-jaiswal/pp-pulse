@@ -107,47 +107,52 @@ export function MultiRoundTabs() {
   if (!ids.length) return null;
 
   return (
-    <div className="w-full bg-background/40">
-      <Tabs value={activeId} onValueChange={setActiveId}>
-        <TabsList className="flex w-full gap-1 px-2 overflow-x-auto no-scrollbar">
-          {ids.map((id) => {
-            const isActive = activeId === id;
-            const isChecked = selectedIds.includes(id);
+  <div className="w-full bg-background/40">
+    <Tabs value={activeId} onValueChange={setActiveId} className="max-h-full border w-full flex items-center justify-between rounded-xl bg-background px-3 py-2 shadow-sm p-0">
+      <TabsList className="flex flex-wrap h-auto w-full gap-1 p-2 justify-start bg-transparent">
+        {ids.map((id) => {
+          const isActive = activeId === id;
+          const isChecked = selectedIds.includes(id);
 
-            return (
-              <TabsTrigger key={id} value={id} asChild>
-                <div
-                  className={cn(
-                    "flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition whitespace-nowrap",
-                    isActive
-                      ? "bg-muted text-foreground"
-                      : "text-muted-foreground hover:bg-muted/50",
-                    "cursor-pointer"
-                  )}
-                >
-                  <Checkbox
-                    checked={isChecked}
-                    onCheckedChange={() => toggleSelection(id)}
-                    onClick={(e) => e.stopPropagation()}
-                    className="h-3 w-3"
-                  />
+          return (
+            <TabsTrigger
+              key={id}
+              value={id}
+              asChild
+              className="data-[state=active]:bg-muted data-[state=active]:text-foreground data-[state=active]:border data-[state=active]:border-neutral-950 rounded-md data-[state=active]:shadow-sm data-[state=active]:shadow-muted-foreground/50"
+            >
+              <div
+                className={cn(
+                  "flex items-center gap-2 px-3 py-1.5 text-xs rounded-md transition whitespace-nowrap",
+                  isActive
+                    ? "bg-muted text-foreground hover:bg-muted/50 border-2  border-neutral-950"
+                    : "text-muted-foreground hover:bg-muted/50",
+                  "cursor-pointer"
+                )}
+              >
+                <Checkbox
+                  checked={isChecked}
+                  onCheckedChange={() => toggleSelection(id)}
+                  onClick={(e) => e.stopPropagation()}
+                  className="h-3 w-3"
+                />
 
-                  <div className="flex items-center gap-1 font-mono">
-                    <span className="opacity-50">
-                      {mode === "round" ? "R" : "G"}:
-                    </span>
-                    <span className="max-w-25">{id}</span>
-                  </div>
-
-                  {isLoading && isActive && (
-                    <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
-                  )}
+                <div className="flex items-center gap-1 font-mono">
+                  <span className="opacity-50">
+                    {mode === "round" ? "R" : "G"}:
+                  </span>
+                  <span className="truncate max-w-[100px]">{id}</span>
                 </div>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-      </Tabs>
-    </div>
-  );
+
+                {isLoading && isActive && (
+                  <Loader2 className="w-3 h-3 animate-spin text-muted-foreground" />
+                )}
+              </div>
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
+    </Tabs>
+  </div>
+);
 }
