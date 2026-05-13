@@ -5,9 +5,21 @@ import { Building2 } from "lucide-react";
 import { CasinoSearchForm } from "./casino-search-form";
 import { CasinoDetailsResult } from "./casino-details-result";
 import { useCasinoDetailsQuery } from "@/features/casino-details/hooks/use-casino-details";
+import { useEffect } from "react";
 
-function CasinoDetailsContent() {
-    const { data, loading, error, fetchState, fetch } = useCasinoDetailsQuery();
+interface CasinoDetailsWrapperProps {
+  initialCasinoId?: string;
+}
+
+
+function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
+  const { data, loading, error, fetchState, fetch } = useCasinoDetailsQuery();
+
+  useEffect(() => {
+    if (initialCasinoId?.trim()) {
+      fetch(initialCasinoId);
+    }
+  }, [initialCasinoId, fetch]);
 
     return (
         <div className="flex flex-col gap-2">
@@ -54,6 +66,6 @@ function CasinoDetailsContent() {
     );
 }
 
-export function CasinoDetailsWrapper() {
-    return <CasinoDetailsContent />;
+export function CasinoDetailsWrapper({ initialCasinoId }: CasinoDetailsWrapperProps) {
+  return <CasinoDetailsContent initialCasinoId={initialCasinoId} />;
 }
