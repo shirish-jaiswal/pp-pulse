@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "node server.js dev",
     "build": "next build",
-    "start": "next start",
+    "start": "node server.js start",
     "lint": "eslint"
   },
   "dependencies": {
@@ -34,6 +34,7 @@
     "cookie-parser": "^1.4.7",
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.4.2",
     "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.7.0",
