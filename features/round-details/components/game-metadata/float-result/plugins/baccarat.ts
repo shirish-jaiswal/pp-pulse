@@ -4,8 +4,8 @@ import { resolveBaccaratWinner } from "@/features/round-details/components/game-
 export const baccaratPlugin: GamePlugin = {
     key: "baccarat",
 
-    resolve: ({ cardDetails, extraData, styleMap }) => {
-        const winner = resolveBaccaratWinner(cardDetails, extraData);
+    resolve: ({ cardDetails, cardMapping, styleMap }) => {
+        const winner = resolveBaccaratWinner(cardDetails, cardMapping);
 
         const map: Record<string, string> = {
             PLAYER: "PLR",
