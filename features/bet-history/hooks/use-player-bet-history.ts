@@ -3,9 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getPlayerBetHistory, PlayerBetHistoryProps } from "@/lib/api/bet-history/player-bet-details";
 
-const ONE_HOUR = 60 * 60 * 1000;
-const CONCURRENCY_LIMIT = 5;
-
 export function usePlayerBetHistory(
     params: PlayerBetHistoryProps,
     refreshInterval?: number
@@ -14,58 +11,61 @@ export function usePlayerBetHistory(
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<any>(null);
 
+    const intervalRef = useRef<NodeJS.Timeout | null>(null);
     const paramsRef = useRef(params);
+
     paramsRef.current = params;
 
+    /**
+     * Stable key for deduplication
+     */
     const getKey = (item: any) =>
         item.TransactionId ||
         item.ThirdPartyTxnId ||
         `${item.RoundId}-${item.Time}`;
 
+    /**
+     * Format WITHOUT timezone conversion
+     * Keeps exact "YYYY-MM-DDTHH:mm"
+     */
+    const format = (d: Date) => {
+        const pad = (n: number) => String(n).padStart(2, "0");
+
+        return (
+            `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
+            `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+        );
+    };
+
+    /**
+     * Build exact 1-hour chunks:
+     * 12:00 → 13:00
+     * 13:00 → 14:00
+     */
     const buildChunks = (from: string, to: string) => {
-        const start = new Date(from).getTime();
-        const end = new Date(to).getTime();
-
-        if (isNaN(start) || isNaN(end) || start >= end) return [];
-
         const chunks: { from: string; to: string }[] = [];
 
-        for (let t = start; t < end; t += ONE_HOUR) {
+        let current = new Date(from);
+        const end = new Date(to);
+
+        while (current < end) {
+            const next = new Date(current);
+            next.setHours(next.getHours() + 1);
+
             chunks.push({
-                from: new Date(t).toISOString(),
-                to: new Date(Math.min(t + ONE_HOUR, end)).toISOString(),
+                from: format(current),
+                to: format(next > end ? end : next),
             });
+
+            current = next;
         }
 
         return chunks;
     };
 
-    const fetchChunked = async (chunks: { from: string; to: string }[]) => {
-        const results: any[] = [];
-
-        for (let i = 0; i < chunks.length; i += CONCURRENCY_LIMIT) {
-            const batch = chunks.slice(i, i + CONCURRENCY_LIMIT);
-
-            const settled = await Promise.allSettled(
-                batch.map((c) =>
-                    getPlayerBetHistory({
-                        playerId: paramsRef.current.playerId,
-                        from: c.from,
-                        to: c.to,
-                    })
-                )
-            );
-
-            for (const res of settled) {
-                if (res.status === "fulfilled") {
-                    results.push(...res.value);
-                }
-            }
-        }
-
-        return results;
-    };
-
+    /**
+     * Fetch logic
+     */
     const fetchData = useCallback(async () => {
         const { playerId, from, to } = paramsRef.current;
 
@@ -77,19 +77,31 @@ export function usePlayerBetHistory(
         try {
             const chunks = buildChunks(from, to);
 
-            if (!chunks.length) {
-                setData([]);
-                return;
+            const results = await Promise.allSettled(
+                chunks.map((c) =>
+                    getPlayerBetHistory({
+                        playerId,
+                        from: c.from,
+                        to: c.to,
+                    })
+                )
+            );
+
+            const merged: any[] = [];
+
+            for (const res of results) {
+                if (res.status === "fulfilled") {
+                    merged.push(...res.value);
+                }
             }
 
-            const merged = await fetchChunked(chunks);
-
+            // Deduplicate safely
             setData(() => {
                 const map = new Map<string, any>();
 
-                for (const item of merged) {
+                merged.forEach((item) => {
                     map.set(getKey(item), item);
-                }
+                });
 
                 return Array.from(map.values());
             });
@@ -100,6 +112,7 @@ export function usePlayerBetHistory(
         }
     }, []);
 
+
     useEffect(() => {
         if (!params.playerId) {
             setData([]);
@@ -107,6 +120,18 @@ export function usePlayerBetHistory(
         }
 
         fetchData();
+
+        if (refreshInterval) {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+
+            intervalRef.current = setInterval(() => {
+                fetchData();
+            }, refreshInterval);
+        }
+
+        return () => {
+            if (intervalRef.current) clearInterval(intervalRef.current);
+        };
     }, [params.playerId, params.from, params.to, refreshInterval]);
 
     return {
