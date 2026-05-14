@@ -30,11 +30,11 @@ const GenericGameResultSheet = ({
   className,
 }: GenericGameResultSheetProps) => {
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} >
       <SheetContent
         side="right"
         className={cn(
-          "p-0 flex flex-col",
+          "p-0 flex flex-col min-w-[40vw] max-w-none",
           className
         )}
       >

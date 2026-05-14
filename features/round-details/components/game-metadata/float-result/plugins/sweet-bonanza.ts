@@ -6,7 +6,6 @@ export const sweetBonanzaPlugin: GamePlugin = {
 
     resolve: ({ gameDetails }) => {
         const img = sb_floatResult(gameDetails);
-        console.log("img :: ", img)
         return {
             label: "BONUS",
             imgurl: img || "",

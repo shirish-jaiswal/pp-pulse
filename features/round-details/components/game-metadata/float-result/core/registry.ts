@@ -6,6 +6,7 @@ import { crashPlugin } from "@/features/round-details/components/game-metadata/f
 import { gameShowPlugin } from "@/features/round-details/components/game-metadata/float-result/plugins/game-show";
 import { treasureIslandPlugin } from "@/features/round-details/components/game-metadata/float-result/plugins/treasure-island";
 import { GameType } from "@/utils/get-game-type";
+import { blackjackPlugin } from "../plugins/blackjack";
 
 export const gamePlugins: Record<GameType, GamePlugin> = {
     "sweet-bonanza": sweetBonanzaPlugin,
@@ -17,6 +18,6 @@ export const gamePlugins: Record<GameType, GamePlugin> = {
     "other-card-game": baccaratPlugin,
     "non-card": gameShowPlugin,
     unknown: gameShowPlugin,
-    "blackjack": baccaratPlugin,
+    "blackjack": blackjackPlugin,
     "sicbo": gameShowPlugin,
 };

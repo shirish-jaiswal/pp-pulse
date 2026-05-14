@@ -9,7 +9,6 @@ import BetTable from "@/features/round-details/components/round-audit/tab-conten
 import PremiumLogMonitor from "@/features/round-details/components/round-audit/tab-content/log-monitor";
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
-import AddationalDetailsWrapper from "@/features/round-details/components/round-audit/tab-content/addational-details-wrapper";
 import { usePrefetchTransactionLogs } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-prefetch-logs";
 import { toast } from "sonner";
 
@@ -87,10 +86,6 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
               <FullScreenWrapper title="Bet History" description="Player wagers overview">
                 <div className="gap-2 flex flex-col">
                   <BetTable items={roundDetails?.betInfo} />
-                  <AddationalDetailsWrapper
-                    items={roundDetails?.cardDetails}
-                    isCardGame={roundDetails?.isCardGame}
-                  />
                 </div>
               </FullScreenWrapper>
             )}
@@ -106,15 +101,6 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
                 <PremiumLogMonitor
                   roundId={roundDetails?.tptInfo?.[0]?.round_id || ""}
                   timeStamp={roundDetails?.tptInfo?.[0]?.trans_date || ""}
-                />
-              </FullScreenWrapper>
-            )}
-
-            {activeTab === "addationalDetails" && (
-              <FullScreenWrapper title="Additional Details">
-                <AddationalDetailsWrapper
-                  items={roundDetails?.cardDetails}
-                  isCardGame={roundDetails?.isCardGame}
                 />
               </FullScreenWrapper>
             )}

@@ -21,23 +21,18 @@ export async function GET(request: NextRequest) {
     if (rawData.round_id) {
       externalQueryParams.roundId = rawData.round_id;
     } else {
-      console.log("⚠️ No round_id, falling back to game_id/user_id");
 
       if (rawData.game_id) {
-        console.log("➡️ Adding game_id");
         externalQueryParams.gameId = rawData.game_id;
       }
 
       if (rawData.user_id) {
-        console.log("➡️ Adding user_id");
         externalQueryParams.userId = rawData.user_id;
       }
     }
 
-    console.log("🌐 External query params:", externalQueryParams);
 
     const sessionCookie = await getSessionCookie();
-    console.log("sessionCookie ++ :", sessionCookie);
 
     const axiosConfig = {
       baseURL: BACKEND_URL,
@@ -48,17 +43,10 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log("⚙️ Axios config:", axiosConfig);
-
-    console.log("🚀 Sending parallel requests...");
-
     const [tptResponse, betResponse] = await Promise.all([
       axios.get("/tpttableinfo", axiosConfig),
       axios.get("/bettableinfo", axiosConfig),
     ]);
-
-    console.log("✅ TPT response:", tptResponse.data);
-    console.log("✅ BET response:", betResponse.data);
 
     const responsePayload = {
       data: {
@@ -67,11 +55,9 @@ export async function GET(request: NextRequest) {
       },
     };
 
-    console.log("📤 Final response:", responsePayload);
 
     return NextResponse.json(responsePayload);
   } catch (error: any) {
-    console.log("SERVER ERROR");
     console.warn("❌ round-details error:");
     console.warn("Status:", error?.response?.status);
     console.warn("Data:", error?.response?.data);
@@ -83,7 +69,6 @@ export async function GET(request: NextRequest) {
       error.message ||
       "Request failed";
 
-    console.log("📤 Sending error response:", errorMessage);
 
     return NextResponse.json(
       { error: errorMessage },

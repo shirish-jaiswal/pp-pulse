@@ -117,54 +117,44 @@ const getCardColor = (suit: Suit = "S", rank: Rank) =>
   rank === "JKR"
     ? "#8b5cf6"
     : suit === "H" || suit === "D"
-    ? CARD_COLORS.RED
-    : CARD_COLORS.DARK;
+      ? CARD_COLORS.RED
+      : CARD_COLORS.DARK;
 
 /* =========================================================
    MINI CARD
 ========================================================= */
+export type ApiRank = Rank | 1;
+const normalizeRank = (rank: ApiRank): Rank => {
+  if (rank === 1) return "A";
+  return rank as Rank;
+};
 export const MiniPlayingCard = ({
   rank,
   suit = "S",
   size = 60,
   rotate = 0
-}: CardProps) => {
-  const color = getCardColor(suit, rank);
+}: CardProps & { rank: ApiRank }) => {
+
+  const normalizedRank = normalizeRank(rank);
+
+  const color = getCardColor(suit, normalizedRank);
   const width = size;
   const height = size * 1.4;
 
-  // Reduce font size slightly for "10" so it stays within the border
-  const rankFontSize = rank === "10" ? "36" : "42";
+  const rankFontSize = normalizedRank === "10" ? "36" : "42";
 
   return (
-    <svg
-      width={width}
-      height={height}
-      viewBox="0 0 80 112"
-      xmlns="http://www.w3.org/2000/svg"
-      className="inline-block transition-transform hover:scale-105 select-none"
-    >
-      <g transform={rotate ? `rotate(${getRotation(rotate)}, 40, 56)` : undefined}>
-        <rect
-          width="80"
-          height="112"
-          rx="8"
-          fill="white"
-          stroke={CARD_COLORS.BORDER}
-          strokeWidth="2"
-        />
+    <svg width={width} height={height} viewBox="0 0 80 112">
+      <g transform={rotate ? `rotate(${rotate}, 40, 56)` : undefined}>
+        <rect width="80" height="112" rx="8" fill="white" stroke={CARD_COLORS.BORDER} />
 
-        <g fill={color} textAnchor="middle" fontFamily="Inter, sans-serif" fontWeight="900">
-          <text
-            x="40"
-            y="54"
-            fontSize={rankFontSize}
-            letterSpacing={rank === "10" ? "-3" : "-2"}
-          >
-            {rank === "JKR" ? "J" : rank}
+        <g fill={color} textAnchor="middle" fontWeight="900">
+          <text x="40" y="54" fontSize={rankFontSize}>
+            {normalizedRank === "JKR" ? "J" : normalizedRank}
           </text>
+
           <text x="40" y="92" fontSize="36">
-            {rank === "JKR" ? "🃏" : SUIT_SYMBOLS[suit]}
+            {normalizedRank === "JKR" ? "🃏" : SUIT_SYMBOLS[suit]}
           </text>
         </g>
       </g>

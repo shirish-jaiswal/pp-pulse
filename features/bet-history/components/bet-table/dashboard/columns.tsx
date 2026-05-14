@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { RoundRow } from "@/features/bet-history/components/bet-table/transform-bets";
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
-import { formatDate } from "@/features/round-details/components/round-audit/tab-content/transaction-table";
+import { formatDate } from "@/utils/date-utils";
 
 export const columns: ColumnDef<RoundRow>[] = [
   {

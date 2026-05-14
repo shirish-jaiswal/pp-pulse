@@ -14,38 +14,28 @@ const FLOATING_POPUP_GAMES = [
   "sweet-bonanza",
   "baccarat",
   "dragon-tiger",
+  "blackjack",
 ];
 
 const GameMetadata = () => {
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [sheetType, setSheetType] = useState<string>("default");
 
-  const [sheetType, setSheetType] =
-    useState<string>("default");
-
+  // Always call hooks at the top level, before ANY returns
   const { gameMetadata } = useRoundDetails();
+  const floatingResult = useFloatingGameResult();
 
-  const floatingResult =
-    useFloatingGameResult();
-
-  const handleOpenSheet = (
-    type: string = "default"
-  ) => {
+  const handleOpenSheet = (type: string = "default") => {
     setSheetType(type);
     setSheetOpen(true);
   };
 
-  const sheetConfig =
-    resultRegistry[sheetType] ||
-    resultRegistry.default;
-
-  const SheetComponent =
-    sheetConfig.component;
+  const sheetConfig = resultRegistry[sheetType] || resultRegistry.default;
+  const SheetComponent = sheetConfig.component;
 
   if (!gameMetadata) return null;
 
-  const resultItem = gameMetadata.find(
-    (item) => item.label === "Result"
-  );
+  const resultItem = gameMetadata.find((item) => item.label === "Result");
 
   return (
     <>

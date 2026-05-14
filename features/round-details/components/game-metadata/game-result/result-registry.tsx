@@ -3,7 +3,8 @@
 import React from "react";
 import SweetBonanzaResult from "./result-sheets/sweet-bonanza/sweet-bonanza";
 import DefaultNoPopup from "./result-sheets/default-result";
-import BaccaratHandReport from "../../round-audit/tab-content/card-details/baccarat/baccarat";
+import BaccaratHandReport from "./result-sheets/baccarat/baccarat";
+import BlackjackHandReport from "./result-sheets/blackjack/black-jack-hand-report";
 
 
 export const resultRegistry: Record<
@@ -21,8 +22,12 @@ export const resultRegistry: Record<
     title: "Baccarat Result",
     component: BaccaratHandReport,
   },
-    default: {
-      title: "Default",
-      component: DefaultNoPopup,
-    },
+  "blackjack": {
+    title: "Blackjack Result",
+    component: BlackjackHandReport,
+  },
+  default: {
+    title: "Default",
+    component: DefaultNoPopup,
+  },
 };
