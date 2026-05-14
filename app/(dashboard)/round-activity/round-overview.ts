@@ -8,7 +8,8 @@ export interface RoundOverviewData {
 }
 
 const EXTERNAL_LINKS = {
-  casino: (id: string) => `${DOMAIN_URL}/casinos/${id}`,
+  // casino: (id: string) => `${DOMAIN_URL}/casinos/${id}`,
+  casino: (id: string) => `/casino-details/${id}`,
   user: (id: string) => `${DOMAIN_URL}/users/${id}`,
   round: (id: string) => `${DOMAIN_URL}/round-activity?roundId=${id}`,
 };
