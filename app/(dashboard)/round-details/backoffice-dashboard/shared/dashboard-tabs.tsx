@@ -83,18 +83,6 @@ export function DashboardTabs() {
     };
   };
 
-  // const lateBetPayload = useMemo(() => {
-  //   if (kibanaFunction?.trim() !== "LATE BET" || !boData) return null; return getLateBetPayload(boData);
-  // }, [boData]);
-
-  // useEffect(() => {
-  //   if (lateBetPayload !== null) {
-  //     console.log("LATE BET PAYLOAD :: ", lateBetPayload)
-
-  //     setLogPayload(lateBetPayload);
-  //   }
-  // }, [lateBetPayload, setLogPayload]);
-  console.log("logPayload :: ", logPayload)
   const handleSortToggle = () => {
     const newOrder = sortOrder === "asc" ? "desc" : "asc"
     setSortOrder(newOrder)

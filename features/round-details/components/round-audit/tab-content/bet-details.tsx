@@ -2,8 +2,8 @@
 
 import { useState, useMemo } from "react";
 import { cn } from "@/utils/cn";
-import { formatDate } from "./transaction-table";
 import { BetTableInfo } from "@/features/round-details/types/bet-table-info";
+import { formatDate } from "@/utils/date-utils";
 
 type SortKey = "win" | "status";
 type SortOrder = "asc" | "desc";

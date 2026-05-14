@@ -13,7 +13,6 @@ export default function RoundAudit() {
   const tabs = useMemo(() => {
     const items = [];
     if (roundDetails?.betInfo) items.push({ id: "bets", label: "Bet Details", icon: InfoIcon });
-    if (roundDetails?.cardDetails?.length) items.push({ id: "addationalDetails", label: "Additional Details", icon: ClubIcon });
     if (roundDetails?.tptInfo?.length) items.push({ id: "tx", label: "Transactions", icon: CircleDollarSign });
     if (roundDetails) items.push({ id: "logs", label: "Kibana Logs", icon: Terminal });
     return items;

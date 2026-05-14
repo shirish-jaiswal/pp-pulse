@@ -10,7 +10,7 @@ import {
 
 import { CardDetailsInfo } from "@/features/round-details/types/card-details";
 
-import { useFindBaccaratCards } from "@/hooks/excel-db/use-baccarat-cards";
+import { useFindCards } from "@/hooks/excel-db/use-baccarat-cards";
 
 import { cn } from "@/utils/cn";
 
@@ -19,7 +19,7 @@ import {
   getBankerCodes,
   getBaccaratWinner,
   getPlayerCodes,
-} from "@/features/round-details/components/round-audit/tab-content/card-details/baccarat/baccarat-hand-report-rules";
+} from "@/features/round-details/components/game-metadata/game-result/result-sheets/baccarat/baccarat-hand-report-rules";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 
 interface BaccaratHandReportProps {
@@ -38,7 +38,7 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = () => {
   }, [events]);
 
   const { data: cardDetails, isLoading } =
-    useFindBaccaratCards({
+    useFindCards({
       code: resultCodes,
     });
 

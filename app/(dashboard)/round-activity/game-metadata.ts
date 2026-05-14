@@ -1,4 +1,5 @@
 import { GameMetaData } from "@/features/round-details/context/round-details-context";
+import { formatDate } from "@/utils/date-utils";
 import { getGameType } from "@/utils/get-game-type";
 
 export default function generateGameMetaData(
@@ -42,7 +43,7 @@ export default function generateGameMetaData(
     },
     {
       label: "Game Time",
-      value: d?.game_time ? new Date(d.game_time).toLocaleString() : "-",
+      value: d?.game_time ? formatDate(d.game_time) : "-",
       isTechnical: false,
     },
     {
@@ -54,7 +55,7 @@ export default function generateGameMetaData(
     {
       label: "Result Time",
       value: d?.result_time
-        ? new Date(d.result_time).toLocaleString()
+        ? formatDate(d.result_time)
         : "-",
       isTechnical: false,
     },
