@@ -116,9 +116,6 @@ export function ResolutionEditorContent({
 
   const isReady = useMemo(() => !varsLoading, [varsLoading]);
 
-  // =========================
-  // CONTENT TRANSFORM
-  // =========================
   const getPopulatedContent = useCallback(
     (rawContent: string) => {
       if (!rawContent || !isReady) return "";
@@ -209,6 +206,7 @@ export function ResolutionEditorContent({
                 placeholder={`Write ${category.toLowerCase()}...`}
                 copyPopup={true}
                 showFieldPlugin={false}
+                showLogsToggle={true}
               />
             )}
           </div>

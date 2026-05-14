@@ -14,6 +14,7 @@ import {
     getBlackjackRoundResult,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-round-result";
 import LoadingSkeleton from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/skeleton";
+import { ResultSheetHeaderBlock } from "@/features/round-details/components/game-metadata/game-result/result-sheets/result-sheet-header-block";
 
 const BlackjackHandReport = () => {
     const { roundDetails } = useRoundDetails();
@@ -259,6 +260,8 @@ const BlackjackHandReport = () => {
                 <LoadingSkeleton />
             ) : (
                 <>
+                    <ResultSheetHeaderBlock />
+
                     <DealerSection />
 
                     <div className="grid gap-3 xl:grid-cols-2">

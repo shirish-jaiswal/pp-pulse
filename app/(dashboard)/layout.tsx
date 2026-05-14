@@ -7,7 +7,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { RoundDetailsProvider } from "@/features/round-details/context/round-details-context";
 import { ProfileProvider } from "@/context/use-profile";
@@ -17,9 +16,7 @@ import KnowledgeQuiz from "@/components/custom/k-quiz";
 
 function LayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-
   const { menu } = useRbacMenu();
-
   const currentRoute = menu.find((item) =>
     pathname.startsWith(item.url)
   );
@@ -50,7 +47,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           <DoYouKnow />
           <KnowledgeQuiz />
           <ScrollArea className="flex-1 w-full">
-            <div className="p-3 md:p-4">{children}</div>
+            <div className="p-3">{children}</div>
           </ScrollArea>
         </RoundDetailsProvider>
       </SidebarInset>

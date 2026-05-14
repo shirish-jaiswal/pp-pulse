@@ -3,7 +3,8 @@
 import { useMemo } from "react";
 import Image from "next/image";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
-import { processGameDetails, IMAGE_MAP } from "./rules";
+import { processGameDetails, IMAGE_MAP } from "@/features/round-details/components/game-metadata/game-result/result-sheets/sweet-bonanza/rules";
+import { ResultSheetHeaderBlock } from "@/features/round-details/components/game-metadata/game-result/result-sheets/result-sheet-header-block";
 
 const SweetBonanzaResult = () => {
   const { roundDetails } = useRoundDetails();
@@ -17,16 +18,7 @@ const SweetBonanzaResult = () => {
   return (
     <div className="flex flex-col gap-2 text-slate-800 text-sm">
 
-      <div className="flex items-center justify-between border-b pb-2 mb-4">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-          Game Result Details
-        </h3>
-
-        {/* Increased from 10px to text-xs */}
-        <span className="font-mono text-xs text-slate-400">
-          ID: {roundDetails?.tptInfo?.[0]?.game_id || "N/A"}
-        </span>
-      </div>
+      <ResultSheetHeaderBlock />
 
       {Object.values(triggers).length > 0 && (
         <div className="flex flex-col gap-2 mb-4">

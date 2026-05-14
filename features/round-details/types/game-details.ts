@@ -4,25 +4,25 @@ import { z } from "zod";
 // Single Object
 // ------------------
 export const RoundMetaSchema = z.object({
-  round_id: z.string(),
-  game_id: z.string(),
-  user_id: z.string(),
+  round_id: z.string().trim(),
+  game_id: z.string().trim(),
+  user_id: z.string().trim(),
 
-  table_id: z.string(),
-  table_name: z.string(),
+  table_id: z.string().trim(),
+  table_name: z.string().trim(),
 
-  game_type: z.string(),
-  game_time: z.string().datetime(),
+  game_type: z.string().trim(),
+  game_time: z.string().trim().datetime(),
 
-  IP: z.string().ip(),
+  IP: z.string().trim().ip(),
 
-  Description: z.string(),
+  Description: z.string().trim(),
   multiplier: z.number().int().nullable(),
 
-  cancelReason: z.string().nullable(),
+  cancelReason: z.string().trim().nullable(),
 
-  resultcode_id: z.string(),
-  result_time: z.string().datetime(),
+  resultcode_id: z.string().trim(),
+  result_time: z.string().trim().datetime(),
 
   state_indicator: z.number().int(),
 });

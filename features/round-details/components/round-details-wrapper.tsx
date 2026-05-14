@@ -45,8 +45,6 @@ export function RoundDetailsWrapper({
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
-
-  // Use a ref to track the last processed round ID to prevent double toasts
   const lastToastedIdRef = useRef<string | null>(null);
 
   // -----------------------------
@@ -79,9 +77,6 @@ export function RoundDetailsWrapper({
     setMultiIds,
   ]);
 
-  // -----------------------------
-  // Fetch Data
-  // -----------------------------
   useEffect(() => {
     const fetchData = async () => {
       const activeRoundId =
@@ -101,16 +96,11 @@ export function RoundDetailsWrapper({
         const data = await c_getRoundDetails(payload);
         setRoundDetails(data);
 
-        // safe overview generation
         const overview = generateRoundOverview(data);
         setRoundOverview(overview?.roundOverview ?? []);
-
-        // safe metadata generation
-        console.log("Raw game metadata:", data?.gameDetails);
         const meta = generateGameMetaData(data?.gameDetails ?? []);
         setGameMetadata(meta);
       } catch (err) {
-        console.error("Failed to fetch round details:", err);
         setError(true);
         setRoundDetails(null);
         setRoundOverview(null);
@@ -131,29 +121,20 @@ export function RoundDetailsWrapper({
     setGameMetadata,
   ]);
 
-  // -----------------------------
-  // Logic: Handle Toast Notification
-  // -----------------------------
   useEffect(() => {
     const walletType = roundDetails?.tptInfo?.[0]?.Wallet_Type?.toLowerCase();
-
-    // We use either the specific roundId prop or the ID from the fetched data
     const currentRoundId = roundId || roundDetails?.tptInfo?.[0]?.round_id as string;
 
     if (walletType === "bt" && currentRoundId !== lastToastedIdRef.current) {
-      toast.info("BT operator No Slots Logs");
+      toast.info("BT Operators dont have Slots Logs");
       lastToastedIdRef.current = currentRoundId;
     }
 
-    // If roundDetails is cleared, reset the ref so the next fetch can trigger a toast
     if (!roundDetails) {
       lastToastedIdRef.current = null;
     }
   }, [roundDetails, roundId]);
 
-  // -----------------------------
-  // Cancel Reason (UI block)
-  // -----------------------------
   const cancelReason = roundDetails?.gameDetails?.[0]?.cancelReason;
 
   return (
