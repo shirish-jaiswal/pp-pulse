@@ -10,6 +10,7 @@ export type PlayerBetHistoryProps = {
 export async function getPlayerBetHistory(
     params: PlayerBetHistoryProps
 ): Promise<any[]> {
+
     const res = await apiRequest({
         method: "GET",
         endpoint: "/playerbetsinfo",
@@ -20,6 +21,5 @@ export async function getPlayerBetHistory(
         },
         requireCookie: true,
     });
-    console.log("Response :: ", res);
     return res?.data ?? [];
 }
