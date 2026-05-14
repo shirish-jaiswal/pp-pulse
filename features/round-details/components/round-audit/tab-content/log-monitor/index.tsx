@@ -8,7 +8,7 @@ import { useLogState } from "@/features/round-details/components/round-audit/tab
 import { LogSkeleton } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-skeleton";
 
 export default function PremiumLogMonitor({ roundId, timeStamp }: any) {
-  const state = useLogState(roundId, timeStamp);
+  const state = useLogState();
 
   if (state.isLoading) {
     return <LogSkeleton />;

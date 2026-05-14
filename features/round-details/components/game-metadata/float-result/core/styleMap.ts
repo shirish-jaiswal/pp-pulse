@@ -1,76 +1,76 @@
 export const styleMap = {
   /**
-   * ROULETTE
+   * ROULETTE (high contrast, classic casino feel)
    */
   "roulette-red":
-    "bg-red-600 border-red-800 text-white",
+    "bg-red-500/90 border-red-700 text-white",
 
   "roulette-black":
-    "bg-neutral-800 border-neutral-950 text-white",
+    "bg-zinc-900 border-zinc-950 text-white",
 
   "roulette-tie":
-    "bg-emerald-600 border-emerald-800 text-white",
+    "bg-emerald-500/90 border-emerald-700 text-white",
 
   /**
-   * BACCARAT
+   * BACCARAT (premium, softer tones)
    */
   "baccarat-player":
-    "bg-blue-600 border-blue-800 text-white",
+    "bg-sky-600/90 border-sky-800 text-white",
 
   "baccarat-banker":
-    "bg-rose-600 border-rose-800 text-white",
+    "bg-rose-500/90 border-rose-800 text-white",
 
   "baccarat-tie":
     "bg-slate-600 border-slate-800 text-white",
 
   /**
-   * BLACKJACK
+   * BLACKJACK (status-driven, readable states)
    */
   "blackjack-win":
-    "bg-emerald-600 border-emerald-800 text-white",
+    "bg-emerald-600/90 border-emerald-800 text-white",
 
   "blackjack-partial":
-    "bg-amber-500 border-amber-700 text-black",
+    "bg-amber-400/90 border-amber-600 text-black",
 
   "blackjack-lose":
-    "bg-rose-700 border-rose-900 text-white",
+    "bg-rose-600/90 border-rose-900 text-white",
 
   "blackjack-push":
-    "bg-slate-500 border-slate-700 text-white",
+    "bg-slate-500/90 border-slate-700 text-white",
 
   "blackjack-dealer-bust":
-    "bg-fuchsia-600 border-fuchsia-800 text-white",
+    "bg-violet-600/90 border-violet-800 text-white",
 
   "blackjack-blackjack":
-    "bg-yellow-400 border-yellow-600 text-black",
+    "bg-yellow-300 border-yellow-500 text-black",
 
   "blackjack-bust":
-    "bg-zinc-700 border-zinc-900 text-white",
+    "bg-zinc-800 border-zinc-950 text-white",
 
   "blackjack-double":
-    "bg-cyan-600 border-cyan-800 text-white",
+    "bg-cyan-600/90 border-cyan-800 text-white",
 
   "blackjack-split":
-    "bg-violet-600 border-violet-800 text-white",
+    "bg-indigo-600/90 border-indigo-800 text-white",
 
   "blackjack-insurance":
-    "bg-teal-600 border-teal-800 text-white",
+    "bg-teal-600/90 border-teal-800 text-white",
 
   /**
-   * TREASURE ISLAND
+   * TREASURE ISLAND (distinct themed green-gold vibe)
    */
   "treasure-island":
-    "bg-green-700 border-green-900 text-white",
+    "bg-emerald-700/90 border-emerald-900 text-white",
 
   /**
-   * CRASH
+   * CRASH (high tension / tech vibe)
    */
   crash:
-    "bg-indigo-600 border-indigo-800 text-white",
+    "bg-indigo-700/90 border-indigo-900 text-white",
 
   /**
    * DEFAULT
    */
   default:
-    "bg-gray-500 border-gray-700 text-white",
+    "bg-zinc-500 border-zinc-700 text-white",
 } as const;

@@ -16,9 +16,10 @@ const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
   default: ["message"],
 };
 
-export function useLogState(roundId: string, timeStamp: any) {
+export function useLogState() {
   const { roundDetails } = useRoundDetails();
-
+  const roundId = roundDetails?.tptInfo?.[0]?.round_id || "";
+  const timeStamp = roundDetails?.tptInfo?.[0]?.trans_date || "";
   const { data, isLoading } = useTransactionLogs({
     roundId,
     timeStamp,

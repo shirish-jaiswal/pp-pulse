@@ -21,6 +21,7 @@ import {
   getPlayerCodes,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/baccarat/baccarat-hand-report-rules";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+import { ResultSheetHeaderBlock } from "../result-sheet-header-block";
 
 interface BaccaratHandReportProps {
   events?: CardDetailsInfo;
@@ -155,6 +156,8 @@ const BaccaratHandReport: React.FC<BaccaratHandReportProps> = () => {
 
   return (
     <div className="rounded-xl p-2 bg-muted/20 border space-y-4">
+      <ResultSheetHeaderBlock />
+
       <div className="flex justify-center">
         <div
           className={cn(

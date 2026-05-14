@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-
 import {
   Sheet,
   SheetContent,
@@ -9,7 +8,6 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-
 import { cn } from "@/utils/cn";
 
 type GenericGameResultSheetProps = {

@@ -12,13 +12,15 @@ import { FormattingControls } from "./formatting-controls";
 import { InsertControls } from "./insert-controls";
 import { FieldDropdown } from "./field-variables/field-dropdown";
 import { CopyHtmlButton } from "./copy-html/copy-html-button";
+import { LogTogglePlugin } from "./logs/log-toggle-plugin";
 
 interface ToolbarProps {
   copyPopup?: boolean;
   showFieldPlugin?: boolean;
+  showLogsToggle?: boolean
 }
 
-export function Toolbar({ copyPopup, showFieldPlugin }: ToolbarProps) {
+export function Toolbar({ copyPopup, showFieldPlugin, showLogsToggle }: ToolbarProps) {
   const [editor] = useLexicalComposerContext();
 
   return (
@@ -43,21 +45,25 @@ export function Toolbar({ copyPopup, showFieldPlugin }: ToolbarProps) {
             </>
           )}
         </div>
+        <div className="flex">
+          {showLogsToggle && (
+            <LogTogglePlugin />
+          )}
+          <CopyHtmlButton
+            copyPopup={copyPopup}
+            getHtml={async () => {
+              const html = await editor.getEditorState().read(() =>
+                $generateHtmlFromNodes(editor, null)
+              );
 
-        <CopyHtmlButton
-          copyPopup={copyPopup}
-          getHtml={async () => {
-            const html = await editor.getEditorState().read(() =>
-              $generateHtmlFromNodes(editor, null)
-            );
+              const text = editor.getEditorState().read(() =>
+                $getRoot().getTextContent()
+              );
 
-            const text = editor.getEditorState().read(() =>
-              $getRoot().getTextContent()
-            );
-
-            return { html, text };
-          }}
-        />
+              return { html, text };
+            }}
+          />
+        </div>
       </div>
     </TooltipProvider>
   );

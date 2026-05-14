@@ -67,12 +67,10 @@ export const processGameDetails = (gameDetails: any[]) => {
         state.triggers[type] = { ...item, bonusType: type };
       }
 
-      // Handle individual CandyBall results
       if (lowerDesc.includes("candyball")) {
         const match = rawDesc.match(/candyball\s*(\d)/i);
         const num = match ? Number(match[1]) : null;
 
-        // Mapping: 0=Blue, 1=Red, 2=Yellow[cite: 1]
         const colorMap: Record<number, string> = { 0: "Blue", 1: "Red", 2: "Yellow" };
 
         bonusResults.push({
@@ -90,7 +88,6 @@ export const processGameDetails = (gameDetails: any[]) => {
       continue;
     }
 
-    // --- 4. BUBBLE SURPRISE RULE ---
     if (lowerDesc.includes("bubble surprise")) {
       const type = "bubble_surprise";
       if (!state.triggers[type]) state.triggers[type] = { ...item, bonusType: type };

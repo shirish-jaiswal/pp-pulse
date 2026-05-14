@@ -19,6 +19,8 @@ import { Toolbar } from "@/components/custom/text-editor/toolbar/toolbar";
 import ImagesPlugin from "@/components/custom/text-editor/toolbar/image/image-plugin";
 import FieldPlugin from "@/components/custom/text-editor/toolbar/field-variables/field-plugin";
 import { FieldNode } from "@/components/custom/text-editor/toolbar/field-variables/field-node";
+import { LogTogglePlugin } from "./toolbar/logs/log-toggle-plugin";
+import LogPlugin from "./toolbar/logs/log-plugin";
 
 
 export default function RichTextEditor({
@@ -26,13 +28,15 @@ export default function RichTextEditor({
   placeholder = "Start typing...",
   initialValue,
   copyPopup = false,
-  showFieldPlugin = true
+  showFieldPlugin = true,
+  showLogsToggle = false
 }: {
   onChange?: (val: string) => void;
   placeholder?: string;
   initialValue?: string;
   copyPopup?: boolean;
-  showFieldPlugin?: boolean
+  showFieldPlugin?: boolean;
+  showLogsToggle?: boolean
 }) {
   const [mounted, setMounted] = useState(false);
 
@@ -83,9 +87,9 @@ export default function RichTextEditor({
 
   return (
     <LexicalComposer initialConfig={editorConfig}>
-      <div className="border rounded-md shadow-sm bg-white overflow-auto max-w-4xl max-h-full mx-auto">
+      <div className="border rounded-md shadow-sm bg-white overflow-auto max-h-full mx-auto">
 
-        <Toolbar copyPopup={copyPopup} showFieldPlugin={showFieldPlugin} />
+        <Toolbar copyPopup={copyPopup} showFieldPlugin={showFieldPlugin} showLogsToggle={showLogsToggle} />
         <div className="relative">
           <RichTextPlugin
             contentEditable={
@@ -104,6 +108,7 @@ export default function RichTextEditor({
         <LinkPlugin />
         <TablePlugin />
         <ImagesPlugin />
+        <LogPlugin />
 
         <OnChangePlugin
           onChange={(editorState) => {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
+import { ResultSheetHeaderBlock } from "@/features/round-details/components/game-metadata/game-result/result-sheets/result-sheet-header-block";
 
 const DefaultNoPopup = () => {
   const { roundDetails } = useRoundDetails();
@@ -14,6 +15,7 @@ const DefaultNoPopup = () => {
       <div className="text-sm font-medium">
         {gameName}
       </div>
+      <ResultSheetHeaderBlock />
 
       <div className="rounded-lg border p-3">
         {gameResult}
