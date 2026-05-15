@@ -1,7 +1,12 @@
 "use client";
 
 import React, { ReactNode, useState } from "react";
-import { LucideIcon, Copy, Check, ExternalLink } from "lucide-react"; // Added ExternalLink for visual cue
+import {
+  LucideIcon,
+  Copy,
+  Check,
+  ExternalLink,
+} from "lucide-react";
 import { cn } from "@/utils/cn";
 import Link from "next/link";
 
@@ -9,6 +14,13 @@ export interface InfoLink {
   href: string;
   target?: "_blank" | "_self";
 }
+
+export type InfoCardVariant =
+  | "default"
+  | "error"
+  | "success"
+  | "info"
+  | "warning";
 
 export interface ValueType {
   label: string;
@@ -22,8 +34,6 @@ export interface InfoItem {
   link?: InfoLink;
   actionComponent?: ReactNode;
 }
-
-export type InfoCardVariant = "default" | "error" | "success";
 
 export interface InfoCardProps {
   iName?: string;
@@ -42,30 +52,44 @@ export default function InfoCard({
   variant = "default",
 }: InfoCardProps) {
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-  // Track which item's action component is currently active/open
-  const [activeActionIndex, setActiveActionIndex] = useState<number | null>(null);
+
+  // Track which action component is active
+  const [activeActionIndex, setActiveActionIndex] =
+    useState<number | null>(null);
 
   const isError = variant === "error";
   const isSuccess = variant === "success";
+  const isInfo = variant === "info";
+  const isWarning = variant === "warning";
 
-  const handleCopy = (e: React.MouseEvent, text: string, index: number) => {
-    e.stopPropagation(); // Prevent triggering links or buttons underneath
+  const handleCopy = (
+    e: React.MouseEvent,
+    text: string,
+    index: number
+  ) => {
+    e.stopPropagation();
+
     navigator.clipboard.writeText(text);
+
     setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 1500);
+
+    setTimeout(() => {
+      setCopiedIndex(null);
+    }, 1500);
   };
 
   const getCopyText = (value: InfoItem["value"]) => {
     if (Array.isArray(value)) {
       return value.map((v) => v.label).join(" | ");
     }
+
     return String(value);
   };
 
   return (
     <div
       className={cn(
-        "flex items-start gap-2 p-2 rounded-xl border bg-background shadow-sm hover:shadow-md transition",
+        "flex items-start gap-2 rounded-xl border bg-background p-2 shadow-sm transition hover:shadow-md",
         className
       )}
     >
@@ -75,7 +99,9 @@ export default function InfoCard({
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-lg bg-muted",
             isError && "bg-red-500/10 text-red-400",
-            isSuccess && "bg-emerald-500/10 text-emerald-400"
+            isSuccess && "bg-emerald-500/10 text-emerald-400",
+            isInfo && "bg-blue-500/10 text-blue-400",
+            isWarning && "bg-orange-500/10 text-orange-400"
           )}
         >
           <Icon className="h-4 w-4" />
@@ -83,11 +109,15 @@ export default function InfoCard({
       )}
 
       {/* CONTENT */}
-      <div className="flex flex-col gap-3 w-full min-w-0">
+      <div className="flex min-w-0 w-full flex-col gap-3">
         {items.map((item, index) => (
-          <div key={index} className="flex items-center justify-between gap-4">
+          <div
+            key={index}
+            className="flex items-center justify-between gap-4"
+          >
+            {/* LEFT */}
             <div className="min-w-0 flex-1">
-              <div className="text-xs text-muted-foreground mb-0.5">
+              <div className="mb-0.5 text-xs text-muted-foreground">
                 {item.label}
               </div>
 
@@ -95,24 +125,30 @@ export default function InfoCard({
                 <Link
                   href={item.link.href}
                   target={item.link.target || "_blank"}
-                  className="text-sm font-medium hover:underline break-all"
+                  className="break-all text-sm font-medium hover:underline"
                 >
                   {renderValue(item.value)}
                 </Link>
               ) : (
-                <div className="text-sm font-medium break-all text-foreground">
+                <div className="break-all text-sm font-medium text-foreground">
                   {renderValue(item.value)}
                 </div>
               )}
             </div>
 
-            {/* ACTIONS SECTION */}
+            {/* ACTIONS */}
             <div className="flex items-center gap-1">
-              {/* COPY BUTTON */}
+              {/* COPY */}
               {item.copyable && (
                 <button
-                  onClick={(e) => handleCopy(e, getCopyText(item.value), index)}
-                  className="p-1.5 rounded-md hover:bg-muted transition"
+                  onClick={(e) =>
+                    handleCopy(
+                      e,
+                      getCopyText(item.value),
+                      index
+                    )
+                  }
+                  className="rounded-md p-1.5 transition hover:bg-muted"
                   title="Copy to clipboard"
                 >
                   {copiedIndex === index ? (
@@ -123,24 +159,25 @@ export default function InfoCard({
                 </button>
               )}
 
-              {/* DYNAMIC ACTION COMPONENT TRIGGER */}
+              {/* ACTION COMPONENT */}
               {isIconButton && item.actionComponent && (
                 <div className="relative">
                   <button
-                    onClick={() => setActiveActionIndex(activeActionIndex === index ? null : index)}
-                    className="p-1.5 rounded-md hover:bg-primary/10 text-primary transition"
+                    onClick={() =>
+                      setActiveActionIndex(
+                        activeActionIndex === index
+                          ? null
+                          : index
+                      )
+                    }
+                    className="rounded-md p-1.5 text-primary transition hover:bg-primary/10"
                   >
                     <ExternalLink className="h-4 w-4" />
                   </button>
 
-                  {/*
-                    This renders the component passed in props.
-                    If it's a Modal/Dialog, it usually handles its own portal/overlay.
-                    If it's a dropdown, you might want to wrap it in a visibility check.
-                  */}
                   {activeActionIndex === index && (
                     <div className="absolute right-0 z-50">
-                       {item.actionComponent}
+                      {item.actionComponent}
                     </div>
                   )}
                 </div>
@@ -161,17 +198,27 @@ function renderValue(value: InfoItem["value"]) {
           ? "text-red-400"
           : val.variant === "success"
           ? "text-emerald-400"
+          : val.variant === "info"
+          ? "text-blue-400"
+          : val.variant === "warning"
+          ? "text-orange-400"
           : "text-foreground";
 
       return (
         <span key={i}>
-          <span className={cn(colorClass)}>{val.label}</span>
+          <span className={cn(colorClass)}>
+            {val.label}
+          </span>
+
           {i < value.length - 1 && (
-            <span className="mx-1 text-muted-foreground">|</span>
+            <span className="mx-1 text-muted-foreground">
+              |
+            </span>
           )}
         </span>
       );
     });
   }
+
   return <span>{value}</span>;
 }

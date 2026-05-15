@@ -59,7 +59,7 @@ function SheetContent({
         data-slot="sheet-content"
         data-side={side}
         className={cn(
-          "fixed z-50 flex flex-col gap-4 bg-background shadow-xl",
+          "fixed z-50 flex flex-col gap-4 bg-background shadow-xl ",
 
           // base animation (smooth)
           "duration-200 ease-out will-change-transform",

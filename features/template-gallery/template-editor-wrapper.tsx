@@ -18,7 +18,7 @@ export function TemplateEditorWrapper(props: TemplateEditorWrapperProps) {
 
     return (
         <Sheet open={props.isOpen} onOpenChange={props.onOpenChange}>
-            <SheetContent className="min-w-225 max-w-full flex flex-col gap-0 p-1">
+            <SheetContent className="flex flex-col gap-0 p-1 min-w-[60vw] w-[60vw]  max-w-none">
                 <ResolutionHeader initialData={props.initialData} />
                 <Tabs
                     value={form.tabValue}

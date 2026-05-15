@@ -1,23 +1,16 @@
 "use client";
 
 import * as React from "react";
-
 import { ListTree } from "lucide-react";
-
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-
 import { Button } from "@/components/ui/button";
-
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
 import { INSERT_LOGS_COMMAND } from "@/components/custom/text-editor/toolbar/logs/log-command";
-
 import { truncateLogs } from "@/components/custom/text-editor/toolbar/logs/log-utils";
-
 import { useLogState } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-log-state";
 
 export function LogTogglePlugin() {
@@ -58,9 +51,6 @@ export function LogTogglePlugin() {
       </PopoverTrigger>
 
       <PopoverContent className="w-72" align="start">
-        {/* ===================== */}
-        {/* LOG TYPE SELECTOR */}
-        {/* ===================== */}
         <div className="space-y-2">
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             Log Type
@@ -80,10 +70,6 @@ export function LogTogglePlugin() {
             ))}
           </div>
         </div>
-
-        {/* ===================== */}
-        {/* ACTION AREA */}
-        {/* ===================== */}
           {isLoading ? (
             <div className="text-xs text-muted-foreground text-center py-2">
               Loading logs...

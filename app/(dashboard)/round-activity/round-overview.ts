@@ -8,15 +8,11 @@ export interface RoundOverviewData {
 }
 
 const EXTERNAL_LINKS = {
-  // casino: (id: string) => `${DOMAIN_URL}/casinos/${id}`,
   casino: (id: string) => `/casino-details/${id}`,
   user: (id: string) => `${DOMAIN_URL}/users/${id}`,
   round: (id: string) => `${DOMAIN_URL}/round-activity?roundId=${id}`,
 };
 
-// ------------------
-// Helpers
-// ------------------
 const formatAmount = (amount: unknown): string =>
   new Intl.NumberFormat("en-US").format(Number(amount) || 0);
 
@@ -99,9 +95,6 @@ const buildTxnSection = (
   };
 };
 
-// ------------------
-// Main Function
-// ------------------
 export default function generateRoundOverview(
   roundDetails?: RoundDetailsResponse | null
 ): RoundOverviewData {
@@ -128,6 +121,7 @@ export default function generateRoundOverview(
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
   const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
   const cancelledTxns = tptInfo.filter(txn => txn.action_type === "Cancelled");
+  const adjustedTxns = tptInfo.filter(txn => txn.action_type === "Adjusted");
 
   // Status logic
   const hasPlacedError = placedTxns.some(txn =>
@@ -159,6 +153,12 @@ export default function generateRoundOverview(
   const cancelledVariant: InfoCardProps["variant"] =
     hasCancelledError ? "error" : "default";
 
+    const hasAdjusted = adjustedTxns.length > 0;
+    const hasAdjustedError = adjustedTxns.some(txn =>
+      isValidErrorCode(txn.error_code)
+    );
+    const adjustedVariant: InfoCardProps["variant"] =
+      hasAdjustedError ? "error" : "info";
   // ------------------
   // Build Sections
   // ------------------
@@ -205,6 +205,7 @@ export default function generateRoundOverview(
     ),
     buildTxnSection("Unknown BETs", "coins", unknownTxns, currency),
     buildTxnSection("Cancelled BETs", "alert", cancelledTxns, currency, cancelledVariant),
+    buildTxnSection("Adjusted BETs", "alert", adjustedTxns, currency, adjustedVariant),
   ];
 
   return {

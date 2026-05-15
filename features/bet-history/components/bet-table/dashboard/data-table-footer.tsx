@@ -10,7 +10,7 @@ export function DataTableFooter({ totals }: any) {
   return (
     <TableFooter>
       <TableRow className="bg-muted font-semibold">
-        <TableCell colSpan={3} className="text-right">
+        <TableCell colSpan={4} className="text-right">
           Totals
         </TableCell>
 
