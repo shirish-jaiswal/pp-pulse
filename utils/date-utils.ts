@@ -36,8 +36,19 @@ export const formatDate_intl = (dateStr: string | Date) => {
   return `${datePart}, ${hour}:${minute}:${second}.${ms} ${dayPeriod}`;
 };
 
-export const formatDate = (dateStr: string | Date) => {
-  const d = typeof dateStr === "string" ? dateStr : dateStr.toISOString();
-  const [date, time] = d.replace("Z", "").split("T");
-  return `${date} ${time}`;
+export const formatDate = (
+  dateStr?: string | Date | null
+): string => {
+  if (!dateStr) return "-";
+
+  const d =
+    typeof dateStr === "string"
+      ? dateStr
+      : dateStr.toISOString();
+
+  const [date = "", time = ""] = d
+    .replace("Z", "")
+    .split("T");
+
+  return `${date} ${time}`.trim();
 };

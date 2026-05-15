@@ -32,7 +32,7 @@ const GenericGameResultSheet = ({
       <SheetContent
         side="right"
         className={cn(
-          "p-0 flex flex-col min-w-[40vw] max-w-none",
+          "p-0 flex flex-col min-w-[60vw] max-w-none",
           className
         )}
       >

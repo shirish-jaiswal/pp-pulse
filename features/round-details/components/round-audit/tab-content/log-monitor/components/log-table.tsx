@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useRef } from "react";
 import {
     Table,
@@ -11,36 +13,44 @@ import { cn } from "@/utils/cn";
 import { getNestedValue } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
 
 export function LogTable({ filteredLogs, visibleColumns }: any) {
-    // Initializing widths for both the "Time" column and all dynamic columns
     const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(() => {
-        const widths: { [key: string]: number } = { time: 120 }; // Base width for timestamp
+        const widths: { [key: string]: number } = { time: 180 };
+
         visibleColumns.forEach((col: string) => {
-            widths[col] = 200;
+            widths[col] = 260;
         });
+
         return widths;
     });
 
-    const resizingRef = useRef<{ col: string; startX: number; startWidth: number } | null>(null);
+    const resizingRef = useRef<{
+        col: string;
+        startX: number;
+        startWidth: number;
+    } | null>(null);
 
     const onMouseDown = (e: React.MouseEvent, col: string) => {
         resizingRef.current = {
             col,
             startX: e.clientX,
-            startWidth: columnWidths[col] || (col === 'time' ? 120 : 200),
+            startWidth: columnWidths[col],
         };
+
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
         document.body.style.cursor = "col-resize";
+        document.body.style.userSelect = "none";
     };
 
     const onMouseMove = (e: MouseEvent) => {
         if (!resizingRef.current) return;
+
         const { col, startX, startWidth } = resizingRef.current;
         const delta = e.clientX - startX;
 
         setColumnWidths((prev) => ({
             ...prev,
-            [col]: Math.max(col === 'time' ? 100 : 80, startWidth + delta),
+            [col]: Math.max(140, startWidth + delta),
         }));
     };
 
@@ -49,62 +59,66 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
         document.body.style.cursor = "default";
+        document.body.style.userSelect = "auto";
     };
 
     return (
-        <div className="flex-1 overflow-auto rounded-md border bg-background">
-            <Table className="w-full table-fixed border-separate border-spacing-0">
-                <TableHeader className="sticky top-0 z-10 bg-background border-b border-border">
+        <div className="flex-1 overflow-auto rounded-xl border bg-background">
+            <Table className="w-full table-fixed border-separate border-spacing-y-2">
+
+                {/* HEADER */}
+                <TableHeader className="sticky top-0 z-20 bg-background">
                     <TableRow>
-                        {/* Time Header with Resizer */}
                         <TableHead
                             style={{ width: columnWidths["time"] }}
-                            className="relative px-2 py-2 text-xs text-muted-foreground border-r group"
+                            className="relative px-4 py-4 text-xs font-medium text-muted-foreground"
                         >
-                            <div className="truncate">Time</div>
+                            Time
+
                             <div
                                 onMouseDown={(e) => onMouseDown(e, "time")}
-                                className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/50 active:bg-primary z-20"
+                                className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/40"
                             />
                         </TableHead>
 
-                        {/* Dynamic Column Headers */}
                         {visibleColumns.map((col: string) => (
                             <TableHead
                                 key={col}
-                                style={{ width: columnWidths[col] || 200 }}
-                                className="relative px-2 py-2 text-xs text-muted-foreground border-r group"
+                                style={{ width: columnWidths[col] }}
+                                className="relative px-4 py-4 text-xs font-medium text-muted-foreground"
                             >
-                                <div className="truncate">{col}</div>
+                                {col}
+
                                 <div
                                     onMouseDown={(e) => onMouseDown(e, col)}
-                                    className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-transparent hover:bg-primary/50 active:bg-primary z-20"
+                                    className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/40"
                                 />
                             </TableHead>
                         ))}
                     </TableRow>
                 </TableHeader>
 
+                {/* BODY */}
                 <TableBody>
                     {filteredLogs.map((log: any, idx: number) => (
                         <TableRow
                             key={idx}
                             className={cn(
-                                "border-b border-border/40",
-                                idx % 2 === 0 ? "bg-background" : "bg-muted/20",
-                                "hover:bg-muted/40"
+                                "bg-background",
+                                "hover:bg-muted/20 transition-colors"
                             )}
                         >
-                            {/* Time Cell - Width matches Header */}
+                            {/* TIME */}
                             <TableCell
                                 style={{ width: columnWidths["time"] }}
-                                className="px-2 py-1.5 text-[11px] whitespace-nowrap font-mono align-top border-r overflow-hidden"
+                                className="px-4 py-4 align-top border-r"
                             >
-                                <div className="flex flex-col leading-tight">
-                                    <span>
+                                <div className="flex flex-col leading-6">
+                                    <span className="text-xs text-muted-foreground ">
                                         {log.raw?.["@timestamp"]?.split("T")[0] || "--"}
                                     </span>
-                                    <span className="text-muted-foreground">
+
+                                    <span className="text-foreground">
                                         {log.raw?.["@timestamp"]
                                             ?.split("T")[1]
                                             ?.replace("Z", "") || "--"}
@@ -112,22 +126,23 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
                                 </div>
                             </TableCell>
 
-                            {/* Dynamic Value Cells */}
+                            {/* DYNAMIC COLUMNS */}
                             {visibleColumns.map((col: string) => {
                                 const val = getNestedValue(log, col);
+
                                 return (
                                     <TableCell
                                         key={col}
-                                        style={{ width: columnWidths[col] || 200 }}
-                                        className="px-2 py-1.5 text-[11px] align-top min-w-0 border-r"
+                                        style={{ width: columnWidths[col] }}
+                                        className="px-4 py-4 align-top border-r"
                                     >
-                                        <div className="w-full break-all whitespace-pre-wrap overflow-hidden">
-                                            {typeof val === "object" ? (
-                                                <pre className="text-[10px] bg-muted/30 p-1 rounded font-mono break-all whitespace-pre-wrap">
+                                        <div className="text-sm leading-6 whitespace-normal wrap-break-word overflow-wrap-anywhere">
+                                            {typeof val === "object" && val !== null ? (
+                                                <pre className="text-xs font-mono bg-muted/30 p-3 rounded-md whitespace-pre-wrap wrap-break-word overflow-wrap-anywhere">
                                                     {JSON.stringify(val, null, 2)}
                                                 </pre>
                                             ) : (
-                                                <span className="block leading-tight">
+                                                <span className="block whitespace-normal wrap-break-word overflow-wrap-anywhere">
                                                     {String(val ?? "-")}
                                                 </span>
                                             )}
