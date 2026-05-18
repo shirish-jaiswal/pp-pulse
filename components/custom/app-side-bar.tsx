@@ -11,6 +11,7 @@ import {
   HomeIcon,
   Users,
   UserIcon,
+  ChevronRight,
 } from "lucide-react";
 
 import {
@@ -54,24 +55,18 @@ type MenuItem = {
   enabled?: boolean;
 };
 
-export function AppSidebar({
-  menu,
-}: {
-  menu: MenuItem[];
-}) {
+export function AppSidebar({ menu }: { menu: MenuItem[] }) {
   const { state } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
   const { user } = useProfile();
 
+  // Group items smoothly
   const grouped = menu.reduce((acc, item) => {
     if (item.enabled === false) return acc;
-
     const group = item.group || "OTHER";
-
     if (!acc[group]) acc[group] = [];
     acc[group].push(item);
-
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
@@ -86,16 +81,32 @@ export function AppSidebar({
             asChild
             tooltip={isCollapsed ? item.title : undefined}
             className={cn(
-              "h-9 px-2 flex items-center gap-2 rounded-md transition-all",
-              "border border-transparent hover:bg-muted/60",
-              isActive &&
-                "bg-muted text-foreground border-l-2 border-primary shadow-sm"
+              "h-10 px-3 relative flex items-center gap-3 rounded-lg transition-all duration-200 group/item",
+              "hover:bg-muted/70 text-muted-foreground hover:text-foreground",
+              isActive && [
+                "bg-primary/5 text-primary font-medium hover:bg-primary/10 hover:text-primary",
+                "before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:rounded-r-md before:bg-primary"
+              ]
             )}
           >
-            <Link href={item.url} className="flex items-center gap-2 w-full">
-              {Icon && <Icon className="w-4 h-4 shrink-0" />}
-              {!isCollapsed && (
-                <span className="truncate">{item.title}</span>
+            <Link href={item.url} className="flex items-center w-full justify-between">
+              <div className="flex items-center gap-3 min-w-0">
+                {Icon && (
+                  <Icon
+                    className={cn(
+                      "w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover/item:scale-105",
+                      isActive ? "text-primary" : "text-muted-foreground/80 group-hover/item:text-foreground"
+                    )}
+                  />
+                )}
+                {!isCollapsed && (
+                  <span className="truncate text-sm tracking-wide">{item.title}</span>
+                )}
+              </div>
+
+              {/* Subtle design polish: mini-arrow indicator for active links when expanded */}
+              {!isCollapsed && isActive && (
+                <ChevronRight className="w-3.5 h-3.5 text-primary/70 shrink-0" />
               )}
             </Link>
           </SidebarMenuButton>
@@ -104,60 +115,99 @@ export function AppSidebar({
     });
 
   return (
-    <Sidebar variant="inset" collapsible="icon" className="border-r bg-background p-0">
-
+    <Sidebar
+      variant="inset"
+      collapsible="icon"
+      className="border-r border-border/60 bg-sidebar-background p-0 backdrop-blur-md"
+    >
       {/* HEADER */}
-      <SidebarHeader className="flex items-center justify-center bg-slate-800 p-1.5 shadow-md">
-        {!isCollapsed && (
-          <Image src="/portal/logo.png" alt="logo" width={90} height={40} />
+      <SidebarHeader
+        className={cn(
+          "flex items-center justify-center border-b border-border/40 transition-all duration-300 h-12 p-0"
         )}
+      >
+        <div className="flex items-center justify-center w-full h-full relative bg-slate-800 shadow-md">
+          {!isCollapsed ? (
+            <div className="relative transition-all duration-300 animate-in fade-in zoom-in-95 ">
+              <Image src="/portal/logo.png" alt="logo" width={90} height={40} />
+            </div>
+          ) : (
+            // Professional minimal logomark placeholder
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-sm transition-all duration-300 animate-in fade-in zoom-in-75">
+              P
+            </div>
+          )}
+        </div>
       </SidebarHeader>
 
       {/* CONTENT */}
-      <SidebarContent className="px-2 space-y-4">
-
+      <SidebarContent className={cn("py-4 space-y-6 transition-all", isCollapsed ? "px-1.5" : "px-3")}>
         {Object.entries(grouped)
           .filter(([group]) => group !== "NA")
           .map(([group, items]) => (
-            <SidebarGroup key={group}>
-              <p className="text-[11px] uppercase text-muted-foreground px-2 mb-1">
-                {group}
-              </p>
+            <SidebarGroup key={group} className="p-0 space-y-1.5">
+              {!isCollapsed ? (
+                <p className="text-[10px] font-bold tracking-wider uppercase text-muted-foreground/60 px-3 mb-1 select-none pointer-events-none transition-all animate-in fade-in duration-300">
+                  {group}
+                </p>
+              ) : (
+                // Clean visual spacer between icon blocks when collapsed instead of leaving weird layout voids
+                <div className="mx-2 my-1 border-t border-border/30 first:hidden" />
+              )}
 
               <SidebarGroupContent>
-                <SidebarMenu>
+                <SidebarMenu className="gap-1">
                   {renderMenu(items)}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           ))}
-
       </SidebarContent>
 
       {/* FOOTER */}
-      <SidebarFooter className="border-t px-2 py-2 space-y-1">
-
-        {user && (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              tooltip={isCollapsed ? user.name : undefined}
-              className="h-9 px-2 flex items-center gap-2"
-            >
-              <Link href="/profile" className="flex gap-2 w-full">
-                <UserIcon className="w-4 h-4" />
-                {!isCollapsed && (
-                  <span className="truncate capitalize">
-                    {user.name}
-                  </span>
-                )}
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+      <SidebarFooter
+        className={cn(
+          "border-t border-border/40 bg-muted/20 space-y-2 transition-all duration-200",
+          isCollapsed ? "p-1.5" : "p-3"
         )}
+      >
+        <SidebarMenu>
+          {user && (
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                tooltip={isCollapsed ? user.name : undefined}
+                className={cn(
+                  "h-11 rounded-lg transition-all w-full flex items-center gap-3",
+                  isCollapsed ? "px-2 justify-center" : "px-3 hover:bg-muted/80"
+                )}
+              >
+                <Link href="/profile" className="flex items-center w-full min-w-0">
+                  {/* Styled User Avatar Box */}
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-medium text-xs border border-primary/20">
+                    {user.name ? user.name.charAt(0).toUpperCase() : <UserIcon className="w-3.5 h-3.5" />}
+                  </div>
 
-        <LogoutButton isCollapsed={isCollapsed} />
+                  {!isCollapsed && (
+                    <div className="flex flex-col items-start ml-0.5 min-w-0 leading-tight">
+                      <span className="truncate text-sm font-medium text-foreground capitalize">
+                        {user.name}
+                      </span>
+                      <span className="truncate text-[11px] text-muted-foreground font-normal">
+                        View profile
+                      </span>
+                    </div>
+                  )}
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          )}
+        </SidebarMenu>
+
+        <div className={cn("w-full transition-all", isCollapsed ? "px-0.5" : "px-1")}>
+          <LogoutButton isCollapsed={isCollapsed} />
+        </div>
       </SidebarFooter>
-
     </Sidebar>
   );
 }

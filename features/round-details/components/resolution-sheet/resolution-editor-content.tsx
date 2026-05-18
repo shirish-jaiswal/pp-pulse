@@ -66,9 +66,6 @@ export function ResolutionEditorContent({
   const [selectedId, setSelectedId] = useState<string>("");
   const [editorContent, setEditorContent] = useState<string>("");
 
-  // =========================
-  // VALUES + LINK META
-  // =========================
   const { dataValues, linkMeta } = useMemo(() => {
     if (varsLoading) return { dataValues: {}, linkMeta: {} };
 

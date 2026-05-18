@@ -5,8 +5,6 @@ import {
 import apiRequest from "@/lib/api/api-request";
 import { isCardGame } from "@/utils/get-game-type";
 
-
-
 export async function c_getRoundDetails(
   rawData: RoundDetailsInputProps
 ): Promise<any> {

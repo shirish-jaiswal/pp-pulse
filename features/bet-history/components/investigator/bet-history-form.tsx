@@ -54,10 +54,6 @@ export function BetHistoryForm() {
 
       const safeDuration = Math.min(durationInMinutes, 1440);
 
-      // ===============================
-      // PURE STRING TIME ENGINE
-      // ===============================
-
       const [datePart, timePart] = from!.split("T");
       let [year, month, day] = datePart.split("-").map(Number);
       let [hour, minute] = timePart.split(":").map(Number);
