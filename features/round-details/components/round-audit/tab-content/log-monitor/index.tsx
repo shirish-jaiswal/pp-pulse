@@ -7,8 +7,15 @@ import { LogFooter } from "@/features/round-details/components/round-audit/tab-c
 import { useLogState } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-log-state";
 import { LogSkeleton } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-skeleton";
 
-export default function PremiumLogMonitor({ roundId, timeStamp }: any) {
-  const state = useLogState();
+interface PremiumLogMonitorProps {
+  roundId: string;
+  timeStamp: string;
+  sharedState?: ReturnType<typeof useLogState>;
+}
+
+export default function PremiumLogMonitor({ roundId, timeStamp, sharedState }: PremiumLogMonitorProps) {
+  const localState = useLogState();
+  const state = sharedState || localState;
 
   if (state.isLoading) {
     return <LogSkeleton />;

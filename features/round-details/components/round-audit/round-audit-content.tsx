@@ -10,6 +10,7 @@ import PremiumLogMonitor from "@/features/round-details/components/round-audit/t
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
 import { usePrefetchTransactionLogs } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-prefetch-logs";
+import { useLogState } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-log-state";
 import { toast } from "sonner";
 
 interface ContentProps {
@@ -22,6 +23,8 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
   const { roundDetails, resolutionEditorOpen, setResolutionEditorOpen } = useRoundDetails();
   const [copied, setCopied] = useState(false);
   const shortId = gameId.split("-").pop();
+
+  const sharedLogState = useLogState();
 
   usePrefetchTransactionLogs({
     roundId: roundDetails?.tptInfo?.[0]?.round_id,
@@ -101,6 +104,7 @@ export function RoundAuditContent({ activeTab, activeLabel, gameId }: ContentPro
                 <PremiumLogMonitor
                   roundId={roundDetails?.tptInfo?.[0]?.round_id || ""}
                   timeStamp={roundDetails?.tptInfo?.[0]?.trans_date || ""}
+                  sharedState={sharedLogState}
                 />
               </FullScreenWrapper>
             )}

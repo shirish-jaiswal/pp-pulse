@@ -1,9 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-
 import {
   COMMAND_PRIORITY_EDITOR,
   $createParagraphNode,
@@ -11,7 +9,6 @@ import {
   $insertNodes,
   ElementNode,
 } from "lexical";
-
 import {
   $createTableNodeWithDimensions,
   $isTableCellNode,
@@ -49,7 +46,6 @@ export default function LogPlugin() {
           // =====================
           // Heading (Bold)
           // =====================
-
           const heading = $createParagraphNode();
           const title = $createTextNode(
             `Logs (${activeTab})`
@@ -60,9 +56,8 @@ export default function LogPlugin() {
           $insertNodes([heading]);
 
           // =====================
-          // Table
+          // Table Creation
           // =====================
-
           const tableNode = $createTableNodeWithDimensions(
             logs.length + 1,
             finalColumns.length,
@@ -75,7 +70,6 @@ export default function LogPlugin() {
           // =====================
           // HEADER ROW
           // =====================
-
           const headerRow = rows[0] as ElementNode;
           const headerCells = headerRow.getChildren();
 
@@ -97,7 +91,6 @@ export default function LogPlugin() {
           // =====================
           // DATA ROWS
           // =====================
-
           logs.forEach((log: any, rowIndex: number) => {
             const row = rows[rowIndex + 1] as ElementNode;
             const cells = row.getChildren();
@@ -105,7 +98,6 @@ export default function LogPlugin() {
             cells.forEach((cell, colIndex: number) => {
               if ($isTableCellNode(cell)) {
                 const key = finalColumns[colIndex];
-
                 let value: any;
 
                 if (key === "timepoint") {
@@ -129,7 +121,6 @@ export default function LogPlugin() {
           // =====================
           // Insert table
           // =====================
-
           $insertNodes([tableNode]);
           $insertNodes([$createParagraphNode()]);
         });
