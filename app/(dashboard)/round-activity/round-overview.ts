@@ -191,7 +191,7 @@ export default function generateRoundOverview(
         {
           label: "Round ID",
           value: roundId || "N/A",
-          ...createLink(userId, EXTERNAL_LINKS.round),
+          ...createLink(roundId, EXTERNAL_LINKS.round),
         },
       ],
     },
