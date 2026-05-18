@@ -136,126 +136,70 @@ export function LogSidebar({
    */
 
   const buildHtmlTable = () => {
-    return `
-      <table
-        style="
-          border-collapse: collapse;
-          width: 100%;
-          font-family: Arial, sans-serif;
-          font-size: 13px;
-        "
-      >
-        <thead>
-          <tr>
-            ${visibleColumns
-              .map(
-                (column) => `
-                  <th
-                    style="
-                      border: 2px solid #555;
-                      background: #f3f4f6;
-                      padding: 10px 14px;
-                      text-align: left;
-                      font-weight: 600;
-                      white-space: nowrap;
-                    "
-                  >
-                    ${escapeHtml(formatLabel(column))}
-                  </th>
-                `
-              )
-              .join("")}
-          </tr>
-        </thead>
+  const tableHeaders = visibleColumns
+    .map((column) => {
+      const cleanLabel = escapeHtml(formatLabel(column)).trim();
+      return `<th style="border: 2px solid #555; background: #f3f4f6; padding: 10px 14px; text-align: left; font-weight: 600; white-space: nowrap;">${cleanLabel}</th>`;
+    })
+    .join("");
 
-        <tbody>
-          ${logs
-            .map((log) => {
-              return `
-                <tr>
-                  ${visibleColumns
-                    .map((column) => {
-                      const value =
-                        getNestedValue(
-                          log,
-                          column
-                        );
+  const tableRows = logs
+    .map((log) => {
+      const cells = visibleColumns
+        .map((column) => {
+          const value = getNestedValue(log, column);
 
-                      const formattedValue =
-                        value === null ||
-                        value === undefined
-                          ? ""
-                          : typeof value === "object"
-                          ? JSON.stringify(
-                              value,
-                              null,
-                              2
-                            )
-                          : String(value);
+          const formattedValue =
+            value === null || value === undefined
+              ? ""
+              : typeof value === "object"
+              ? JSON.stringify(value, null, 2)
+              : String(value);
 
-                      return `
-                        <td
-                          style="
-                            border: 1px solid #777;
-                            padding: 10px 14px;
-                            vertical-align: top;
-                            line-height: 1.5;
-                            white-space: pre-wrap;
-                            max-width: 500px;
-                            word-break: break-word;
-                          "
-                        >
-                          ${escapeHtml(
-                            formattedValue
-                          )}
-                        </td>
-                      `;
-                    })
-                    .join("")}
-                </tr>
-              `;
-            })
-            .join("")}
-        </tbody>
-      </table>
-    `;
-  };
+          // Crucial: Trim whitespace boundaries from structural values before generating cells
+          const cleanCellContent = escapeHtml(formattedValue).trim();
 
-  const copyTable = async () => {
-    if (!logs?.length || !visibleColumns?.length) {
-      return;
-    }
+          return `<td style="border: 1px solid #777; padding: 10px 14px; vertical-align: top; line-height: 1.5; white-space: pre-wrap; max-width: 500px; word-break: break-word;">${cleanCellContent}</td>`;
+        })
+        .join("");
+      return `<tr>${cells}</tr>`;
+    })
+    .join("");
 
-    try {
-      const html = buildHtmlTable();
+  // Minify the outer structure to prevent destination layout engine parsing bugs
+  return `<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 13px;"><thead><tr>${tableHeaders}</tr></thead><tbody>${tableRows}</tbody></table>`.trim();
+};
 
-      const clipboardData = [
-        new ClipboardItem({
-          "text/html": new Blob([html], {
-            type: "text/html",
-          }),
+const copyTable = async () => {
+  if (!logs?.length || !visibleColumns?.length) {
+    return;
+  }
+
+  try {
+    const html = buildHtmlTable();
+
+    const clipboardData = [
+      new ClipboardItem({
+        "text/html": new Blob([html], {
+          type: "text/html",
         }),
-      ];
+        // Fallback option to provide predictable plain text layout streams inside code blocks
+        "text/plain": new Blob([logs.map(log => visibleColumns.map(col => String(getNestedValue(log, col) ?? '')).join('\t')).join('\n')], {
+          type: "text/plain",
+        }),
+      }),
+    ];
 
-      await navigator.clipboard.write(
-        clipboardData
-      );
+    await navigator.clipboard.write(clipboardData);
 
-      setCopied(true);
-
-      setTimeout(() => {
-        setCopied(false);
-      }, 2000);
-    } catch (error) {
-      console.error("Copy failed", error);
-    }
-  };
-
-  /**
-   * ----------------------------------------------------------------
-   * RENDERERS
-   * ----------------------------------------------------------------
-   */
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  } catch (error) {
+    console.error("Copy failed", error);
+  }
+};
 
   const renderColumnItem = (key: string) => (
     <label
