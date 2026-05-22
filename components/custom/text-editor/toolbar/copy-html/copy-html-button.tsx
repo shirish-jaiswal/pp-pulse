@@ -19,33 +19,53 @@ export function CopyHtmlButton({
   const [open, setOpen] = useState(false);
 
   const doCopy = useCallback(async () => {
-  try {
-    const { html, text } = await getHtml();
+    try {
+      let { html, text } = await getHtml();
 
-    const fullHtml = `
-      <html>
-        <head>
-          <meta charset="utf-8" />
-        </head>
-        <body>
-          ${html}
-        </body>
-      </html>
-    `;
+      // ==========================================
+      // FORCE EXACT EXCEL/SHEETS TABLE STYLES ON COPY
+      // ==========================================
 
-    await navigator.clipboard.write([
-      new ClipboardItem({
-        "text/html": new Blob([fullHtml], { type: "text/html" }),
-        "text/plain": new Blob([text], { type: "text/plain" }),
-      }),
-    ]);
+      // 1. Style the base <table> element
+      html = html.replace(
+        /<table([^>]*)>/gi,
+        `<table style="border-collapse: collapse; width: 100%; font-family: Arial, sans-serif; font-size: 13px;" $1>`
+      );
 
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  } catch (err) {
-    console.error("Copy failed:", err);
-  }
-}, [getHtml]);
+      // 2. Style Header Cells <th>
+      html = html.replace(
+        /<th([^>]*)>/gi,
+        `<th style="border: 2px solid #555; background: #f3f4f6; padding: 10px 14px; text-align: left; font-weight: 600; white-space: nowrap; font-family: Arial, sans-serif; font-size: 13px;" $1>`
+      );
+
+      // 3. Style Regular Cells <td>
+      html = html.replace(
+        /<td([^>]*)>/gi,
+        `<td style="border: 1px solid #777; padding: 10px 14px; vertical-align: top; line-height: 1.5; white-space: pre-wrap; max-width: 500px; word-break: break-word; font-family: Arial, sans-serif; font-size: 13px;" $1>`
+      );
+
+      // 4. Style Numeric Cells <td>
+      html = html.replace(
+        /<td([^>]*?style="[^"]*?")>([\s]*?-?[\d,.]+(?:\s?[A-Z]{3})?[\s]*?)<\/td>/gi,
+        `<td $1 text-align: right;">$2</td>`
+      );
+
+      // Minify wrapper completely to strip hidden tab/newline formatting gaps
+      const fullHtml = `<html><head><meta charset="utf-8" /></head><body>${html.trim()}</body></html>`.trim();
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([fullHtml], { type: "text/html" }),
+          "text/plain": new Blob([text.trim()], { type: "text/plain" }),
+        }),
+      ]);
+
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Copy failed:", err);
+    }
+  }, [getHtml]);
 
   const handleClick = async () => {
     if (!copyPopup) {
@@ -81,7 +101,6 @@ export function CopyHtmlButton({
 
   return (
     <>
-      {/* Button */}
       <div className="flex items-center gap-2 ml-auto pl-4">
         <Button
           variant="ghost"
@@ -93,7 +112,6 @@ export function CopyHtmlButton({
         </Button>
       </div>
 
-      {/* SINGLE REUSABLE DIALOG */}
       <CopyWarningDialog
         open={open}
         onOpenChange={setOpen}

@@ -6,11 +6,13 @@ import { RoundRow } from "@/features/bet-history/components/bet-table/transform-
 import { Checkbox } from "@/components/ui/checkbox";
 import Link from "next/link";
 import { formatDate } from "@/utils/date-utils";
+import { RoundsCopyHandler } from "@/features/bet-history/components/bet-table/dashboard/rounds-copy-handler";
 
 export const columns: ColumnDef<RoundRow>[] = [
   {
     accessorKey: "roundId",
-    header: "Round ID",
+    // Passing the custom header component with access to the table instance
+    header: ({ table }) => <RoundsCopyHandler table={table} />,
     enableSorting: false,
     enableColumnFilter: true,
     filterFn: "includesString",
@@ -44,7 +46,7 @@ export const columns: ColumnDef<RoundRow>[] = [
     accessorKey: "totalPlaced",
     header: "Placed",
     enableSorting: false,
-    enableColumnFilter: false, // optional (numeric filter later)
+    enableColumnFilter: false,
     cell: ({ row }) => row.original.totalPlaced.toFixed(2),
   },
   {
@@ -133,7 +135,6 @@ export const columns: ColumnDef<RoundRow>[] = [
 export function getSelectionColumn<T>(): ColumnDef<T> {
   return {
     id: "select",
-
     header: ({ table }) => (
       <Checkbox
         checked={
@@ -149,7 +150,6 @@ export function getSelectionColumn<T>(): ColumnDef<T> {
         aria-label="Select all rows"
       />
     ),
-
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
@@ -159,7 +159,6 @@ export function getSelectionColumn<T>(): ColumnDef<T> {
         aria-label="Select row"
       />
     ),
-
     enableSorting: false,
     enableHiding: false,
   };

@@ -94,7 +94,7 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
                 {Icon && (
                   <Icon
                     className={cn(
-                      "w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover/item:scale-105",
+                      "w-4.5 h-4.5 shrink-0 transition-transform duration-200 group-hover/item:scale-105",
                       isActive ? "text-primary" : "text-muted-foreground/80 group-hover/item:text-foreground"
                     )}
                   />

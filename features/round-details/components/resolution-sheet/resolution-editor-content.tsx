@@ -16,6 +16,8 @@ import { useRoundDetails } from "@/features/round-details/context/round-details-
 import {
   buildBetDetailsTable,
   buildTransactionTable,
+  buildBulkBetDetailsTables,
+  buildBulkTransactionTables,
   fillAndTransformData,
 } from "@/features/round-details/components/resolution-sheet/insert-values";
 import { useGetVariables } from "@/hooks/excel-db/use-get-variables";
@@ -61,10 +63,19 @@ export function ResolutionEditorContent({
     });
 
   const { data: variables = [], isLoading: varsLoading } = useGetVariables();
-  const { roundDetails } = useRoundDetails();
+
+  const { selectedRoundDetailsMap, roundDetails } = useRoundDetails();
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [editorContent, setEditorContent] = useState<string>("");
+
+  const activeTargetsMap = useMemo(() => {
+    if (Object.keys(selectedRoundDetailsMap).length === 0 && roundDetails) {
+      const currentActiveId = roundDetails.tptInfo?.at(0)?.round_id || "Active";
+      return { [currentActiveId]: roundDetails };
+    }
+    return selectedRoundDetailsMap;
+  }, [selectedRoundDetailsMap, roundDetails]);
 
   const { dataValues, linkMeta } = useMemo(() => {
     if (varsLoading) return { dataValues: {}, linkMeta: {} };
@@ -73,9 +84,10 @@ export function ResolutionEditorContent({
     const links: Record<string, any> = {};
 
     const staticVariables: Record<string, string> = {
-      currentUrl:
-        typeof window !== "undefined" ? window.location.href : "",
+      currentUrl: typeof window !== "undefined" ? window.location.href.trim() : "",
     };
+
+    const targetCount = Object.keys(activeTargetsMap).length;
 
     variables.forEach((variable: any) => {
       const key = variable.key;
@@ -91,25 +103,44 @@ export function ResolutionEditorContent({
       }
 
       if (key === "bet_details") {
-        values[key] = buildBetDetailsTable(
-          roundDetails?.betInfo as BetTableInfo
-        );
+        if (targetCount === 1) {
+          const singlePayload = Object.values(activeTargetsMap)[0];
+          values[key] = buildBetDetailsTable(singlePayload?.betInfo as BetTableInfo);
+        } else {
+          values[key] = buildBulkBetDetailsTables(activeTargetsMap);
+        }
         return;
       }
 
       if (key === "transaction_details") {
-        values[key] = buildTransactionTable(
-          roundDetails?.tptInfo as TPTTableInfo
-        );
+        if (targetCount === 1) {
+          const singlePayload = Object.values(activeTargetsMap)[0];
+          values[key] = buildTransactionTable(singlePayload?.tptInfo as TPTTableInfo);
+        } else {
+          values[key] = buildBulkTransactionTables(activeTargetsMap);
+        }
         return;
       }
 
-      const found = findValueDeep(roundDetails, key);
-      values[key] = found !== undefined ? found : "";
+      const scalarAccumulator = new Set<string>();
+
+      Object.values(activeTargetsMap).forEach((singlePayload) => {
+        const discoveredValue = findValueDeep(singlePayload, key);
+        if (discoveredValue !== undefined && discoveredValue !== null) {
+          const trimmedVal = String(discoveredValue).trim();
+          if (trimmedVal !== "") {
+            scalarAccumulator.add(trimmedVal);
+          }
+        }
+      });
+
+      values[key] = scalarAccumulator.size > 0
+        ? Array.from(scalarAccumulator).join(", ")
+        : "";
     });
 
     return { dataValues: values, linkMeta: links };
-  }, [variables, roundDetails, varsLoading]);
+  }, [variables, activeTargetsMap, varsLoading]);
 
   const isReady = useMemo(() => !varsLoading, [varsLoading]);
 
@@ -155,61 +186,67 @@ export function ResolutionEditorContent({
       const populated = getPopulatedContent(current.content);
       setEditorContent(populated);
     }
-  }, [resolutions, selectedId, getPopulatedContent, isReady]);
+  }, [resolutions, selectedId, getPopulatedContent, isReady, activeTargetsMap]);
 
   const isDataLoading = templatesLoading || varsLoading;
 
   return (
-    <TabsContent value={tabsValue} className="mt-0 border-none">
-      <Card className="border-none shadow-none bg-transparent pt-0">
-        <CardContent className="p-2">
+    <>
+      {Object.keys(selectedRoundDetailsMap).length > 1 && (
+        <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono text-right bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+          Bulk Mode Active: Compiling data for {Object.keys(selectedRoundDetailsMap).length} rounds
+        </div>
+      )}
 
-          {/* HEADER */}
-          <div className="flex items-center justify-between gap-3">
-            <h3 className="text-[13px] font-medium text-muted-foreground tracking-tight">
-              {category}
-            </h3>
+      <TabsContent value={tabsValue} className="mt-0 border-none">
+        <Card className="border-none shadow-none bg-transparent pt-0">
+          <CardContent className="p-2">
+            {/* HEADER */}
+            <div className="flex items-center justify-between gap-3">
+              <h3 className="text-[13px] font-medium text-muted-foreground tracking-tight">
+                {category}
+              </h3>
 
-            <Select
-              value={selectedId}
-              onValueChange={setSelectedId}
-              disabled={isDataLoading || resolutions.length === 0}
-            >
-              <SelectTrigger className="min-w-55 h-8 text-xs">
-                <SelectValue placeholder="Select Template" />
-              </SelectTrigger>
+              <Select
+                value={selectedId}
+                onValueChange={setSelectedId}
+                disabled={isDataLoading || resolutions.length === 0}
+              >
+                <SelectTrigger className="min-w-55 h-8 text-xs">
+                  <SelectValue placeholder="Select Template" />
+                </SelectTrigger>
 
-              <SelectContent>
-                {resolutions.map((item) => (
-                  <SelectItem key={item.id} value={item.id.toString()}>
-                    {item.title}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                <SelectContent>
+                  {resolutions.map((item) => (
+                    <SelectItem key={item.id} value={item.id.toString()}>
+                      {item.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          {/* EDITOR */}
-          <div className="h-[calc(100vh-12rem)] overflow-hidden rounded-md border border-border/40 bg-background/40">
-            {!isReady ? (
-              <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
-                Loading variables...
-              </div>
-            ) : (
-              <RichTextEditor
-                key={`${category}-${selectedId}`}
-                initialValue={editorContent}
-                onChange={setEditorContent}
-                placeholder={`Write ${category.toLowerCase()}...`}
-                copyPopup={true}
-                showFieldPlugin={false}
-                showLogsToggle={true}
-              />
-            )}
-          </div>
-
-        </CardContent>
-      </Card>
-    </TabsContent>
+            {/* EDITOR */}
+            <div className="h-[calc(100vh-12rem)] overflow-hidden rounded-md border border-border/40 bg-background/40">
+              {!isReady ? (
+                <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
+                  Loading variables...
+                </div>
+              ) : (
+                <RichTextEditor
+                  key={`${category}-${selectedId}-${Object.keys(activeTargetsMap).join("-")}`}
+                  initialValue={editorContent}
+                  onChange={setEditorContent}
+                  placeholder={`Write ${category.toLowerCase()}...`}
+                  copyPopup={true}
+                  showFieldPlugin={false}
+                  showLogsToggle={true}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </>
   );
 }

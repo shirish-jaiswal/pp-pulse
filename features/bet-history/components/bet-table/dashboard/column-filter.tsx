@@ -59,6 +59,7 @@ export default function ColumnFilter<TData, TValue>({
   }, [facetedValues, debouncedSearch]);
 
   const filterValue = (column.getFilterValue() as string[]) ?? [];
+  const isFiltered = filterValue.length > 0; // Check if any filter is active
 
   const toggleValue = (value: string) => {
     const isSelected = filterValue.includes(value);
@@ -73,7 +74,6 @@ export default function ColumnFilter<TData, TValue>({
   const clearAll = () => column.setFilterValue([]);
   const selectAll = () => column.setFilterValue(options);
 
-  /* focus search input when open */
   useEffect(() => {
     if (open) {
       setTimeout(() => {
@@ -87,13 +87,17 @@ export default function ColumnFilter<TData, TValue>({
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
+          variant={isFiltered ? "default" : "outline"} // Changes variant style when filtered
           size="xs"
-          className="gap-1 bg-accent-foreground/10"
+          className={`gap-1 ${
+            isFiltered
+              ? "bg-primary text-primary-foreground hover:bg-primary/90"
+              : "bg-accent-foreground/10"
+          }`}
         >
           <Filter className="w-3 h-3" />
-          {filterValue.length > 0 && (
-            <span className="text-xs">({filterValue.length})</span>
+          {isFiltered && (
+            <span className="text-xs font-semibold">({filterValue.length})</span>
           )}
         </Button>
       </DropdownMenuTrigger>

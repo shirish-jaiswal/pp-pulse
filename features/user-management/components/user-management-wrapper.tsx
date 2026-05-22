@@ -1,12 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import {  useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 import { UserManagementResult, UserManagementResultById } from "./user-management-result";
 import { useUserManagementQuery } from "@/features/user-management/hooks/use-user-management";
+
+import { useSearchParams } from "next/navigation";
+
 
 type Tab = "email" | "userId";
 
@@ -15,7 +18,18 @@ function UserManagementContent() {
     const [emailQuery, setEmailQuery] = useState("");
     const [userIdQuery, setUserIdQuery] = useState("");
 
+    const searchParams = useSearchParams();
+    const queryUserId = searchParams.get("userId");
+
     const { data, loading, error, fetchState, fetchByEmail, fetchByUserId } = useUserManagementQuery();
+
+    useEffect(() => {
+    if (queryUserId) {
+        setActiveTab("userId");
+        setUserIdQuery(queryUserId);
+        fetchByUserId(queryUserId);
+    }
+    }, [queryUserId]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

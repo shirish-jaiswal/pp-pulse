@@ -29,7 +29,7 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
 
     return (
         <Sheet open={resolutionEditorOpen} onOpenChange={setResolutionEditorOpen}>
-            <SheetContent className="p-1 flex flex-col min-w-[60vw] max-w-none">
+            <SheetContent className="p-1 flex flex-col min-w-[60vw] max-w-none gap-0">
                 <SheetHeader className="p-1 border-b border-border mb-1">
                     <SheetTitle className="font-bold text-lg">Resolution</SheetTitle>
                     <SheetDescription className="text-muted-foreground">

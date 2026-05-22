@@ -25,7 +25,13 @@ export type GameMetaData = {
   value: string;
   isTechnical: boolean;
   showPopupOf?: string;
-}
+};
+
+// Map structure allows easy O(1) addition, deletion, and checks by ID
+export type SelectedRoundDetailsMap = Record<string, RoundDetailsResponse>;
+
+// Type tracking accumulated logs across multiple rounds
+export type AccumulatedLogsMap = Record<string, any>;
 
 type RoundDetailsContextType = {
   roundDetailsInput: RoundDetailsInputProps | null;
@@ -33,9 +39,7 @@ type RoundDetailsContextType = {
 
   multiIds: MultiIdsState;
   setMultiIds: (
-    val:
-      | Partial<MultiIdsState>
-      | ((prev: MultiIdsState) => MultiIdsState)
+    val: Partial<MultiIdsState> | ((prev: MultiIdsState) => MultiIdsState)
   ) => void;
 
   isBulkMode: boolean;
@@ -47,6 +51,17 @@ type RoundDetailsContextType = {
   roundDetails: RoundDetailsResponse | null;
   setRoundDetails: (val: RoundDetailsResponse | null) => void;
 
+  // Global state store tracking details of every checked round/game
+  selectedRoundDetailsMap: SelectedRoundDetailsMap;
+  setSelectedRoundDetailsMap: Dispatch<SetStateAction<SelectedRoundDetailsMap>>;
+
+  // Background raw cache tracking logs of every fetched round
+  accumulatedLogs: AccumulatedLogsMap;
+  setAccumulatedLogs: Dispatch<SetStateAction<AccumulatedLogsMap>>;
+
+  // EXPOSED TO EVERYONE: Returns all loaded data unfiltered so the dashboard works perfectly
+  selectedRoundLogs: AccumulatedLogsMap;
+
   roundOverview: InfoCardProps[] | null;
   setRoundOverview: (val: InfoCardProps[] | null) => void;
 
@@ -54,14 +69,9 @@ type RoundDetailsContextType = {
   setGameMetadata: (val: GameMetaData[] | null) => void;
 };
 
-const RoundDetailsContext =
-  createContext<RoundDetailsContextType | null>(null);
+const RoundDetailsContext = createContext<RoundDetailsContextType | null>(null);
 
-export function RoundDetailsProvider({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export function RoundDetailsProvider({ children }: { children: React.ReactNode }) {
   const [roundDetailsInput, setRoundDetailsInput] =
     useState<RoundDetailsInputProps | null>(null);
 
@@ -72,6 +82,14 @@ export function RoundDetailsProvider({
 
   const [roundDetails, setRoundDetailsData] =
     useState<RoundDetailsResponse | null>(null);
+
+  // Global state store tracking details of every checked round/game
+  const [selectedRoundDetailsMap, setSelectedRoundDetailsMap] =
+    useState<SelectedRoundDetailsMap>({});
+
+  // Global background cache tracking logs of every fetched round
+  const [accumulatedLogs, setAccumulatedLogs] =
+    useState<AccumulatedLogsMap>({});
 
   const [roundOverview, setRoundOverviewData] =
     useState<InfoCardProps[] | null>(null);
@@ -120,6 +138,10 @@ export function RoundDetailsProvider({
     setGameMetadataData(val);
   }, []);
 
+  // ✅ UNFILTERED FOR DASHBOARD: Simply points to the total accumulated cache
+  // This ensures the dashboard doesn't experience unintended missing logs
+  const selectedRoundLogs = accumulatedLogs;
+
   const value = useMemo(
     () => ({
       roundDetailsInput,
@@ -137,6 +159,14 @@ export function RoundDetailsProvider({
       roundDetails,
       setRoundDetails,
 
+      selectedRoundDetailsMap,
+      setSelectedRoundDetailsMap,
+
+      accumulatedLogs,
+      setAccumulatedLogs,
+
+      selectedRoundLogs,
+
       roundOverview,
       setRoundOverview,
 
@@ -149,6 +179,9 @@ export function RoundDetailsProvider({
       isBulkMode,
       resolutionEditorOpen,
       roundDetails,
+      selectedRoundDetailsMap,
+      accumulatedLogs,
+      selectedRoundLogs,
       roundOverview,
       gameMetadata,
       setRoundDetailsInput,
