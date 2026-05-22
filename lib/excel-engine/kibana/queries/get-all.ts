@@ -6,6 +6,7 @@ import { DB_NAME } from "..";
 
 export interface QUERIES_TEMPLATE_TYPE {
     id: number;
+    name: string;
     game: string;
     filters: string;
     query: string;

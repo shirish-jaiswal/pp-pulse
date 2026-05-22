@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useReducer, useMemo, useCallback } from "react";
-import { QueryState, QueryNode, BoolNode, JoinOperator } from "../types";
+import React, { createContext, useContext, useReducer, useMemo, useCallback, useState } from "react";
+import { QueryState, QueryNode, BoolNode, JoinOperator, SavedFilter } from "../types";
 import { createInitialState, validateTree } from "./treeCore";
 import { handleAddCondition, handleAddGroup } from "./conditionMutations";
 import { handleDeleteNode } from "./deletionEngines";
@@ -21,16 +21,12 @@ function queryReducer(state: QueryState, action: QueryAction): QueryState {
             };
             return validateTree({ ...state, nodes: updatedNodes });
         }
-
         case "ADD_CONDITION":
             return handleAddCondition(state, action);
-
         case "ADD_GROUP":
             return handleAddGroup(state, action.parentId);
-
         case "DELETE_NODE":
             return handleDeleteNode(state, action.nodeId);
-
         case "UPDATE_RELATION": {
             const parent = state.nodes[action.parentId] as BoolNode;
             if (!parent) return state;
@@ -48,10 +44,8 @@ function queryReducer(state: QueryState, action: QueryAction): QueryState {
                 },
             });
         }
-
         case "RESET_TREE":
             return createInitialState();
-
         default:
             return state;
     }
@@ -71,15 +65,12 @@ interface QueryBuilderContextType {
 
 const QueryBuilderContext = createContext<QueryBuilderContextType | undefined>(undefined);
 
-// Define type safe props to accept an optional pre-existing query state
 interface QueryBuilderProviderProps {
     children: React.ReactNode;
     initialState?: QueryState;
 }
 
 export const QueryBuilderProvider: React.FC<QueryBuilderProviderProps> = ({ children, initialState }) => {
-
-    // Lazy initializer checks for the prop. If found, runs it through your validation logic.
     const [state, dispatch] = useReducer(queryReducer, initialState, (passedState) => {
         if (passedState) {
             return validateTree(passedState);
@@ -114,6 +105,78 @@ export function useQueryBuilder() {
     const context = useContext(QueryBuilderContext);
     if (!context) {
         throw new Error("useQueryBuilder must be utilized inside a <QueryBuilderProvider />");
+    }
+    return context;
+}
+
+interface MultiFilterContextType {
+    filters: Record<string, SavedFilter>;
+    editingFilterId: string | null;
+    saveFilter: (name: string, treeState: QueryState) => void;
+    updateSavedFilter: (id: string, updatedFields: Partial<SavedFilter>) => void;
+    deleteFilter: (id: string) => void;
+    setEditingFilterId: (id: string | null) => void;
+}
+
+const MultiFilterContext = createContext<MultiFilterContextType | undefined>(undefined);
+
+export const MultiFilterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    const [filters, setFilters] = useState<Record<string, SavedFilter>>({});
+    const [editingFilterId, setEditingFilterId] = useState<string | null>(null);
+
+    const saveFilter = useCallback((name: string, treeState: QueryState) => {
+        const id = crypto.randomUUID();
+        setFilters((prev) => ({
+            ...prev,
+            [id]: {
+                id,
+                name: "",
+                state: treeState,
+                isEnabled: true,
+                isExcluded: false,
+            },
+        }));
+    }, []);
+
+    const updateSavedFilter = useCallback((id: string, updatedFields: Partial<SavedFilter>) => {
+        setFilters((prev) => {
+            if (!prev[id]) return prev;
+            return {
+                ...prev,
+                [id]: { ...prev[id], ...updatedFields },
+            };
+        });
+    }, []);
+
+    const deleteFilter = useCallback((id: string) => {
+        setFilters((prev) => {
+            const next = { ...prev };
+            delete next[id];
+            return next;
+        });
+        setEditingFilterId((currentId) => (currentId === id ? null : currentId));
+    }, []);
+
+    const contextValue = useMemo(() => ({
+        filters,
+        editingFilterId,
+        saveFilter,
+        updateSavedFilter,
+        deleteFilter,
+        setEditingFilterId,
+    }), [filters, editingFilterId, saveFilter, updateSavedFilter, deleteFilter]);
+
+    return (
+        <MultiFilterContext.Provider value={contextValue}>
+            {children}
+        </MultiFilterContext.Provider>
+    );
+};
+
+export function useMultiFilters() {
+    const context = useContext(MultiFilterContext);
+    if (!context) {
+        throw new Error("useMultiFilters must be used inside a <MultiFilterProvider />");
     }
     return context;
 }

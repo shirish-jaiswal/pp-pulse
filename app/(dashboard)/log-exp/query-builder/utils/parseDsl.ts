@@ -25,19 +25,17 @@ export function parseDsl(dsl: any): QueryState {
         return state;
     }
 
-    // Pass false as the initial state for the inverted/negation tracking flag
     traverseDsl(dsl, undefined, rootId, nodes, false);
 
     state.nodes = nodes;
     return state;
 }
-
 function traverseDsl(
     item: any,
     parentId: string | undefined,
     forcedId: string | null,
     nodes: Record<string, QueryNode>,
-    isInverted: boolean // Added flag to pass down negation context
+    isInverted: boolean
 ): string {
     const currentId = forcedId || generateId();
 
@@ -45,6 +43,41 @@ function traverseDsl(
     if (item && item.bool) {
         const boolBlock = item.bool;
 
+        // --- SAFE FIX: Check length and verify elements exist safely ---
+        if (
+            Array.isArray(boolBlock.should) &&
+            boolBlock.should.length > 0 && // Ensure array isn't empty
+            boolBlock.should.every((sub: any) => sub && sub.match_phrase)
+        ) {
+            const firstChild = boolBlock.should[0];
+            const firstField = firstChild && firstChild.match_phrase ? Object.keys(firstChild.match_phrase)[0] : null;
+
+            if (firstField) {
+                const allSameField = boolBlock.should.every(
+                    (sub: any) => sub && sub.match_phrase && Object.keys(sub.match_phrase)[0] === firstField
+                );
+
+                if (allSameField) {
+                    const combinedValues = boolBlock.should.map(
+                        (sub: any) => sub.match_phrase[firstField]
+                    );
+
+                    const conditionNode: ConditionNode = {
+                        id: currentId,
+                        type: "condition",
+                        parentId: parentId,
+                        field: firstField,
+                        operator: isInverted ? "is_not_one_of" : "is_one_of",
+                        values: combinedValues,
+                    };
+
+                    nodes[currentId] = conditionNode;
+                    return currentId;
+                }
+            }
+        }
+
+        // Standard bool block processing if it's a complex mix
         const groupNode: BoolNode = {
             id: currentId,
             type: "bool",
@@ -56,7 +89,6 @@ function traverseDsl(
         // Process inversion/negation groups (must_not arrays)
         if (Array.isArray(boolBlock.must_not) && boolBlock.must_not.length > 0) {
             boolBlock.must_not.forEach((subItem: any) => {
-                // Set isInverted to true for all nodes down this branch
                 const childId = traverseDsl(subItem, currentId, null, nodes, true);
                 const relation: JoinOperator | undefined = groupNode.children.length === 0 ? undefined : "AND";
                 groupNode.children.push({ id: childId, relation });
@@ -83,6 +115,9 @@ function traverseDsl(
             });
         }
 
+        // Run sequential cleanup pass on siblings
+        consolidateChildren(groupNode, nodes);
+
         return currentId;
     }
 
@@ -96,7 +131,6 @@ function traverseDsl(
             type: "condition",
             parentId: parentId,
             field: field || "message",
-            // Dynamically evaluate operator based on context flag
             operator: isInverted ? "is_not_one_of" : "is_one_of",
             values: value ? [value] : [],
         };
@@ -116,4 +150,34 @@ function traverseDsl(
     };
     nodes[currentId] = fallbackNode;
     return currentId;
+}
+
+function consolidateChildren(groupNode: BoolNode, nodes: Record<string, QueryNode>) {
+    const uniqueChildren: Array<{ id: string; relation?: JoinOperator }> = [];
+    const seenConditions: Record<string, ConditionNode> = {};
+
+    groupNode.children.forEach((childRef) => {
+        const childNode = nodes[childRef.id];
+
+        if (childNode && childNode.type === "condition") {
+            const key = `${childNode.field}_${childNode.operator}`;
+
+            if (seenConditions[key]) {
+                const primaryNode = seenConditions[key];
+                primaryNode.values = [...primaryNode.values, ...childNode.values];
+                delete nodes[childRef.id];
+            } else {
+                seenConditions[key] = childNode;
+                uniqueChildren.push(childRef);
+            }
+        } else {
+            uniqueChildren.push(childRef);
+        }
+    });
+
+    if (uniqueChildren.length > 0) {
+        uniqueChildren[0].relation = undefined;
+    }
+
+    groupNode.children = uniqueChildren;
 }

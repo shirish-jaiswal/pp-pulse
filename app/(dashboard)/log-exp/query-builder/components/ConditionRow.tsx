@@ -1,17 +1,79 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import { ConditionNode } from "../types";
 import { useQueryBuilder } from "../context/QueryBuilderContext";
 import { ConditionTagInput } from "./ConditionTagInput";
 import { DropdownSelector } from "./DropdownSelector";
-import { SUPPORT_FIELDS } from "./constants";
+import { useKibanaResponseStore } from "../../context/kibana-response-context";
 
 interface ConditionRowProps {
   node: ConditionNode;
 }
 
+// Helper utility to safely extract nested values using dot-notation paths (e.g., "contextmap.ppenv")
+const getNestedValue = (obj: any, path: string) => {
+  if (!obj || !path) return undefined;
+
+  // If the object directly contains the key (even with dots), use it
+  if (Object.prototype.hasOwnProperty.call(obj, path)) {
+    return obj[path];
+  }
+
+  // Otherwise, split the pathway string and dive down into nested objects
+  return path.split('.').reduce((current, key) => {
+    return current && current[key] !== undefined ? current[key] : undefined;
+  }, obj);
+};
+
 export const ConditionRow: React.FC<ConditionRowProps> = ({ node }) => {
   const { actions } = useQueryBuilder();
   const { id, field, operator, values, parentId } = node;
+
+  // Consume dynamic fields AND full documents from our global store
+  const { availableFields, selectedFields, documents } = useKibanaResponseStore();
+
+  // Combine fields and remove duplicates for the field dropdown selector
+  const dynamicFieldOptions = useMemo(() => {
+    const mergedFields = Array.from(new Set([...selectedFields, ...availableFields]));
+    const cleanSortedFields = mergedFields
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+
+    return cleanSortedFields.map((fieldName) => ({
+      value: fieldName,
+      label: fieldName,
+    }));
+  }, [availableFields, selectedFields]);
+
+  // Extract unique sample values for the *currently selected field* across all cached log documents
+  const valueSuggestions = useMemo(() => {
+    if (!field || !documents || !Array.isArray(documents)) return [];
+
+    const uniqueValues = new Set<string>();
+
+    documents.forEach((doc) => {
+      // Safely access properties nested inside Elasticsearch '_source' tracking layers
+      const sourceData = doc?._source;
+      if (!sourceData) return;
+
+      // FIX: Use our pathway walker utility instead of simple direct square-bracket lookups
+      const rawValue = getNestedValue(sourceData, field);
+
+      if (rawValue !== undefined && rawValue !== null) {
+        if (Array.isArray(rawValue)) {
+          // Flatten multi-value arrays if present
+          rawValue.forEach((v) => uniqueValues.add(String(v)));
+        } else if (typeof rawValue === "object") {
+          // Guard clause: If the nested path hits a full object instead of a leaf value, ignore it
+          return;
+        } else {
+          uniqueValues.add(String(rawValue));
+        }
+      }
+    });
+
+    // Sort values for clean readability in the suggestion UI box
+    return Array.from(uniqueValues).sort((a, b) => a.localeCompare(b));
+  }, [field, documents]);
 
   const handleFieldSelect = useCallback((value: string) => {
     actions.updateNode({ ...node, field: value });
@@ -26,13 +88,17 @@ export const ConditionRow: React.FC<ConditionRowProps> = ({ node }) => {
     actions.updateNode({ ...node, values: nextValues });
   }, [actions, node]);
 
+  // Unique ID dynamically bound to this specific row to decouple datalist lookup bindings
+  const datalistId = `suggestions-${id}`;
+
   return (
     <div className="group flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-2 shadow-sm transition-all hover:border-slate-300">
 
+      {/* Dropdown configured with properly formatted object options */}
       <div className="w-52 shrink-0">
         <DropdownSelector
           selectedValue={field}
-          options={SUPPORT_FIELDS}
+          options={dynamicFieldOptions}
           onSelect={handleFieldSelect}
           placeholder="Select field..."
         />
@@ -47,16 +113,18 @@ export const ConditionRow: React.FC<ConditionRowProps> = ({ node }) => {
         <option value="is_not_one_of">is not one of</option>
       </select>
 
+      {/* Pass suggestions down to your Tag Input component */}
       <div className="grow min-w-0">
         <ConditionTagInput
           values={values || []}
           onChange={handleValuesChange}
+          suggestions={valueSuggestions}
+          datalistId={datalistId}
         />
       </div>
 
-      {/* 4. Action Controls */}
+      {/* Action Controls */}
       <div className="flex shrink-0 items-center gap-1.5 border-l border-slate-100 pl-3">
-        {/* + AND Button - Bumped height to h-8 and text from 10px to text-xs (12px) */}
         <button
           type="button"
           disabled={!parentId}

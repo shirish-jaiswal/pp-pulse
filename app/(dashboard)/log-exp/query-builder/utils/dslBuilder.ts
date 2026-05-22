@@ -85,8 +85,6 @@ function buildGroup(state: QueryState, node: BoolNode) {
   }
 
   // 4. Default standard AND/Filter layout group
-  // Fix: Instead of discarding other items in filters, we create a full base skeleton
-  // and intelligently map your conditions into either 'filter' or 'must_not' branches.
   const boilerplate: any = {
     bool: {
       must: [],
@@ -97,11 +95,20 @@ function buildGroup(state: QueryState, node: BoolNode) {
   };
 
   filters.forEach((item) => {
-    if (item && item.bool && item.bool.must_not) {
-      // Safely spread nested items down into the parent's must_not block
-      boilerplate.bool.must_not.push(...item.bool.must_not);
+    if (item && item.isNegation) {
+      // Clean up our operational flag before saving to output
+      const cleanItem = { bool: item.bool };
+
+      // Wrap it cleanly inside a separate block to preserve your structural parser context
+      boilerplate.bool.must_not.push({
+        bool: {
+          should: cleanItem.bool.should,
+          minimum_should_match: cleanItem.bool.minimum_should_match
+        }
+      });
     } else {
-      // Standard positive criteria belong inside the filter array
+      // Remove flag if present on positive item
+      if (item && 'isNegation' in item) delete item.isNegation;
       boilerplate.bool.filter.push(transformToFullBoilerplate(item));
     }
   });
@@ -111,6 +118,10 @@ function buildGroup(state: QueryState, node: BoolNode) {
 
 function transformToFullBoilerplate(item: any): any {
   if (!item) return item;
+
+  // Clean flag up if necessary
+  const isNegation = item.isNegation;
+  if ('isNegation' in item) delete item.isNegation;
 
   // If it's already an explicit boilerplate block, leave it be
   if (item.bool && "must" in item.bool && "filter" in item.bool) {
@@ -126,8 +137,13 @@ function transformToFullBoilerplate(item: any): any {
     },
   };
 
-  if (item.bool && item.bool.must_not) {
-    boilerplate.bool.must_not = item.bool.must_not;
+  if (isNegation) {
+    boilerplate.bool.must_not.push({
+      bool: {
+        should: item.bool.should,
+        minimum_should_match: item.bool.minimum_should_match
+      }
+    });
   } else {
     boilerplate.bool.filter.push(item);
   }

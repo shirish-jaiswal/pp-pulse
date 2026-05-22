@@ -30,9 +30,27 @@ export interface QueryState {
   nodes: Record<string, QueryNode>;
 }
 
-export type Action =
+export interface SavedFilter {
+  id: string;
+  name: string;
+  state: QueryState;
+  isEnabled: boolean;
+  isExcluded: boolean; // false = INCLUDE (must), true = EXCLUDE (must_not)
+}
+
+export interface MultiFilterState {
+  filters: Record<string, SavedFilter>;
+  editingFilterId: string | null; // Tracks which filter is currently being edited in the popup
+}
+
+export type QueryAction =
   | { type: "UPDATE_NODE"; node: QueryNode }
-  | { type: "ADD_CONDITION"; parentId: string }
+  | { type: "ADD_CONDITION"; parentId: string; relation: JoinOperator; targetNodeId?: string }
   | { type: "ADD_GROUP"; parentId: string }
   | { type: "DELETE_NODE"; nodeId: string }
-  | { type: "UPDATE_RELATION"; parentId: string; childId: string; relation: JoinOperator };
+  | { type: "UPDATE_RELATION"; parentId: string; childId: string; relation: JoinOperator }
+  | { type: "RESET_TREE" }
+  | { type: "CREATE_FILTER"; name: string; initialState?: QueryState }
+  | { type: "SWITCH_FILTER"; filterId: string }
+  | { type: "RENAME_FILTER"; filterId: string; newName: string }
+  | { type: "DELETE_FILTER"; filterId: string };

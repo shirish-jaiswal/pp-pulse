@@ -11,11 +11,9 @@ type KibanaRequestOptions<T = unknown> = {
 };
 
 const KIBANA_BASE_URL =
-  process.env.KIBANA_URL ||
   process.env.NEXT_PUBLIC_KIBANA_URL;
 
 const KIBANA_API_KEY =
-  process.env.KIBANA_API_KEY ||
   process.env.NEXT_PUBLIC_KIBANA_API_KEY;
 
 if (!KIBANA_BASE_URL) {
@@ -43,6 +41,7 @@ export async function kibanaRequest<R = any, T = unknown>({
     const finalBaseURL = normalizeUrl(baseURL || KIBANA_BASE_URL as string);
     const cleanEndpoint = endpoint.replace(/^\//, "");
 
+    console.log(`${finalBaseURL}/${cleanEndpoint}`);
     const config: AxiosRequestConfig = {
       method,
       url: `${finalBaseURL}/${cleanEndpoint}`,
@@ -69,9 +68,9 @@ export async function kibanaRequest<R = any, T = unknown>({
 
       throw new Error(
         error.response?.data?.error?.reason ||
-          error.response?.data?.message ||
-          error.message ||
-          "Kibana request failed"
+        error.response?.data?.message ||
+        error.message ||
+        "Kibana request failed"
       );
     }
 
