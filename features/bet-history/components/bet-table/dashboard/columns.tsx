@@ -1,6 +1,6 @@
 "use client";
 
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, Row } from "@tanstack/react-table";
 import { Badge } from "@/components/ui/badge";
 import { RoundRow } from "@/features/bet-history/components/bet-table/transform-bets";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -8,10 +8,19 @@ import Link from "next/link";
 import { formatDate } from "@/utils/date-utils";
 import { RoundsCopyHandler } from "@/features/bet-history/components/bet-table/dashboard/rounds-copy-handler";
 
+// Reuseable true-OR matching function for primitive string values
+const multiSelectOrFilterFn = (row: Row<RoundRow>, columnId: string, filterValue: string[]) => {
+  if (!filterValue || filterValue.length === 0) return true;
+  const rowValue = row.getValue(columnId);
+  return filterValue.includes(String(rowValue));
+};
+
+// Tells TanStack Table to automatically clean up the filter state when it's empty
+multiSelectOrFilterFn.autoRemove = (val: any) => !val || val.length === 0;
+
 export const columns: ColumnDef<RoundRow>[] = [
   {
     accessorKey: "roundId",
-    // Passing the custom header component with access to the table instance
     header: ({ table }) => <RoundsCopyHandler table={table} />,
     enableSorting: false,
     enableColumnFilter: true,
@@ -31,7 +40,6 @@ export const columns: ColumnDef<RoundRow>[] = [
     header: "Game ID",
     enableSorting: false,
     enableColumnFilter: false,
-    filterFn: "arrIncludesSome",
   },
   {
     accessorKey: "time",
@@ -39,8 +47,7 @@ export const columns: ColumnDef<RoundRow>[] = [
     enableSorting: true,
     sortingFn: "datetime",
     enableColumnFilter: false,
-    cell: ({ row }) =>
-      formatDate(row.original.time)
+    cell: ({ row }) => formatDate(row.original.time),
   },
   {
     accessorKey: "totalPlaced",
@@ -64,9 +71,7 @@ export const columns: ColumnDef<RoundRow>[] = [
     cell: ({ row }) => (
       <span
         className={
-          row.original.profitLoss >= 0
-            ? "text-green-600"
-            : "text-red-600"
+          row.original.profitLoss >= 0 ? "text-green-600" : "text-red-600"
         }
       >
         {row.original.profitLoss.toFixed(2)}
@@ -78,10 +83,9 @@ export const columns: ColumnDef<RoundRow>[] = [
     header: "Status",
     enableSorting: false,
     enableColumnFilter: true,
-    filterFn: "arrIncludesSome",
+    filterFn: multiSelectOrFilterFn,
     cell: ({ row }) => {
       const status = row.original.status;
-
       return (
         <Badge
           className={
@@ -102,14 +106,14 @@ export const columns: ColumnDef<RoundRow>[] = [
     header: "Error Code",
     enableSorting: false,
     enableColumnFilter: true,
-    filterFn: "includesString",
+    filterFn: multiSelectOrFilterFn,
   },
   {
     accessorKey: "errorDescription",
     header: "Error Desc",
     enableSorting: false,
     enableColumnFilter: true,
-    filterFn: "includesString",
+    filterFn: multiSelectOrFilterFn,
     cell: ({ row }) => (
       <div className="max-w-52 whitespace-normal wrap-break-words">
         {row.original.errorDescription}
@@ -121,14 +125,13 @@ export const columns: ColumnDef<RoundRow>[] = [
     header: "Retries",
     enableSorting: false,
     enableColumnFilter: false,
-    filterFn: "arrIncludesSome",
   },
   {
     accessorKey: "gameMode",
     header: "Game Mode",
     enableSorting: false,
     enableColumnFilter: true,
-    filterFn: "arrIncludesSome",
+    filterFn: multiSelectOrFilterFn,
   },
 ];
 
@@ -144,18 +147,14 @@ export function getSelectionColumn<T>(): ColumnDef<T> {
             ? "indeterminate"
             : false
         }
-        onCheckedChange={(value) =>
-          table.toggleAllPageRowsSelected(!!value)
-        }
+        onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all rows"
       />
     ),
     cell: ({ row }) => (
       <Checkbox
         checked={row.getIsSelected()}
-        onCheckedChange={(value) =>
-          row.toggleSelected(!!value)
-        }
+        onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
       />
     ),

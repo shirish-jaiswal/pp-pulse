@@ -34,13 +34,27 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
     >
       <AppSidebar menu={menu} />
       <SidebarInset className="flex flex-col h-screen bg-background">
-        <header className="sticky top-0 z-10 flex h-12 py-1.5 items-center gap-3 border-b bg-background/80 backdrop-blur px-4 shadow-md">
-          <SidebarTrigger className="-ml-1" />
-          <div className="flex flex-col leading-tight">
-            <h1 className="text-sm font-semibold">{currentTitle}</h1>
-            <p className="text-[11px] text-muted-foreground">
-              Support Workspace
-            </p>
+        <header className="sticky top-0 z-10 flex h-12 py-1.5 items-center justify-between gap-3 border-b bg-background/80 backdrop-blur px-4 shadow-md">
+          <div className="flex">
+            <SidebarTrigger className="-ml-1" />
+            <div className="flex flex-col leading-tight">
+              <h1 className="text-sm font-semibold">{currentTitle}</h1>
+              <p className="text-[11px] text-muted-foreground">
+                Support Workspace
+              </p>
+            </div>
+          </div>
+
+          <div>
+            <a
+              href="/portal/log-exp"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ color: "#00BFB3" }}
+              className="text-sm font-medium px-3 py-1.5 rounded-md bg-[#00BFB3]/5 hover:bg-[#00BFB3]/15 border border-[#00BFB3]/10 hover:border-[#00BFB3]/30 transition-all duration-200"
+            >
+              Kibana
+            </a>
           </div>
         </header>
         <RoundDetailsProvider>

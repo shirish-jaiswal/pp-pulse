@@ -10,11 +10,8 @@ type KibanaRequestOptions<T = unknown> = {
   baseURL?: string;
 };
 
-const KIBANA_BASE_URL =
-  process.env.NEXT_PUBLIC_KIBANA_URL;
-
-const KIBANA_API_KEY =
-  process.env.NEXT_PUBLIC_KIBANA_API_KEY;
+const KIBANA_BASE_URL = process.env.NEXT_PUBLIC_KIBANA_URL;
+const KIBANA_API_KEY = process.env.NEXT_PUBLIC_KIBANA_API_KEY;
 
 if (!KIBANA_BASE_URL) {
   throw new Error("Missing KIBANA_URL or NEXT_PUBLIC_KIBANA_URL");
@@ -38,16 +35,18 @@ export async function kibanaRequest<R = any, T = unknown>({
     if (!endpoint) {
       throw new Error("Endpoint is required");
     }
-    const finalBaseURL = normalizeUrl(baseURL || KIBANA_BASE_URL as string);
+    const finalBaseURL = normalizeUrl(baseURL || (KIBANA_BASE_URL as string));
     const cleanEndpoint = endpoint.replace(/^\//, "");
 
     console.log(`${finalBaseURL}/${cleanEndpoint}`);
+
     const config: AxiosRequestConfig = {
       method,
       url: `${finalBaseURL}/${cleanEndpoint}`,
       data,
       params,
-      timeout: 65000,
+      // 1. INCREASED TIMEOUT HERE: Changed from 65000 to 120000 (2 minutes)
+      timeout: 120000,
       headers: {
         "Content-Type": "application/json",
         "kbn-xsrf": "true",
@@ -59,12 +58,17 @@ export async function kibanaRequest<R = any, T = unknown>({
     const response = await axios.request<R>(config);
     return response.data;
   } catch (error: any) {
+    // 2. Handle the specific Axios timeout error gracefully in logs
     if (axios.isAxiosError(error)) {
-      console.error("❌ Kibana Request Failed:", {
-        url: error.config?.url,
-        status: error.response?.status,
-        data: error,
-      });
+      if (error.code === "ECONNABORTED") {
+        console.error("❌ Kibana Request Timed Out after 120 seconds");
+      } else {
+        console.error("❌ Kibana Request Failed:", {
+          url: error.config?.url,
+          status: error.response?.status,
+          data: error.message,
+        });
+      }
 
       throw new Error(
         error.response?.data?.error?.reason ||
