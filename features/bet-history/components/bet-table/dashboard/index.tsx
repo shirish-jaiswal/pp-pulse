@@ -6,10 +6,14 @@ import { useBetHistory } from "@/features/bet-history/context/bet-history-contex
 import { RoundRow, transformToRounds } from "@/features/bet-history/components/bet-table/transform-bets";
 import { DataTable } from "@/features/bet-history/components/bet-table/dashboard/data-table";
 
-
 export default function DashboardPage() {
   const { data } = useBetHistory();
-  const tableColumns = [getSelectionColumn<RoundRow>(), ...columns];
+
+  const tableColumns = useMemo(
+    () => [getSelectionColumn<RoundRow>(), ...columns],
+    []
+  );
+
   const transformedData = useMemo(() => {
     return transformToRounds(data);
   }, [data]);

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { fetchRows, insertRow, updateRow, deleteRow } from "@/lib/excel-engine/api-client";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 17;
 
 export function useDataGrid(dbName: string, tableName: string) {
   const [rows, setRows] = useState<any[]>([]);
@@ -31,7 +31,7 @@ export function useDataGrid(dbName: string, tableName: string) {
 
   useEffect(() => { load(); }, [load]);
 
-  const filteredRows = useMemo(() => 
+  const filteredRows = useMemo(() =>
     rows.filter((row) =>
       search ? Object.values(row).some((v) => String(v).toLowerCase().includes(search.toLowerCase())) : true
     ), [rows, search]
@@ -76,7 +76,7 @@ export function useDataGrid(dbName: string, tableName: string) {
     try {
       const header = columns.join(",");
       const body = rows
-        .map((row) => 
+        .map((row) =>
           columns.map((col) => {
             const cell = row[col] ?? "";
             // Escape quotes and wrap in quotes to handle commas within data
@@ -94,7 +94,7 @@ export function useDataGrid(dbName: string, tableName: string) {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       toast.success("Export started");
     } catch (error) {
       toast.error("Export failed");
@@ -103,9 +103,9 @@ export function useDataGrid(dbName: string, tableName: string) {
   }, [rows, columns, tableName]);
 
   return {
-    rows, columns, loading, search, setSearch, page, setPage, 
+    rows, columns, loading, search, setSearch, page, setPage,
     pagedRows, totalPages, filteredCount: filteredRows.length,
-    submitting, load, handleInsert, handleUpdate, handleDelete, 
+    submitting, load, handleInsert, handleUpdate, handleDelete,
     handleExport,
   };
 }

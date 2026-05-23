@@ -1,3 +1,12 @@
+import React from 'react';
+import {
+  Dices,
+  History,
+  Building2,
+  Users,
+  Terminal
+} from 'lucide-react';
+
 function HomePage() {
   return (
     <div className="p-6 space-y-8 min-h-[80vh] flex flex-col justify-between">
@@ -13,62 +22,96 @@ function HomePage() {
         {/* Current Features */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Round Activity */}
-          <div className="border rounded-xl p-4 shadow-sm">
-            <h2 className="font-semibold text-lg">Round Activity</h2>
-            <ul className="text-sm text-gray-600 mt-2 space-y-1">
-              <li>Blackjack</li>
-              <li>Roulette</li>
-              <li>Baccarat</li>
-              <li>Sweet Bonanza</li>
-              <li>All other games (partial integration - under development)</li>
-            </ul>
-          </div>
-
-          {/* Kibana Enhancements - HIGHLIGHTED UNDER DEVELOPMENT */}
-          <div className="border-2 border-amber-400 bg-amber-50/50 rounded-xl p-4 shadow-md relative overflow-hidden">
-            <div className="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
-              Under Development
+          <a
+            href="/portal/round-activity"
+            className="border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all block group"
+          >
+            <div className="flex items-center gap-2.5 text-gray-900 group-hover:text-blue-600 transition-colors">
+              <Dices className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">Round Activity</h2>
             </div>
-            <h2 className="font-semibold text-lg text-amber-900 flex items-center gap-2">
-              Advanced Kibana Dashboard
-            </h2>
-            <p className="text-sm text-amber-800 mt-2">
+            <ul className="text-sm text-gray-600 mt-3 space-y-1 pl-1">
+              <li>• Blackjack</li>
+              <li>• Roulette</li>
+              <li>• Baccarat</li>
+              <li>• Sweet Bonanza</li>
+              <li className="text-gray-400 italic">• All other games (partial integration)</li>
+            </ul>
+          </a>
+
+          {/* Kibana - HIGHLIGHTED UNDER TESTING */}
+          <a
+            href="/portal/log-exp"
+            className="border-2 border-blue-400 bg-blue-50/30 rounded-xl p-4 shadow-md relative overflow-hidden block hover:shadow-lg transition-all group"
+          >
+            <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
+              Under Testing
+            </div>
+            <div className="flex items-center gap-2.5 text-blue-900 group-hover:text-blue-700 transition-colors">
+              <Terminal className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">Kibana</h2>
+            </div>
+            <p className="text-sm text-blue-800/80 mt-3">
               Dynamic pre-built search filters, faster log exploration, and
               improved observability workflows.
             </p>
-          </div>
+          </a>
 
           {/* Resolution System */}
-          <div className="border rounded-xl p-4 shadow-sm">
-            <h2 className="font-semibold text-lg">Resolution System</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              Automatic round resolution summary generation
+          <a
+            href="/portal/resolution-template"
+            className="border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all block group"
+          >
+            <div className="flex items-center gap-2.5 text-gray-900 group-hover:text-blue-600 transition-colors">
+              <Building2 className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">Resolution System</h2>
+            </div>
+            <p className="text-sm text-gray-600 mt-3">
+              Automatic round resolution summary generation and template engine tools.
             </p>
-          </div>
+          </a>
 
           {/* Player History */}
-          <div className="border rounded-xl p-4 shadow-sm">
-            <h2 className="font-semibold text-lg">Player History</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              Last 24 hours betting and activity tracking
+          <a
+            href="/portal/player-history"
+            className="border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all block group"
+          >
+            <div className="flex items-center gap-2.5 text-gray-900 group-hover:text-blue-600 transition-colors">
+              <History className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">Player History</h2>
+            </div>
+            <p className="text-sm text-gray-600 mt-3">
+              Last 24 hours betting timelines and deep identity activity tracking.
             </p>
-          </div>
+          </a>
 
           {/* Casino Details */}
-          <div className="border rounded-xl p-4 shadow-sm">
-            <h2 className="font-semibold text-lg">Casino Details</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              Game metadata, configuration, and casino-level info
+          <a
+            href="/portal/casino-details"
+            className="border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all block group"
+          >
+            <div className="flex items-center gap-2.5 text-gray-900 group-hover:text-blue-600 transition-colors">
+              <Building2 className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">Casino Details</h2>
+            </div>
+            <p className="text-sm text-gray-600 mt-3">
+              Game metadata configurations, brand parameters, and core casino-level details.
             </p>
-          </div>
+          </a>
 
-          {/* User Details */}
-          <div className="border rounded-xl p-4 shadow-sm">
-            <h2 className="font-semibold text-lg">User Details</h2>
-            <p className="text-sm text-gray-600 mt-2">
-              Player profiles, identity, and account information
+          {/* User Management */}
+          <a
+            href="/portal/user-management"
+            className="border rounded-xl p-4 shadow-sm hover:shadow-md hover:border-gray-300 transition-all block group"
+          >
+            <div className="flex items-center gap-2.5 text-gray-900 group-hover:text-blue-600 transition-colors">
+              <Users className="h-5 w-5 stroke-[2]" />
+              <h2 className="font-semibold text-lg">User Management</h2>
+            </div>
+            <p className="text-sm text-gray-600 mt-3">
+              Player account access controls, profiles, and structural identity variables.
             </p>
-          </div>
+          </a>
         </div>
 
         {/* Upcoming Features */}
@@ -77,15 +120,15 @@ function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Crash Games Expansion */}
-            <div className="border rounded-xl p-4 shadow-sm bg-yellow-50">
+            <div className="border rounded-xl p-4 shadow-sm bg-yellow-50/50">
               <h3 className="font-semibold">Crash Games Expansion</h3>
               <p className="text-sm text-gray-600 mt-2">
-                Full integration of crash games into round activity tracking.
+                Full integration of crash games into round activity tracking pipelines.
               </p>
             </div>
 
             {/* Multi Round Resolution */}
-            <div className="border rounded-xl p-4 shadow-sm bg-blue-50">
+            <div className="border rounded-xl p-4 shadow-sm bg-blue-50/50">
               <h3 className="font-semibold">Multi-Round Resolution Summary</h3>
               <p className="text-sm text-gray-600 mt-2">
                 Aggregated resolution engine to generate combined summaries across

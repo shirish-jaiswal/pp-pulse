@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react"; // Added useEffect
 import {
   BookOpen,
   Building2,
@@ -56,10 +57,17 @@ type MenuItem = {
 };
 
 export function AppSidebar({ menu }: { menu: MenuItem[] }) {
-  const { state } = useSidebar();
+  const { state, setOpen } = useSidebar(); // Destructured setOpen from hook
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
   const { user } = useProfile();
+
+  // Automatically collapse if pathname starts with /log-exp
+  useEffect(() => {
+    if (pathname.startsWith("/log-exp")) {
+      setOpen(false);
+    }
+  }, [pathname, setOpen]);
 
   // Group items smoothly
   const grouped = menu.reduce((acc, item) => {

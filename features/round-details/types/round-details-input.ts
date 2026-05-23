@@ -8,6 +8,7 @@ export const RoundDetailsInputFormSchema = z.object({
   game_id: z.string().trim().optional(),
   round_id: z.string().trim().optional(),
   user_id: z.string().trim().optional(),
+  enabled: z.boolean().default(false).optional(),
 })
   .superRefine((data, ctx) => {
     const { game_id, round_id, user_id } = data;

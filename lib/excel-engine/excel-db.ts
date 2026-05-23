@@ -10,16 +10,16 @@ export const RESOLUTION_TEMPLATE_CONFIG = {
       schema: ["id", "key", "value", "created_at", "updated_at"]
     },
     games: {
-        name: "games",
-        schema: ["id", "title", "created_at", "updated_at"]
+      name: "games",
+      schema: ["id", "title", "created_at", "updated_at"]
     },
     categories: {
-        name: "categories",
-        schema: ["id", "title", "created_at", "updated_at"]
+      name: "categories",
+      schema: ["id", "title", "created_at", "updated_at"]
     },
     subcategories: {
-        name: "sub_category",
-        schema: ["id", "title", "game", "created_at", "updated_at"]
+      name: "sub_category",
+      schema: ["id", "title", "game", "created_at", "updated_at"]
     }
   }
 };
@@ -36,12 +36,12 @@ export const RBAC_CONFIG = {
       schema: ["id", "title", "created_at", "updated_at"]
     },
     access_control: {
-        name: "access_control",
-        schema: ["id", "role", "feature_list", "created_at", "updated_at"]
+      name: "access_control",
+      schema: ["id", "role", "feature_list", "created_at", "updated_at"]
     },
     exception: {
-        name: "exception",
-        schema: ["id", "email", "feature_list", "created_at", "updated_at"]
+      name: "exception",
+      schema: ["id", "email", "feature_list", "created_at", "updated_at"]
     },
     profile: {
       name: "profile",
@@ -73,3 +73,21 @@ export const GAMES_CONFIG = {
     },
   }
 };
+
+export const KIBANA_DB_CONFIG = {
+  name: "kibana",
+  tables: {
+    data_views: {
+      name: "data_views",
+      schema: ["id", "uuid", "name", "created_at", "updated_at"]
+    },
+    search_auto_compelete: {
+      name: "search_auto_compelete",
+      schema: ["id", "name", "created_at", "updated_at"]
+    },
+    queries: {
+      name: "queries",
+      schema: ["id", "game", "filters", "query", "created_at", "updated_at"]
+    },
+  }
+}

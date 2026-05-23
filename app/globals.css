@@ -142,6 +142,21 @@
     @apply bg-background text-foreground;
   }
 }
+@keyframes kibanaLineAnimation {
+  0% {
+    left: -35%;
+    right: 100%;
+  }
+  60% {
+    left: 100%;
+    right: -35%;
+  }
+  100% {
+    left: 100%;
+    right: -35%;
+  }
+}
+
 
 @layer base {
   /* The container for the editor content */
@@ -157,6 +172,11 @@
     margin: 1rem 0;
     overflow: hidden;
   }
+
+
+.animate-kibana-line {
+  animation: kibanaLineAnimation 1.6s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+}
 
   .ProseMirror td,
   .ProseMirror th {

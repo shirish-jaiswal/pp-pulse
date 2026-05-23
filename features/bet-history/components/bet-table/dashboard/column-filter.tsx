@@ -48,18 +48,20 @@ export default function ColumnFilter<TData, TValue>({
 
   const MAX_OPTIONS = 500;
 
+  // All uniquely available options regardless of search term
+  const allOptions = useMemo(() => {
+    return Array.from(facetedValues.keys()).map(String).sort();
+  }, [facetedValues]);
+
+  // Filtered options based on the user's current search input
   const options = useMemo(() => {
-    return Array.from(facetedValues.keys())
-      .map(String)
-      .filter((v) =>
-        v.toLowerCase().includes(debouncedSearch.toLowerCase())
-      )
-      .sort()
+    return allOptions
+      .filter((v) => v.toLowerCase().includes(debouncedSearch.toLowerCase()))
       .slice(0, MAX_OPTIONS);
-  }, [facetedValues, debouncedSearch]);
+  }, [allOptions, debouncedSearch]);
 
   const filterValue = (column.getFilterValue() as string[]) ?? [];
-  const isFiltered = filterValue.length > 0; // Check if any filter is active
+  const isFiltered = filterValue.length > 0;
 
   const toggleValue = (value: string) => {
     const isSelected = filterValue.includes(value);
@@ -72,7 +74,8 @@ export default function ColumnFilter<TData, TValue>({
   };
 
   const clearAll = () => column.setFilterValue([]);
-  const selectAll = () => column.setFilterValue(options);
+
+  const selectAll = () => column.setFilterValue(allOptions);
 
   useEffect(() => {
     if (open) {
@@ -87,7 +90,7 @@ export default function ColumnFilter<TData, TValue>({
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={isFiltered ? "default" : "outline"} // Changes variant style when filtered
+          variant={isFiltered ? "default" : "outline"}
           size="xs"
           className={`gap-1 ${
             isFiltered
@@ -135,19 +138,24 @@ export default function ColumnFilter<TData, TValue>({
               No options
             </p>
           ) : (
-            options.map((value) => (
-              <DropdownMenuItem
-                key={value}
-                onSelect={(e) => e.preventDefault()}
-                className="flex items-center gap-2 text-xs"
-              >
-                <Checkbox
-                  checked={filterValue.includes(value)}
-                  onCheckedChange={() => toggleValue(value)}
-                />
-                <span className="truncate">{value}</span>
-              </DropdownMenuItem>
-            ))
+            options.map((value) => {
+              const isChecked = filterValue.includes(value);
+
+              return (
+                <DropdownMenuItem
+                  key={value}
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={() => toggleValue(value)}
+                  className="flex items-center gap-2 text-xs cursor-pointer select-none"
+                >
+                  <Checkbox
+                    checked={isChecked}
+                    onCheckedChange={() => {}}
+                  />
+                  <span className="truncate">{value}</span>
+                </DropdownMenuItem>
+              );
+            })
           )}
         </div>
       </DropdownMenuContent>
