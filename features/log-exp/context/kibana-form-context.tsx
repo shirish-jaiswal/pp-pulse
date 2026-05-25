@@ -14,7 +14,7 @@ import { GameData } from "@/features/log-exp/search-bar/utils/map-round-to-game-
 import { useMultiFilters, useQueryBuilder } from "@/features/log-exp/query-builder/context/QueryBuilderContext";
 
 /* -------------------------------------------------------------------------- */
-/*                                    TYPES                                   */
+/* TYPES                                   */
 /* -------------------------------------------------------------------------- */
 
 export type DateRangeValue = {
@@ -51,7 +51,7 @@ interface KibanaFormContextType {
 const KibanaFormContext = createContext<KibanaFormContextType | undefined>(undefined);
 
 /* -------------------------------------------------------------------------- */
-/*                            RECURSIVE DSL COMPILER                          */
+/* RECURSIVE DSL COMPILER                          */
 /* -------------------------------------------------------------------------- */
 
 function buildDsl(state: QueryState, nodeId: string): any {
@@ -159,37 +159,42 @@ function transformToFullBoilerplate(item: any): any {
 }
 
 /* -------------------------------------------------------------------------- */
-/*                                  PROVIDER                                  */
+/* PROVIDER                                  */
 /* -------------------------------------------------------------------------- */
 
-export const KibanaFormProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+// Isolated default date generation logic so it is never recreated inside the component cycle
+const getInitialDateRange = (): DateRangeValue => {
   const now = new Date();
-
-  const defaultDateRange: DateRangeValue = {
+  return {
     from: subMinutes(now, 15),
     to: now,
   };
+};
 
+export const KibanaFormProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  // Using lazy state initialization ensures execution runs exactly once on mount
+  const [dateRange, setDateRange] = useState<DateRangeValue>(getInitialDateRange);
   const [searchValue, setSearchValue] = useState("");
   const [selectedDataView, setSelectedDataView] = useState("");
-  const [dateRange, setDateRange] = useState<DateRangeValue>(defaultDateRange);
   const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
 
-  const [timeRange, setTimeRange] = useState<KibanaTimeRange>({
-    from: defaultDateRange.from,
-    to: defaultDateRange.to,
-    label: "Last 15 minutes",
+  const [timeRange, setTimeRange] = useState<KibanaTimeRange>(() => {
+    const initial = getInitialDateRange();
+    return {
+      from: initial.from,
+      to: initial.to,
+      label: "Last 15 minutes",
+    };
   });
 
   const [gameData, setGameData] = useState<GameData | null>(null);
   const [selectedTemplate, setSelectedTemplate] = useState<any | null>(null);
 
-  // Consume live builder tree values and pill filters
   const { state: queryBuilderState } = useQueryBuilder();
   const { filters: savedPillFilters } = useMultiFilters();
 
   /* ---------------------------------------------------------------------- */
-  /*                        TIME RANGE SYNCHRONIZATION                      */
+  /* TIME RANGE SYNCHRONIZATION                      */
   /* ---------------------------------------------------------------------- */
   useEffect(() => {
     if (!dateRange.from || !dateRange.to) return;
@@ -212,18 +217,27 @@ export const KibanaFormProvider: React.FC<{ children: ReactNode }> = ({ children
       label = `Last ${weeks} week${weeks > 1 ? "s" : ""}`;
     }
 
-    setTimeRange({ from: fromDate, to: toDate, label });
+    // Prevents redundant re-renders or shifts if timestamps and labels remain identical
+    setTimeRange((prev) => {
+      if (
+        prev.from?.getTime() === fromDate.getTime() &&
+        prev.to?.getTime() === toDate.getTime() &&
+        prev.label === label
+      ) {
+        return prev;
+      }
+      return { from: fromDate, to: toDate, label };
+    });
   }, [dateRange]);
 
   /* ---------------------------------------------------------------------- */
-  /*                  COMPREHENSIVE MULTI-STATE DSL ENGINE                  */
+  /* COMPREHENSIVE MULTI-STATE DSL ENGINE                  */
   /* ---------------------------------------------------------------------- */
   const compiledDslQuery = useMemo(() => {
     const rootQueries: any[] = [];
     const rootMustNotQueries: any[] = [];
 
     try {
-      // 1. Process active structure tree from queryBuilder context
       if (queryBuilderState?.rootId) {
         const builderDsl = buildDsl(queryBuilderState, queryBuilderState.rootId);
         if (builderDsl) {
@@ -231,7 +245,6 @@ export const KibanaFormProvider: React.FC<{ children: ReactNode }> = ({ children
         }
       }
 
-      // 2. Process all enabled multi-filter configuration parameters
       Object.values(savedPillFilters).forEach((filter: SavedFilter) => {
         if (!filter.isEnabled || !filter.state?.rootId) return;
 
@@ -239,14 +252,12 @@ export const KibanaFormProvider: React.FC<{ children: ReactNode }> = ({ children
         if (!pillDsl) return;
 
         if (filter.isExcluded) {
-          // Wrap positive parameters inside an exclusion layer if toggled to 'Exclude Results'
           rootMustNotQueries.push(pillDsl);
         } else {
           rootQueries.push(pillDsl);
         }
       });
 
-      // 3. Flatten and assemble into a unified query execution tree
       if (rootQueries.length === 0 && rootMustNotQueries.length === 0) {
         return null;
       }

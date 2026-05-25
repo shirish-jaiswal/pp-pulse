@@ -1,8 +1,7 @@
-// components/KibanaFieldsList.tsx
 "use client";
 
 import React, { useMemo } from "react";
-import { Plus, Minus, LucideIcon, Flame } from "lucide-react";
+import { Plus, Minus, LucideIcon } from "lucide-react";
 import { KibanaFieldStatPopover } from "./KibanaFieldStatPopover";
 
 type Props = {
@@ -10,21 +9,13 @@ type Props = {
   fields: string[];
   count: number;
   emptyText: string;
-
   actionIcon?: LucideIcon;
   actionTitle?: string;
-
   onAction?: () => void;
   actionVariant?: "primary" | "secondary";
-
   type: "selected" | "available" | "popular";
   profileDefaults?: string[];
-
   onToggle: (field: string) => void;
-
-  /**
-   * ALL LOGS FROM THE HIT TABLE
-   */
   documents?: Record<string, any>[];
 };
 
@@ -123,15 +114,15 @@ export function KibanaFieldsList({
   documents = [],
 }: Props) {
 
+  // Memoized on stringified arrays to prevent resetting metrics if parent references shuffle
   const fieldsStatsMap = useMemo(() => {
     const cache: Record<string, FieldStat[]> = {};
     fields.forEach((field) => {
       cache[field] = calculateFieldDistribution(documents, field);
     });
     return cache;
-  }, [documents, fields]);
+  }, [documents, JSON.stringify(fields)]);
 
-  // Helper helper function to resolve dynamic style hooks across the layout types
   const getBadgeStyles = () => {
     switch (type) {
       case "selected":
@@ -145,13 +136,11 @@ export function KibanaFieldsList({
 
   return (
     <div>
-      {/* List Header */}
       <div className="flex items-center justify-between px-2 pb-1.5">
         <div className="flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
             {title}
           </span>
-
           <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${getBadgeStyles()}`}>
             {count}
           </span>
@@ -175,7 +164,6 @@ export function KibanaFieldsList({
         )}
       </div>
 
-      {/* Empty State Fallback */}
       {fields.length === 0 ? (
         <div className="px-2 py-1 text-xs italic text-slate-400">
           {emptyText}
@@ -195,18 +183,14 @@ export function KibanaFieldsList({
                     : "text-sm text-slate-600"
                 }`}
               >
-                {/* Field Details & Trigger Area */}
                 <div className="min-w-0 flex flex-1 items-center gap-1.5 overflow-hidden">
-
-                  {/* Field Distribution Popover UI */}
                   <KibanaFieldStatPopover
                     field={field}
-                    type={type === "popular" ? "available" : type} // Keeps internal popover behavior compatible
+                    type={type === "popular" ? "available" : type}
                     stats={stats}
                     totalSampleDocuments={documents.length}
                   />
 
-                  {/* Active Profile Pin */}
                   {type === "selected" && isProfileDefault && (
                     <span
                       className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500"
@@ -214,7 +198,6 @@ export function KibanaFieldsList({
                     />
                   )}
 
-                  {/* Recommended Default System Badge */}
                   {type === "available" && isProfileDefault && (
                     <span
                       className="origin-left shrink-0 scale-90 whitespace-nowrap rounded bg-slate-200 px-1 text-[9px] text-slate-500 opacity-60 transition-opacity group-hover:opacity-100"
@@ -225,7 +208,6 @@ export function KibanaFieldsList({
                   )}
                 </div>
 
-                {/* Column Selection Actions */}
                 <button
                   type="button"
                   onClick={(e) => {

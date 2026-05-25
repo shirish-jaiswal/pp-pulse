@@ -76,7 +76,6 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
     // Captures the active snapshot layout rather than waiting for global state sync
     const handleGenerate = useCallback(() => {
         isGeneratingRef.current = true;
-console.log("Triggering API with value:", localValue);
         triggerApi(localValue);
     }, [localValue, triggerApi]);
 
@@ -140,8 +139,6 @@ console.log("Triggering API with value:", localValue);
     const hasActiveGameData = !!(gameData || derivedGameData);
     const showEyeIcon = hasActiveGameData && (hasValidTemplates || isTemplatesLoading);
     const showTemplates = showEyeIcon && isTemplatesOpen && !isTemplatesLoading;
-
-    // Local snapshot visibility flag checking if an annotation token exists
     const operationalHasToken = localValue.includes("@");
 
     return (
@@ -175,7 +172,7 @@ console.log("Triggering API with value:", localValue);
                                         : "text-slate-400 hover:bg-slate-100 hover:text-slate-600 cursor-pointer"
                             }`}
                         >
-                            {isTemplatesLoading ? (
+                            {isTemplatesLoading || isRoundDetailsLoading ? (
                                 <Loader2 className="w-4 h-4 animate-spin" />
                             ) : isTemplatesOpen ? (
                                 <EyeClosed className="w-4 h-4" />

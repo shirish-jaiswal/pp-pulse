@@ -101,7 +101,7 @@ export function IntegratedDateTimeRangePicker({ value, onChange }: Props) {
       <Field className="max-w-xl">
         <Popover open={picker.open} onOpenChange={picker.setOpen}>
           <PopoverTrigger asChild>
-            <div className="flex items-center gap-2 max-w-4xl cursor-pointer">
+            <div className="flex items-center gap-1 cursor-pointer">
               <TriggerButton
                 label={formatButtonLabel(startDate, startTime, "Select Start Time")}
                 onClick={(e) => {
@@ -109,20 +109,27 @@ export function IntegratedDateTimeRangePicker({ value, onChange }: Props) {
                   setActiveTab("start")
                   if (!picker.open) picker.setOpen(true)
                 }}
-                className={picker.open && activeTab === "start" ? "ring-2 ring-primary border-transparent" : ""}
+                className={`w-[145px] text-xs ${picker.open && activeTab === "start"
+                    ? "ring-2 ring-primary border-transparent"
+                    : ""
+                  }`}
               />
 
-              <span className="text-sm font-medium text-muted-foreground shrink-0 select-none">to</span>
+              <span className="text-xs font-medium text-muted-foreground shrink-0 select-none">
+                to
+              </span>
 
               <TriggerButton
                 label={formatButtonLabel(endDate, endTime, "Select End Time")}
                 onClick={(e) => {
-                  // FIX 2: Prevent Radix from toggling/closing when shifting inner tabs
                   e.stopPropagation()
                   setActiveTab("end")
                   if (!picker.open) picker.setOpen(true)
                 }}
-                className={picker.open && activeTab === "end" ? "ring-2 ring-primary border-transparent" : ""}
+                className={`w-[145px] text-xs ${picker.open && activeTab === "end"
+                    ? "ring-2 ring-primary border-transparent"
+                    : ""
+                  }`}
               />
             </div>
           </PopoverTrigger>

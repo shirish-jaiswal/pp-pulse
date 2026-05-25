@@ -8,7 +8,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import QuickFilterCreator from "../../query-builder/components/applied-filters/QuickFilterCreator";
-import { EXTERNAL_LINKS, hasExternalLink } from "../utils/external-links"; // Verify this path matches your project directory
+import { EXTERNAL_LINKS, hasExternalLink } from "../utils/external-links";
 
 type FieldStat = {
   value: string;
@@ -37,7 +37,6 @@ export function KibanaFieldStatPopover({
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const HOVER_DELAY_MS = 300;
 
-  // Evaluates matching field-level mappings dynamically against the config file
   const isLinkable = hasExternalLink(field);
 
   const filteredStats = useMemo(() => {
@@ -175,11 +174,8 @@ export function KibanaFieldStatPopover({
                   key={`${field}-${item.value}`}
                   className="group/row relative rounded-lg border border-slate-100 bg-white p-2 transition-all hover:border-slate-200 hover:bg-slate-50/50 hover:shadow-sm"
                 >
-                  {/* Metric Info Bar */}
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <div className="flex items-center gap-1.5 min-w-0 flex-1">
-
-                      {/* Generates standard decoupled relative dynamic links without hardcoded domains */}
                       {isLinkable && item.value !== "Other" ? (
                         <a
                           href={EXTERNAL_LINKS[field](item.value)}
@@ -187,7 +183,7 @@ export function KibanaFieldStatPopover({
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1 text-sky-600 font-mono text-[11px] font-medium hover:text-sky-800 hover:underline truncate"
-                          title={`Navigate to details for ${item.value}`}
+                          title={`Maps to details for ${item.value}`}
                         >
                           {item.value}
                           <ExternalLink className="h-2.5 w-2.5 shrink-0 text-sky-500" />
@@ -205,17 +201,13 @@ export function KibanaFieldStatPopover({
                         </span>
                       )}
 
-                      {/* Cleaned Hover Action Group Wrapper */}
                       {item.value !== "Other" && (
                         <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-all shrink-0 ml-1">
-
-                          {/* Dedicated premium layout button dock injection */}
                           <QuickFilterCreator
                             fieldKey={field}
                             value={item.value}
                           />
 
-                          {/* Existing Copy Button */}
                           <button
                             type="button"
                             onClick={(e) => handleCopy(e, item.value, item.percentage)}
@@ -237,7 +229,6 @@ export function KibanaFieldStatPopover({
                     </span>
                   </div>
 
-                  {/* Distribution Rendering */}
                   <div className="flex items-center gap-2">
                     <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100/80">
                       <div
@@ -260,7 +251,7 @@ export function KibanaFieldStatPopover({
               ))}
 
               <div className="mt-2.5 border-t border-slate-100 pt-2 text-center text-[10px] font-medium text-slate-400/80 tracking-wide uppercase select-none">
-                Analyzed across all {totalSampleDocuments} records
+                Category break-down across {totalSampleDocuments} records
               </div>
             </div>
           )}

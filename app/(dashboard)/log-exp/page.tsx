@@ -31,12 +31,13 @@ function LogExploreWorkspace() {
           onSearch={() => fetchLogs(false)}
           placeholder="round_id OR (game_id AND user_id)"
         />
-        <div className="max-w-[23vw]">
+        <div className="w-[320px] shrink-0">
           <IntegratedDateTimeRangePicker
             value={dateRange}
             onChange={setDateRange}
           />
         </div>
+
         <Button
           onClick={() => fetchLogs(false)}
           disabled={isLoading}
