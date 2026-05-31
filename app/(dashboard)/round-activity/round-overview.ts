@@ -5,39 +5,11 @@ export interface RoundOverviewData {
   roundOverview: InfoCardProps[];
 }
 
-// ✅ ALWAYS USE PORTAL PATH
 const EXTERNAL_LINKS = {
-  casino: (id: string) => `/casino-details?casinoId=${id}`,
+  casino: (id: string) => `/casino-details/?casinoId=${id}`,
   user: (id: string) => `/user-management?userId=${id}`,
   round: (id: string) => `/round-activity?roundId=${id}`,
 };
-
-// ✅ CLEAN LINK CREATOR
-const createLink = (
-  id: string,
-  url: (id: string) => string
-): Pick<InfoCardProps["items"][number], "link" | "copyable" | "actionComponent"> | {} =>
-  id
-    ? {
-        link: {
-          href: url(id),
-          target: "_blank",
-        },
-        copyable: true,
-
-        // ✅ FIXED ICON BUTTON (valid JSX)
-        actionComponent: (
-          <a
-            href={url(id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/70"
-          >
-            Open
-          </a>
-        ),
-      }
-    : {};
 
 const formatAmount = (amount: unknown): string =>
   new Intl.NumberFormat("en-US").format(Number(amount) || 0);
@@ -52,6 +24,20 @@ const hasValidData = (arr: any[]) =>
   Array.isArray(arr) &&
   arr.length > 0 &&
   arr.some(item => Object.keys(item || {}).length > 0);
+
+const createLink = (
+  id: string,
+  url: (id: string) => string
+): Pick<InfoCardProps["items"][number], "link" | "copyable"> | {} =>
+  id
+    ? {
+        link: {
+          href: url(id),
+          target: "_blank",
+        },
+        copyable: true,
+      }
+    : {};
 
 const appendCurrency = (values: ValueType[], currency: string): ValueType[] => [
   ...values,
@@ -124,9 +110,7 @@ export default function generateRoundOverview(
   const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id || firstTpt?.casino_id);
   const casinoName = safeString(firstBet?.casino_desc || firstTpt?.casino_name);
-  
-  // Extract wallet type safely for dynamic text icon generation
-  const walletType = safeString(firstTpt?.Wallet_Type || "WT");
+  const walletType = safeString(firstTpt?.Wallet_Type || "NA");
 
   // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
@@ -138,7 +122,7 @@ export default function generateRoundOverview(
   const hasPlacedError = placedTxns.some(txn => isValidErrorCode(txn.error_code));
   const settledTxn = settledTxns[0];
   const hasSettledError = Boolean(
-    settledTxn && settledTxn.status_code !== "0" && isValidErrorCode(settledTxn.error_code)
+    `settledTxn && settledTxn.status_code !== "0" && isValidErrorCode(settledTxn.error_code)`
   );
 
   const isSettled = settledTxns.length > 0;
@@ -160,9 +144,69 @@ export default function generateRoundOverview(
   const hasAdjustedError = adjustedTxns.some(txn => isValidErrorCode(txn.error_code));
   const adjustedVariant: InfoCardProps["variant"] = hasAdjustedError ? "error" : "info";
 
+  // -----------------------------------------------------------------
+  // Resilient Balance Boundary Evaluation Logic
+  // -----------------------------------------------------------------
+  let balanceSection: InfoCardProps | null = null;
+
+  if (hasValidData(tptInfo)) {
+    const sortedTpt = [...tptInfo].sort(
+      (a, b) => new Date(a.trans_date).getTime() - new Date(b.trans_date).getTime()
+    );
+
+    const totalRecords = sortedTpt.length;
+    let initialBalance = sortedTpt[0].balance_before;
+    let finalBalance = sortedTpt[totalRecords - 1].balance_after;
+
+    // DEFENSIVE EDGE-CASE FIX: Handle lazily zeroed-out webhook logs
+    if (initialBalance === 0 && finalBalance === 0) {
+      const lastValidStateRow = [...sortedTpt].reverse().find(
+        (tx) => (Number(tx.balance_after) || 0) > 0 || (Number(tx.balance_before) || 0) > 0
+      );
+
+      if (lastValidStateRow) {
+        const brokenTx = sortedTpt[totalRecords - 1];
+        initialBalance = lastValidStateRow.balance_before;
+
+        // Reconstruct true state if the absolute last record dropped uncalculated data
+        if (brokenTx.action_type === "Cancelled" || brokenTx.action_type === "Settled") {
+          finalBalance = lastValidStateRow.balance_after + (Number(brokenTx.amount) || 0);
+        } else if (brokenTx.action_type === "Placed") {
+          finalBalance = lastValidStateRow.balance_after - (Number(brokenTx.amount) || 0);
+        } else {
+          finalBalance = lastValidStateRow.balance_after;
+        }
+      }
+    }
+
+    const delta = finalBalance - initialBalance;
+
+    balanceSection = {
+      icon: "wallet",
+      isIconButton: false,
+      variant: delta >= 0 ? "success" : "default",
+      items: [
+        {
+          label: "Initial Balance",
+          value: appendCurrency([{ label: formatAmount(initialBalance), variant: "default" }], currency),
+        },
+        {
+          label: "Final Balance",
+          value: appendCurrency([{ label: formatAmount(finalBalance), variant: "default" }], currency),
+        },
+        {
+          label: "Net Change",
+          value: [{ 
+            label: `${delta >= 0 ? "+" : ""}${formatAmount(delta)}`, 
+            variant: delta >= 0 ? "success" : "error" 
+          }],
+        },
+      ],
+    };
+  }
+
   const sections: (InfoCardProps | null)[] = [
     {
-      // Pass walletType string here. InfoCard processes strings as custom text SVGs
       icon: walletType, 
       variant: walletType.toLocaleLowerCase() === "sw" ? "success" : walletType === "bt" ? "info" : "default",
       isIconButton: true,
@@ -195,6 +239,7 @@ export default function generateRoundOverview(
         },
       ],
     },
+    balanceSection,
     buildTxnSection("Placed BETs", "coins", placedTxns, currency),
     buildTxnSection("Settled BETs", "hand_coins", settledTxns, currency, transactionVariant),
     buildTxnSection("Unknown BETs", "coins", unknownTxns, currency),
