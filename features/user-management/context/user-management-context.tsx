@@ -15,8 +15,9 @@ type UserManagementContextType = {
     userIdQuery: string;
     setUserIdQuery: (v: string) => void;
 
-    data: UserData | null;
-    setData: (v: UserData | null) => void;
+    // ✅ FIXED → ARRAY
+    data: UserData[];
+    setData: (v: UserData[]) => void;
 
     loading: boolean;
     setLoading: (v: boolean) => void;
@@ -28,10 +29,14 @@ type UserManagementContextType = {
 const UserManagementContext = createContext<UserManagementContextType | null>(null);
 
 export function UserManagementProvider({ children }: { children: React.ReactNode }) {
+
     const [activeTab, setActiveTab] = useState<SearchTab>("email");
     const [emailQuery, setEmailQuery] = useState("");
     const [userIdQuery, setUserIdQuery] = useState("");
-    const [data, setData] = useState<UserData | null>(null);
+
+    // ✅ FIXED → array default
+    const [data, setData] = useState<UserData[]>([]);
+
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -53,6 +58,8 @@ export function UserManagementProvider({ children }: { children: React.ReactNode
 
 export const useUserManagement = () => {
     const ctx = useContext(UserManagementContext);
-    if (!ctx) throw new Error("useUserManagement must be used inside UserManagementProvider");
+    if (!ctx) {
+        throw new Error("useUserManagement must be used inside UserManagementProvider");
+    }
     return ctx;
 };

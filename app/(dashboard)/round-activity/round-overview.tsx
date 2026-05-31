@@ -1,17 +1,43 @@
 import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { InfoCardProps, ValueType } from "@/features/round-details/components/round-overview/info-card";
 
-const DOMAIN_URL = process.env.NEXT_PUBLIC_NEXT_URL;
-
 export interface RoundOverviewData {
   roundOverview: InfoCardProps[];
 }
 
+// ✅ ALWAYS USE PORTAL PATH
 const EXTERNAL_LINKS = {
-  casino: (id: string) => `/casino-details/${id}`,
+  casino: (id: string) => `/casino-details?casinoId=${id}`,
   user: (id: string) => `/user-management?userId=${id}`,
   round: (id: string) => `/round-activity?roundId=${id}`,
 };
+
+// ✅ CLEAN LINK CREATOR
+const createLink = (
+  id: string,
+  url: (id: string) => string
+): Pick<InfoCardProps["items"][number], "link" | "copyable" | "actionComponent"> | {} =>
+  id
+    ? {
+        link: {
+          href: url(id),
+          target: "_blank",
+        },
+        copyable: true,
+
+        // ✅ FIXED ICON BUTTON (valid JSX)
+        actionComponent: (
+          <a
+            href={url(id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/70"
+          >
+            Open
+          </a>
+        ),
+      }
+    : {};
 
 const formatAmount = (amount: unknown): string =>
   new Intl.NumberFormat("en-US").format(Number(amount) || 0);
@@ -26,20 +52,6 @@ const hasValidData = (arr: any[]) =>
   Array.isArray(arr) &&
   arr.length > 0 &&
   arr.some(item => Object.keys(item || {}).length > 0);
-
-const createLink = (
-  id: string,
-  url: (id: string) => string
-): Pick<InfoCardProps["items"][number], "link" | "copyable"> | {} =>
-  id
-    ? {
-        link: {
-          href: url(id),
-          target: "_blank",
-        },
-        copyable: true,
-      }
-    : {};
 
 const appendCurrency = (values: ValueType[], currency: string): ValueType[] => [
   ...values,

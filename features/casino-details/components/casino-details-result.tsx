@@ -4,171 +4,71 @@ import { useState } from "react";
 import { NormalisedCasinoData, SharedEnv } from "@/lib/api/casino-details/casino-details";
 import { Badge } from "@/components/ui/badge";
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+/* ───────── HELPERS ───────── */
 
-type KVRowProps = {
-    label: string;
-    value: React.ReactNode;
-};
-
-function KVRow({ label, value }: KVRowProps) {
+function KVRow({ label, value }: { label: string; value: React.ReactNode }) {
     return (
-        <div className="grid grid-cols-[200px_1fr] gap-2 py-1.5 border-b border-border/40 last:border-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide self-start pt-0.5">
-                {label}
-            </span>
-            <span className="text-xs text-foreground break-all">{value ?? "—"}</span>
+        <div className="flex items-center py-2 text-sm border-b border-border/40">
+            <span className="w-[180px] text-muted-foreground">{label}</span>
+            <span className="font-medium text-foreground">{value ?? "—"}</span>
         </div>
     );
 }
 
 function BoolBadge({ value }: { value: boolean }) {
     return (
-        <Badge variant={value ? "default" : "outline"} className="text-[10px] px-1.5 py-0">
+        <Badge variant={value ? "default" : "outline"}>
             {value ? "Yes" : "No"}
         </Badge>
     );
 }
 
-function SectionTitle({ children }: { children: React.ReactNode }) {
-    return (
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 pt-2">
-            {children}
-        </p>
-    );
-}
-
-// ─── Tab: Casino Details ─────────────────────────────────────────────────────
+/* ───────── CASINO TAB ───────── */
 
 function CasinoInfoTab({ data }: { data: NormalisedCasinoData }) {
     return (
-        <div className="space-y-1">
-            <SectionTitle>Casino Info</SectionTitle>
-            <KVRow label="Casino ID" value={data.casino_id} />
-            <KVRow label="Casino Name / Description" value={data.casino_desc?.trim() || "—"} />
-            <KVRow label="Main Env ID" value={data.main_env_id} />
-            <KVRow label="Main Env Name" value={data.main_env_name?.trim() || "—"} />
+        <div className="max-w-xl border rounded-md p-4 bg-background">
+            <h3 className="text-sm font-semibold mb-3">Casino Info</h3>
 
-            <div className="pt-2">
-                <SectionTitle>Extra Data Flags</SectionTitle>
-                <KVRow label="Extra Data on Bet" value={<BoolBadge value={!!data.extra_data_on_bet} />} />
-                <KVRow label="Extra Data on Win" value={<BoolBadge value={!!data.extra_data_on_win} />} />
-                <KVRow label="Extra Data on DF" value={<BoolBadge value={!!data.extra_data_on_df} />} />
-            </div>
+            <KVRow label="Casino ID" value={data.casino_id} />
+            <KVRow label="Casino Name" value={data.casino_desc} />
+            <KVRow label="Main Env ID" value={data.main_env_id} />
+            <KVRow label="Main Env Name" value={data.main_env_name} />
+            <KVRow label="Extra Data On Bet" value={<BoolBadge value={!!data.extra_data_on_bet} />} />
+            <KVRow label="Extra Data On Win" value={<BoolBadge value={!!data.extra_data_on_win} />} />
+            <KVRow label="Extra Data on DF" value={<BoolBadge value={!!data.extra_data_on_df} />} />
         </div>
     );
 }
 
-// ─── Tab: Sharded Details ────────────────────────────────────────────────────
-
-type ShardedRow = {
-    casinoId: string;
-    envId: string | number;
-    envName: string;
-    shardedCasinoId: string | number;
-    shardedOperatorId: string | number;
-};
-
-function buildShardedRows(data: NormalisedCasinoData): ShardedRow[] {
-    // Primary: array from API  { casino_id, env, env_name, shardedCasinoId, shardedOperatorId }
-    if (Array.isArray(data.sharedEnvs) && data.sharedEnvs.length > 0) {
-        return data.sharedEnvs
-            .filter((e: SharedEnv) => {
-                // Keep rows that have at least an env id or env name
-                const hasEnv = e.env != null && e.env !== "";
-                const hasEnvId = e.env_id != null && (typeof e.env_id === "number" || e.env_id !== "");
-                const hasName = e.env_name && (e.env_name as string).trim();
-                return hasEnv || hasEnvId || hasName;
-            })
-            .map((e: SharedEnv) => ({
-                casinoId:         String(e.casino_id ?? data.casino_id ?? "—"),
-                envId:            e.env ?? e.env_id ?? "—",
-                envName:          e.env_name?.trim() || "—",
-                shardedCasinoId:  e.shardedCasinoId ?? e.sharded_casino_id ?? "—",
-                shardedOperatorId:e.shardedOperatorId ?? e.sharded_operator_id ?? "—",
-            }));
-    }
-
-    // Flat-field fallback (legacy)
-    const flatEnvs = [
-        {
-            id: (data as any).shared_env_1_id,
-            name: (data as any).shared_env_1_name,
-            casinoId: (data as any).shared_env_1_shardedCasinoId,
-            operatorId: (data as any).shared_env_1_shardedOperatorId,
-        },
-        {
-            id: (data as any).shared_env_2_id,
-            name: (data as any).shared_env_2_name,
-            casinoId: (data as any).shared_env_2_shardedCasinoId,
-            operatorId: (data as any).shared_env_2_shardedOperatorId,
-        },
-        {
-            id: (data as any).shared_env_3_id,
-            name: (data as any).shared_env_3_name,
-            casinoId: (data as any).shared_env_3_shardedCasinoId,
-            operatorId: (data as any).shared_env_3_shardedOperatorId,
-        },
-    ];
-    return flatEnvs
-        .filter((e) => {
-            const hasId = e.id != null && e.id !== "";
-            const hasName = e.name && (e.name as string).trim();
-            return hasId || hasName;
-        })
-        .map((e) => ({
-            casinoId:          String(data.casino_id ?? "—"),
-            envId:             e.id ?? "—",
-            envName:           e.name?.trim() || "—",
-            shardedCasinoId:   e.casinoId ?? "—",
-            shardedOperatorId: e.operatorId ?? "—",
-        }));
-}
+/* ───────── SHARDED TAB ───────── */
 
 function ShardedDetailsTab({ data }: { data: NormalisedCasinoData }) {
-    const rows = buildShardedRows(data);
-
-    if (rows.length === 0) {
-        return (
-            <div className="py-6 text-center">
-                <p className="text-sm text-muted-foreground italic">Casino is not sharded</p>
-            </div>
-        );
+    if (!data.sharedEnvs?.length) {
+        return <p className="text-sm text-muted-foreground">No sharded config</p>;
     }
 
     return (
-        <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-xs">
-                <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                            Casino ID
-                        </th>
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                            Env ID
-                        </th>
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                            Env Name
-                        </th>
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                            Sharded Casino ID
-                        </th>
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide whitespace-nowrap">
-                            Sharded Operator ID
-                        </th>
+        <div className="border rounded-md overflow-hidden">
+            <table className="w-full text-sm">
+                <thead className="bg-muted/60">
+                    <tr>
+                        <th className="p-2 text-left">CasinoId</th>
+                        <th className="p-2 text-left">Sharded Env Id</th>
+                        <th className="p-2 text-left">Sharded Env Name</th>
+                        <th className="p-2 text-left">Sharded CasinoId</th>
+                        <th className="p-2 text-left">Sharded OperatorId</th>
                     </tr>
                 </thead>
+
                 <tbody>
-                    {rows.map((row, idx) => (
-                        <tr
-                            key={idx}
-                            className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors"
-                        >
-                            <td className="py-2 px-3 text-foreground font-mono text-[11px]">{row.casinoId}</td>
-                            <td className="py-2 px-3 text-foreground">{String(row.envId)}</td>
-                            <td className="py-2 px-3 text-foreground">{row.envName}</td>
-                            <td className="py-2 px-3 text-foreground">{String(row.shardedCasinoId)}</td>
-                            <td className="py-2 px-3 text-foreground">{String(row.shardedOperatorId)}</td>
+                    {data.sharedEnvs.map((e: SharedEnv, i) => (
+                        <tr key={i} className="border-t hover:bg-muted/20">
+                            <td className="p-2">{e.casino_id}</td>
+                            <td className="p-2">{e.env ?? e.env_id}</td>
+                            <td className="p-2">{e.env_name}</td>
+                            <td className="p-2">{e.shardedCasinoId ?? "—"}</td>
+                            <td className="p-2">{e.shardedOperatorId ?? "—"}</td>
                         </tr>
                     ))}
                 </tbody>
@@ -177,108 +77,249 @@ function ShardedDetailsTab({ data }: { data: NormalisedCasinoData }) {
     );
 }
 
-// ─── Tab: Configurations ─────────────────────────────────────────────────────
+/* ───────── CONFIG TAB ───────── */
 
 function ConfigurationsTab({ data }: { data: NormalisedCasinoData }) {
-    const confLines = data.conf_data
-        ? data.conf_data
-              .split(/\r\n|\r|\n/)
-              .map((l) => l.trim())
-              .filter(Boolean)
-        : [];
+    const [search, setSearch] = useState("");
 
-    const parsedLines: { key: string; value: string }[] = confLines.map((line) => {
-        const eqIdx = line.indexOf("=");
-        if (eqIdx === -1) return { key: line, value: "" };
-        return {
-            key: line.substring(0, eqIdx),
-            value: line.substring(eqIdx + 1),
-        };
-    });
+    const lines = data.conf_data?.split("\n") || [];
 
-    if (parsedLines.length === 0) {
-        return (
-            <div className="py-6 text-center">
-                <p className="text-sm text-muted-foreground italic">No configuration data available</p>
-            </div>
-        );
-    }
+    const filtered = lines.filter(line =>
+        line.toLowerCase().includes(search.toLowerCase())
+    );
 
     return (
-        <div className="overflow-x-auto rounded-md border border-border">
-            <table className="w-full text-xs">
-                <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide w-[220px]">
-                            Configuration
-                        </th>
-                        <th className="py-2 px-3 text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">
-                            Value
-                        </th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {parsedLines.map((row, idx) => (
-                        <tr
-                            key={idx}
-                            className="border-b border-border/40 last:border-0 hover:bg-muted/20 transition-colors"
-                        >
-                            <td className="py-2 px-3 font-medium text-muted-foreground align-top">
-                                {row.key}
-                            </td>
-                            <td className="py-2 px-3 text-foreground break-all align-top">
-                                {row.value || (
-                                    <span className="italic text-muted-foreground/60">empty</span>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+        <>
+            <div className="mb-3">
+                <input
+                    placeholder="Search config..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="border px-3 py-1 text-sm rounded w-[220px]"
+                />
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-auto">
+                {filtered.map((line, i) => {
+                    const [k, ...v] = line.split("=");
+                    return (
+                        <div key={i} className="border rounded p-2 text-xs">
+                            <div className="text-muted-foreground">{k}</div>
+                            <div className="font-medium break-all">{v.join("=")}</div>
+                        </div>
+                    );
+                })}
+            </div>
+        </>
     );
 }
 
-// ─── Main Component ──────────────────────────────────────────────────────────
+/* ───────── TABLES TAB ───────── */
 
-type TabKey = "casino" | "sharded" | "config";
+function TablesTab({ tables }: { tables: any[] }) {
 
-const TABS: { key: TabKey; label: string }[] = [
+    const [config, setConfig] = useState<string | null>(null);
+    const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+
+    /* ✅ NEW FILTER STATES */
+    const [statusFilter, setStatusFilter] = useState("all");
+    const [configFilter, setConfigFilter] = useState("all");
+
+    const PAGE_SIZE = 20;
+
+    let filtered = tables.filter(t =>
+        t.table_name?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    /* ✅ STATUS FILTER */
+    if (statusFilter !== "all") {
+        filtered = filtered.filter(t =>
+            statusFilter === "open" ? t.table_open === true : t.table_open === false
+        );
+    }
+
+    /* ✅ CONFIG FILTER */
+    if (configFilter !== "all") {
+        filtered = filtered.filter(t => {
+            const isDefault = !t.tc_conf_data || t.tc_conf_data === "#";
+            return configFilter === "default" ? isDefault : !isDefault;
+        });
+    }
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+    return (
+        <>
+            {/* ✅ TOP BAR WITH FILTERS */}
+            <div className="flex flex-wrap gap-2 justify-between mb-3">
+
+                <div className="flex gap-2">
+
+                    <input
+                        placeholder="Search table..."
+                        value={search}
+                        onChange={(e) => {
+                            setSearch(e.target.value);
+                            setPage(1);
+                        }}
+                        className="border px-3 py-1 text-sm rounded w-[200px]"
+                    />
+
+                    <select
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                        className="border px-2 py-1 text-sm rounded"
+                    >
+                        <option value="all">All Status</option>
+                        <option value="open">Open</option>
+                        <option value="closed">Closed</option>
+                    </select>
+
+                    <select
+                        value={configFilter}
+                        onChange={(e) => setConfigFilter(e.target.value)}
+                        className="border px-2 py-1 text-sm rounded"
+                    >
+                        <option value="all">All Config</option>
+                        <option value="default">Default</option>
+                        <option value="custom">Custom</option>
+                    </select>
+
+                </div>
+
+                <span className="text-xs text-muted-foreground">
+                    {filtered.length} tables
+                </span>
+            </div>
+
+            {/* TABLE */}
+            <div className="border rounded-md overflow-hidden">
+                <div className="max-h-[500px] overflow-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-muted sticky top-0">
+                            <tr>
+                                <th className="p-2 text-left">TableName</th>
+                                <th className="p-2 text-left">Operator_GameId</th>
+                                <th className="p-2 text-left">TableId</th>
+                                <th className="p-2 text-left">Environment</th>
+                                <th className="p-2 text-center w-[120px]">Status</th>
+                                <th className="p-2 text-center w-[160px]">Config</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {paginated.map((t, i) => (
+                                <tr key={i} className="border-t hover:bg-muted/20">
+
+                                    <td className="p-2">{t.table_name}</td>
+                                    <td className="p-2">{t.operator_game_id}</td>
+                                    <td className="p-2 font-mono text-xs">{t.table_id}</td>
+                                    <td className="p-2">{t.env_name}</td>
+
+                                    <td className="p-2 text-center">
+                                        <Badge variant={t.table_open ? "default" : "outline"}>
+                                            {t.table_open ? "Open" : "Closed"}
+                                        </Badge>
+                                    </td>
+
+                                    <td className="p-2">
+                                        <div className="flex justify-center">
+                                            {!t.tc_conf_data || t.tc_conf_data === "#" ? (
+                                                <Badge variant="outline" className="text-[10px]">
+                                                    Default
+                                                </Badge>
+                                            ) : (
+                                                <button
+                                                    onClick={() => setConfig(t.tc_conf_data)}
+                                                    className="text-xs px-2 py-1 bg-primary text-white rounded"
+                                                >
+                                                    View
+                                                </button>
+                                            )}
+                                        </div>
+                                    </td>
+
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* PAGINATION */}
+            <div className="flex justify-between mt-2 text-xs">
+                <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
+                <span>{page} / {totalPages || 1}</span>
+                <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
+            </div>
+
+            {/* MODAL */}
+            {config && config !== "#" && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+                    <div className="bg-white p-4 w-[600px] max-h-[70vh] overflow-auto rounded">
+                        <table className="w-full text-xs">
+                            <tbody>
+                                {config.split("\n").map((l, i) => {
+                                    const [k, ...v] = l.split("=");
+                                    return (
+                                        <tr key={i}>
+                                            <td className="p-2 text-muted-foreground">{k}</td>
+                                            <td className="p-2">{v.join("=")}</td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+
+                        <div className="text-right mt-2">
+                            <button onClick={() => setConfig(null)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+/* ───────── MAIN ───────── */
+
+type TabKey = "casino" | "sharded" | "config" | "tables";
+
+const TABS = [
     { key: "casino", label: "Casino Details" },
     { key: "sharded", label: "Sharded Details" },
     { key: "config", label: "Configurations" },
+    { key: "tables", label: "Tables" },
 ];
 
 export function CasinoDetailsResult({ data }: { data: NormalisedCasinoData }) {
+
     const [activeTab, setActiveTab] = useState<TabKey>("casino");
 
     return (
-        <div className="rounded-md border border-border bg-card overflow-hidden">
-            {/* Tab Header */}
-            <div className="flex border-b border-border bg-muted/30">
-                {TABS.map((tab) => (
+        <div className="border rounded bg-card">
+
+            <div className="flex border-b">
+                {TABS.map(tab => (
                     <button
                         key={tab.key}
-                        type="button"
-                        onClick={() => setActiveTab(tab.key)}
-                        className={[
-                            "px-4 py-2.5 text-xs font-semibold uppercase tracking-wide transition-colors",
-                            activeTab === tab.key
-                                ? "border-b-2 border-primary text-primary bg-background"
-                                : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
-                        ].join(" ")}
+                        onClick={() => setActiveTab(tab.key as TabKey)}
+                        className={activeTab === tab.key ? "px-4 py-2 border-b-2" : "px-4 py-2"}
                     >
                         {tab.label}
                     </button>
                 ))}
             </div>
 
-            {/* Tab Content */}
-            <div className="p-3">
+            <div className="p-4">
                 {activeTab === "casino" && <CasinoInfoTab data={data} />}
                 {activeTab === "sharded" && <ShardedDetailsTab data={data} />}
                 {activeTab === "config" && <ConfigurationsTab data={data} />}
+                {activeTab === "tables" && <TablesTab tables={data?.tables || []} />}
             </div>
+
         </div>
     );
 }
