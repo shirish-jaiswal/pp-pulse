@@ -1,4 +1,3 @@
-// @/features/round-details/components/round-audit/tab-content/log-monitor/components/log-table.tsx
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -17,7 +16,7 @@ import { useRoundDetails } from "@/features/round-details/context/round-details-
 interface LogTableProps {
     filteredLogs: any[];
     visibleColumns: string[];
-    activeTab: string; 
+    activeTab: string;
 }
 
 export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }: LogTableProps) {
@@ -28,7 +27,7 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
 
     const getLogId = (log: any, fallbackIdx: number): string => {
         if (!log) return String(fallbackIdx);
-        
+
         const timestamp = log.timestamp || log.raw?.["@timestamp"];
         if (timestamp) {
             return `${String(timestamp)}-${fallbackIdx}`;
@@ -120,7 +119,7 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
             const roundData = prev[roundId] || {};
             const allIds = filteredLogs.map((log, i) => getLogId(log, i));
             const tabData: string[] = roundData[activeTab] || [];
-            
+
             const isAllSelected = tabData.length === filteredLogs.length;
 
             return {
@@ -197,7 +196,7 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
 
                         return (
                             <TableRow
-                                key={logId} 
+                                key={logId}
                                 className={cn(
                                     "relative border-b last:border-b-0 group transition-colors hover:bg-muted/20",
                                     isChecked && "bg-muted/40 hover:bg-muted/50"
@@ -218,8 +217,6 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
                                                         type="checkbox"
                                                         className={cn(
                                                             "h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary accent-primary cursor-pointer",
-                                                            // Invisible pseudo-element spreads over the entire 'relative' parent row
-                                                            // keeping the interactive hitbox huge, without breaking normal pointer-events below
                                                             "after:absolute after:inset-0 after:z-10"
                                                         )}
                                                         checked={isChecked}
@@ -236,9 +233,9 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
                                             <TableCell
                                                 key={col}
                                                 style={{ width, minWidth: width, maxWidth: width }}
-                                                className="px-3 py-1.5 align-top border-r text-xs font-mono tracking-tight text-muted-foreground group-last:border-b-0"
+                                                className="px-3 py-1.5 align-top border-r text-xs font-mono tracking-tight text-muted-foreground group-last:border-b-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
                                             >
-                                                <div className="flex flex-col space-y-0.5 truncate">
+                                                <div className="relative z-20 flex flex-col space-y-0.5 select-text whitespace-normal break-words">
                                                     <span>{timestamp ? new Date(timestamp).toUTCString() : "-"}</span>
                                                 </div>
                                             </TableCell>
@@ -252,7 +249,8 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
                                             style={{ width, minWidth: width, maxWidth: width }}
                                             className="px-3 py-1.5 align-top border-r last:border-r-0 group-last:border-b-0"
                                         >
-                                            <div className="text-xs leading-5 break-words [overflow-wrap:anywhere]">
+                                            {/* Added relative z-20 block here as well to unlock string content text selection */}
+                                            <div className="relative z-20 text-xs leading-5 break-words [overflow-wrap:anywhere] select-text">
                                                 {typeof val === "object" && val !== null ? (
                                                     <pre className="relative z-20 text-[11px] font-mono bg-muted/40 p-2 rounded border border-muted/50 whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-h-40 overflow-y-auto cursor-default">
                                                         {JSON.stringify(val, null, 2)}

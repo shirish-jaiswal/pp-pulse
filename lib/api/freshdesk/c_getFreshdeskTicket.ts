@@ -16,7 +16,6 @@ export async function c_getFreshdeskTicket(ticketId: string, freshdesk?: string)
       Authorization: `Basic ${authHeader}`,
     };
 
-
     const [ticket, conversations] = await Promise.all([
       apiRequest({
         method: "GET",

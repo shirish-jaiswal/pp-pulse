@@ -7,13 +7,15 @@ import {
   Fingerprint,
   LucideIcon,
   Landmark,
-  HandCoinsIcon
+  HandCoinsIcon,
+  WalletIcon
 } from "lucide-react";
 
 import InfoCard from "@/features/round-details/components/round-overview/info-card";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 
 const ICON_MAP: Record<string, LucideIcon> = {
+  wallet: WalletIcon,
   building: Building2,
   coins: Coins,
   alert: AlertCircle,

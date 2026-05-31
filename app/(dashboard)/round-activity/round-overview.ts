@@ -194,13 +194,13 @@ export default function generateRoundOverview(
           label: "Final Balance",
           value: appendCurrency([{ label: formatAmount(finalBalance), variant: "default" }], currency),
         },
-        {
-          label: "Net Change",
-          value: [{ 
-            label: `${delta >= 0 ? "+" : ""}${formatAmount(delta)}`, 
-            variant: delta >= 0 ? "success" : "error" 
-          }],
-        },
+        // {
+        //   label: "Net Change",
+        //   value: [{ 
+        //     label: `${delta >= 0 ? "+" : ""}${formatAmount(delta)}`, 
+        //     variant: delta >= 0 ? "success" : "error" 
+        //   }],
+        // },
       ],
     };
   }

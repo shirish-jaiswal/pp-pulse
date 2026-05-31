@@ -30,26 +30,27 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
     return (
         <Sheet open={resolutionEditorOpen} onOpenChange={setResolutionEditorOpen}>
             <SheetContent className="p-1 flex flex-col min-w-[60vw] max-w-none gap-0">
-                <SheetHeader className="p-1 border-b border-border mb-1">
+                <SheetHeader className="p-1 border-b border-border">
                     <SheetTitle className="font-bold text-lg">Resolution</SheetTitle>
                     <SheetDescription className="text-muted-foreground">
                         View resolution summaries and operator responses for this round.
                     </SheetDescription>
                 </SheetHeader>
 
-                <Tabs value={tabSelected} onValueChange={setTabSelected} className="flex-1">
-                    <TabsList className="flex w-full border-b">
+                <Tabs value={tabSelected} onValueChange={setTabSelected} className="flex-1 flex flex-col min-h-0">
+                    <TabsList className="flex w-full border-b justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap gap-1 bg-transparent border-muted unique-scrollbar">
                         {categories.map((cat) => (
                             <TabsTrigger
                                 key={cat.id}
                                 value={cat.title}
-                                className="flex-1"
+                                className="shrink-0 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary"
                             >
                                 {cat.title}
                             </TabsTrigger>
                         ))}
                     </TabsList>
 
+                    {/* Ensure your contents grow nicely below */}
                     {categories.map((cat) => (
                         <ResolutionEditorContent
                             key={cat.id}

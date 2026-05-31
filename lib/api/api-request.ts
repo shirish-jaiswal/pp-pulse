@@ -27,12 +27,8 @@ async function apiRequest<R = any, T = unknown>({
 }: ApiRequestOptions<T>): Promise<R> {
   try {
     if (!endpoint) throw new Error("Endpoint is required");
-
     const cleanEndpoint = endpoint.replace(/^\//, "");
-
-    // ✅ Use passed baseURL or fallback
     const finalBaseURL = (baseURL || DEFAULT_BASE_URL as string).replace(/\/$/, "");
-
     const config: AxiosRequestConfig = {
       method,
       url: `${finalBaseURL}/${cleanEndpoint}`,
@@ -44,9 +40,7 @@ async function apiRequest<R = any, T = unknown>({
         ...headers,
       },
     };
-
     const response = await axios.request<R>(config);
-
     return response.data;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -56,7 +50,6 @@ async function apiRequest<R = any, T = unknown>({
           "API request failed"
       );
     }
-
     throw new Error("Unknown error occurred");
   }
 }
