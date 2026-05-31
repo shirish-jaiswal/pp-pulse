@@ -121,7 +121,6 @@ export function LogSidebar({
   return (
     // Locked to h-full and shrink-0 to prevent dynamic table sizing from crushing the width
     <aside className="flex w-48 h-full max-h-full flex-col border-r bg-muted/40 shrink-0 select-none">
-      {/* HEADER */}
       <div className="flex h-10 items-center gap-2 border-b px-2 shrink-0">
         <Columns className="h-3 w-3" />
         <input
