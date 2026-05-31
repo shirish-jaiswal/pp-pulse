@@ -1,7 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { getCasinoDetails, NormalisedCasinoData } from "@/lib/api/casino-details/casino-details";
+import { 
+  getCasinoDetails,
+  getCasinoTables, 
+  NormalisedCasinoData 
+} from "@/lib/api/casino-details/casino-details";
 
 type FetchState = "idle" | "loading" | "success" | "error" | "empty";
 
@@ -20,9 +24,18 @@ export function useCasinoDetailsQuery() {
         setFetchState("loading");
 
         try {
-            const result = await getCasinoDetails({ casinoId: casinoId.trim() });
-            if (result) {
-                setData(result);
+            // ✅ CALL BOTH APIs
+            const [casinoRes, tablesRes] = await Promise.all([
+                getCasinoDetails({ casinoId: casinoId.trim() }),
+                getCasinoTables({ casinoId: casinoId.trim() }), 
+            ]);
+
+            if (casinoRes) {
+                // ✅ MERGE TABLES INTO DATA
+                setData({
+                    ...casinoRes,
+                    tables: tablesRes,
+                });
                 setFetchState("success");
             } else {
                 setFetchState("empty");

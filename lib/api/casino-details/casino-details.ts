@@ -24,9 +24,12 @@ export type CasinoData = {
     [key: string]: any;
 };
 
+
 export type NormalisedCasinoData = CasinoData & {
     sharedEnvs: SharedEnv[];
+    tables?: any[];
 };
+
 
 export async function getCasinoDetails(params: CasinoDetailsProps): Promise<NormalisedCasinoData | null> {
     const res = await apiRequest({
@@ -36,7 +39,6 @@ export async function getCasinoDetails(params: CasinoDetailsProps): Promise<Norm
         requireCookie: true,
     });
 
-    // Actual API format: { success, api, data: { casino: {...}, shared_envs: [...] } }
     if (res?.data?.casino) {
         return {
             ...res.data.casino,
@@ -44,15 +46,52 @@ export async function getCasinoDetails(params: CasinoDetailsProps): Promise<Norm
         };
     }
 
-    // Array format: { data: [ { casino_id, ... } ] }
     if (Array.isArray(res?.data) && res.data.length > 0) {
         return { ...res.data[0], sharedEnvs: [] };
     }
 
-    // Direct flat object
     if (res?.casino_id) {
         return { ...res, sharedEnvs: [] };
     }
 
     return null;
+}
+
+/* ✅ ✅ ✅ TABLES API (SAME PATTERN, NO CHANGE ABOVE) */
+
+export type CasinoTable = {
+    table_name: string;
+    operator_game_id: string;
+    table_id: string;
+    casino_id: string;
+    env: number;
+    env_name: string;
+    table_open: boolean;
+    tc_conf_data?: string;
+    [key: string]: any;
+};
+
+export async function getCasinoTables(params: CasinoDetailsProps): Promise<CasinoTable[]> {
+    const res = await apiRequest({
+        method: "GET",
+        endpoint: "lc-enabled-tables",
+        params: { casinoid: params.casinoId },
+        requireCookie: true,
+    });
+
+    // ✅ same return handling style as your main API
+
+    if (Array.isArray(res?.data) && res.data.length > 0) {
+        return res.data;
+    }
+
+    if (res?.data?.tables) {
+        return res.data.tables;
+    }
+
+    if (Array.isArray(res)) {
+        return res;
+    }
+
+    return [];
 }

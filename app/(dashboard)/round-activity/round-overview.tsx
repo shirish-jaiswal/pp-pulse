@@ -1,17 +1,43 @@
 import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { InfoCardProps, ValueType } from "@/features/round-details/components/round-overview/info-card";
 
-const DOMAIN_URL = process.env.NEXT_PUBLIC_NEXT_URL;
-
 export interface RoundOverviewData {
   roundOverview: InfoCardProps[];
 }
 
+// ✅ ALWAYS USE PORTAL PATH
 const EXTERNAL_LINKS = {
-  casino: (id: string) => `/casino-details/${id}`,
+  casino: (id: string) => `/casino-details?casinoId=${id}`,
   user: (id: string) => `/user-management?userId=${id}`,
   round: (id: string) => `/round-activity?roundId=${id}`,
 };
+
+// ✅ CLEAN LINK CREATOR
+const createLink = (
+  id: string,
+  url: (id: string) => string
+): Pick<InfoCardProps["items"][number], "link" | "copyable" | "actionComponent"> | {} =>
+  id
+    ? {
+        link: {
+          href: url(id),
+          target: "_blank",
+        },
+        copyable: true,
+
+        // ✅ FIXED ICON BUTTON (valid JSX)
+        actionComponent: (
+          <a
+            href={url(id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs px-2 py-1 rounded bg-muted hover:bg-muted/70"
+          >
+            Open
+          </a>
+        ),
+      }
+    : {};
 
 const formatAmount = (amount: unknown): string =>
   new Intl.NumberFormat("en-US").format(Number(amount) || 0);
@@ -22,27 +48,10 @@ const safeString = (value: unknown): string =>
 const isValidErrorCode = (code: unknown) =>
   code !== null && code !== undefined && code !== "0" && code !== "";
 
-const isEmptyArray = (arr: unknown) =>
-  !Array.isArray(arr) || arr.length === 0;
-
 const hasValidData = (arr: any[]) =>
   Array.isArray(arr) &&
   arr.length > 0 &&
   arr.some(item => Object.keys(item || {}).length > 0);
-
-const createLink = (
-  id: string,
-  url: (id: string) => string
-): Pick<InfoCardProps["items"][number], "link" | "copyable"> | {} =>
-  id
-    ? {
-        link: {
-          href: url(id),
-          target: "_blank",
-        },
-        copyable: true,
-      }
-    : {};
 
 const appendCurrency = (values: ValueType[], currency: string): ValueType[] => [
   ...values,
@@ -102,7 +111,6 @@ export default function generateRoundOverview(
 
   const { betInfo = [], tptInfo = [] } = roundDetails;
 
-  // 🚨 Early exit
   if (!hasValidData(betInfo) && !hasValidData(tptInfo)) {
     return { roundOverview: [] };
   }
@@ -116,14 +124,13 @@ export default function generateRoundOverview(
   const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id || firstTpt?.casino_id);
   const casinoName = safeString(firstBet?.casino_desc || firstTpt?.casino_name);
-  // Group transactions
+
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
   const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
   const cancelledTxns = tptInfo.filter(txn => txn.action_type === "Cancelled");
   const adjustedTxns = tptInfo.filter(txn => txn.action_type === "Adjusted");
 
-  // Status logic
   const hasPlacedError = placedTxns.some(txn =>
     isValidErrorCode(txn.error_code)
   );
@@ -146,22 +153,20 @@ export default function generateRoundOverview(
       ? "error"
       : "success";
 
-  const hasCancelled = cancelledTxns.length > 0;
   const hasCancelledError = cancelledTxns.some(txn =>
     isValidErrorCode(txn.error_code)
   );
+
   const cancelledVariant: InfoCardProps["variant"] =
     hasCancelledError ? "error" : "default";
 
-    const hasAdjusted = adjustedTxns.length > 0;
-    const hasAdjustedError = adjustedTxns.some(txn =>
-      isValidErrorCode(txn.error_code)
-    );
-    const adjustedVariant: InfoCardProps["variant"] =
-      hasAdjustedError ? "error" : "info";
-  // ------------------
-  // Build Sections
-  // ------------------
+  const hasAdjustedError = adjustedTxns.some(txn =>
+    isValidErrorCode(txn.error_code)
+  );
+
+  const adjustedVariant: InfoCardProps["variant"] =
+    hasAdjustedError ? "error" : "info";
+
   const sections: (InfoCardProps | null)[] = [
     {
       iName: "landmark",
@@ -174,7 +179,7 @@ export default function generateRoundOverview(
         },
         {
           label: "Casino Name",
-          value: casinoName + " - " + firstTpt.Wallet_Type || "N/A",
+          value: (casinoName + " - " + firstTpt.Wallet_Type) || "N/A",
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
