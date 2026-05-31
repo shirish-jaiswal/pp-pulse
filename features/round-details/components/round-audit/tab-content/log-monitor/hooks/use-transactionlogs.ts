@@ -1,25 +1,23 @@
-import { c_getTransactionLogs, TransactionLogsProps } from "@/lib/api/round-details/transaction-logs";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import { c_getTransactionLogs, TransactionLogsProps } from "@/lib/api/round-details/transaction-logs";
+import { transactionLogsKeys } from "@/lib/query-key/transaction-logs";
 
+// --- Fetch Hook ---
 export function useTransactionLogs(
   params: TransactionLogsProps
 ): UseQueryResult<any, Error> {
-
-  // Check if the required parameters exist before fetching
-  // Adjust this condition based on what makes your params "valid" (e.g., params?.roundId)
-  const isDataAvailable = Boolean(params && Object.keys(params).length > 0);
+  const isDataAvailable = Boolean(params?.roundId && params?.timeStamp);
 
   return useQuery({
-    queryKey: ["logs", params],
+    queryKey: transactionLogsKeys.list(params), 
     queryFn: () => c_getTransactionLogs(params),
 
-    // The query will not execute as long as this evaluates to false
     enabled: isDataAvailable,
-
-    staleTime: 1000 * 60 * 5,
-    gcTime: 1000 * 60 * 10,
+    staleTime: Infinity,  // ✅ Never consider data stale automatically
+    gcTime: Infinity,     // ✅ Never garbage collect while app is running
     refetchOnMount: false,
     refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
     retry: 1
   });
 }

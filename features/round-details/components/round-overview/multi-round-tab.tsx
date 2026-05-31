@@ -5,7 +5,7 @@ import generateRoundOverview from "@/app/(dashboard)/round-activity/round-overvi
 import useGetRoundDetails from "@/features/round-details/hook/use-get-round-details";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useState, useMemo, useEffect } from "react";
+import { useMemo, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,31 +17,30 @@ type Mode = "round" | "game";
 export function MultiRoundTabs() {
   const {
     multiIds,
+    activeId,       // Extracted directly from context
+    setActiveId,     // Extracted directly from context
     setRoundDetails,
     setRoundOverview,
     setGameMetadata,
-    selectedRoundDetailsMap,    // Read directly from here
-    setSelectedRoundDetailsMap, // Write directly to here
+    selectedRoundDetailsMap,
+    setSelectedRoundDetailsMap,
   } = useRoundDetails();
 
   const mode: Mode = useMemo(() => {
     return multiIds.game_ids?.length ? "game" : "round";
   }, [multiIds]);
 
-  const [activeId, setActiveId] = useState<string>("");
-
   const ids = mode === "round" ? multiIds.round_ids : multiIds.game_ids;
 
-  // 1. Set default active tab
+  // Automatically manage default active tab via global state triggers
   useEffect(() => {
     if (mode === "round" && multiIds.round_ids.length) {
       setActiveId(multiIds.round_ids[0]);
     } else if (mode === "game" && multiIds.game_ids.length) {
       setActiveId(multiIds.game_ids[0]);
     }
-  }, [mode, multiIds]);
+  }, [mode, multiIds, setActiveId]);
 
-  // 2. Fetch data based on activeId
   const {
     data: roundData,
     isLoading: isFetchingData,
@@ -55,7 +54,6 @@ export function MultiRoundTabs() {
 
   const isLoading = isFetchingData || isFetching;
 
-  // 3. Generate derived data
   const roundOverviewData = useMemo(() => {
     if (!roundData) return null;
     return generateRoundOverview(roundData);
@@ -66,7 +64,6 @@ export function MultiRoundTabs() {
     return generateGameMetaData(roundData.gameDetails);
   }, [roundData]);
 
-  // 4. Sync single active tab payload to global UI panels
   useEffect(() => {
     if (roundData && !isLoading) {
       setRoundDetails(roundData);
@@ -89,12 +86,10 @@ export function MultiRoundTabs() {
     setGameMetadata,
   ]);
 
-  // 5. Safe, deferred async effect to capture lazy-loaded data into your context map
   useEffect(() => {
-    if (roundData && !isLoading) {
+    if (roundData && !isLoading && activeId) {
       setSelectedRoundDetailsMap((prevMap) => {
-        // If this active ID is present in our dictionary keys but contains empty/stale layout data, update it safely.
-        if (activeId in prevMap && prevMap[activeId] !== roundData) {
+        if (activeId in prevMap) {
           return {
             ...prevMap,
             [activeId]: roundData,
@@ -105,24 +100,19 @@ export function MultiRoundTabs() {
     }
   }, [roundData, isLoading, activeId, setSelectedRoundDetailsMap]);
 
-  // 6. Error handling
   useEffect(() => {
-    if (isError) {
+    if (isError && activeId) {
       toast.error(`Failed to fetch data for ID: ${activeId}`);
     }
   }, [isError, activeId]);
 
-  // 7. Directly alter the context map dictionary on checkbox interactions
-  const handleCheckboxToggle = (id: string, currentlyChecked: boolean) => {
+  const handleCheckboxToggle = (id: string, isChecked: boolean) => {
     setSelectedRoundDetailsMap((prevMap) => {
       const nextMap = { ...prevMap };
 
-      if (currentlyChecked) {
-        // Unchecking: drop the key instantly
+      if (isChecked) {
         delete nextMap[id];
       } else {
-        // Checking: initialize key slot. If active data is present, cache it now;
-        // otherwise, give it a temporary structure until the network hook populates it.
         nextMap[id] = (id === activeId && roundData && !isLoading)
           ? roundData
           : ({} as any);
@@ -139,15 +129,12 @@ export function MultiRoundTabs() {
       <Tabs
         value={activeId}
         onValueChange={setActiveId}
-        className="max-h-full border w-full flex items-center justify-between rounded-xl bg-background px-3 py-2 shadow-sm p-0"
+        className="max-h-full border w-full flex items-center justify-between rounded-xl bg-background px-1 py-1 shadow-sm p-0"
       >
-        <TabsList className="flex flex-wrap h-auto w-full gap-1 p-2 justify-start bg-transparent">
+        <TabsList className="flex flex-wrap h-auto w-full gap-1 p-1 justify-start bg-transparent">
           {ids.map((id) => {
             const isActive = activeId === id;
-
-            // CRITICAL CHANGE: Derive checked state instantly from global keys
             const isChecked = id in selectedRoundDetailsMap;
-
             return (
               <TabsTrigger
                 key={id}
@@ -168,7 +155,7 @@ export function MultiRoundTabs() {
                     checked={isChecked}
                     onCheckedChange={() => {
                       if (!isChecked) {
-                        setActiveId(id); // Shift focus to target lazy query fetching
+                        setActiveId(id);
                       }
                       handleCheckboxToggle(id, isChecked);
                     }}

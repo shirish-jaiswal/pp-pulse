@@ -1,3 +1,4 @@
+// @/features/round-details/components/round-audit/tab-content/log-monitor/components/log-table.tsx
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -11,15 +12,42 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/utils/cn";
 import { getNestedValue } from "@/features/round-details/components/round-audit/tab-content/log-monitor/utils/log-utils";
+import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 
-export function LogTable({ filteredLogs, visibleColumns }: any) {
+interface LogTableProps {
+    filteredLogs: any[];
+    visibleColumns: string[];
+    activeTab: string; 
+}
+
+export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }: LogTableProps) {
+    const { roundDetails, selectedRowsMap, setSelectedRowsMap, activeId } =
+        useRoundDetails();
+
+    const roundId = activeId || roundDetails?.tptInfo?.[0]?.round_id || "";
+
+    const getLogId = (log: any, fallbackIdx: number): string => {
+        if (!log) return String(fallbackIdx);
+        
+        const timestamp = log.timestamp || log.raw?.["@timestamp"];
+        if (timestamp) {
+            return `${String(timestamp)}-${fallbackIdx}`;
+        }
+
+        const id = log.id || log.logId || log.raw?.id || log.raw?.logId;
+        return id ? `${String(id)}-${fallbackIdx}` : String(fallbackIdx);
+    };
+
+    const allColumns = ["checkbox", "time", ...visibleColumns];
+
     const [columnWidths, setColumnWidths] = useState<{ [key: string]: number }>(() => {
-        const widths: { [key: string]: number } = { time: 180 };
-
+        const widths: { [key: string]: number } = {
+            checkbox: 36,
+            time: 120,
+        };
         visibleColumns.forEach((col: string) => {
             widths[col] = 260;
         });
-
         return widths;
     });
 
@@ -30,12 +58,12 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
     } | null>(null);
 
     const onMouseDown = (e: React.MouseEvent, col: string) => {
+        e.stopPropagation();
         resizingRef.current = {
             col,
             startX: e.clientX,
-            startWidth: columnWidths[col],
+            startWidth: columnWidths[col] ?? 260,
         };
-
         document.addEventListener("mousemove", onMouseMove);
         document.addEventListener("mouseup", onMouseUp);
         document.body.style.cursor = "col-resize";
@@ -44,14 +72,19 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
 
     const onMouseMove = (e: MouseEvent) => {
         if (!resizingRef.current) return;
-
         const { col, startX, startWidth } = resizingRef.current;
         const delta = e.clientX - startX;
 
-        setColumnWidths((prev) => ({
-            ...prev,
-            [col]: Math.max(140, startWidth + delta),
-        }));
+        setColumnWidths((prev) => {
+            let minWidth = 100;
+            if (col === "checkbox") minWidth = 32;
+            if (col === "time") minWidth = 90;
+
+            return {
+                ...prev,
+                [col]: Math.max(minWidth, startWidth + delta),
+            };
+        });
     };
 
     const onMouseUp = () => {
@@ -62,96 +95,180 @@ export function LogTable({ filteredLogs, visibleColumns }: any) {
         document.body.style.userSelect = "auto";
     };
 
+    const handleRowCheck = (logId: string) => {
+        setSelectedRowsMap((prev: any) => {
+            const roundData = prev[roundId] || {};
+            const tabData: string[] = roundData[activeTab] || [];
+
+            const exists = tabData.includes(logId);
+            const updated = exists
+                ? tabData.filter((id) => id !== logId)
+                : [...tabData, logId];
+
+            return {
+                ...prev,
+                [roundId]: {
+                    ...roundData,
+                    [activeTab]: updated,
+                },
+            };
+        });
+    };
+
+    const handleSelectAll = () => {
+        setSelectedRowsMap((prev: any) => {
+            const roundData = prev[roundId] || {};
+            const allIds = filteredLogs.map((log, i) => getLogId(log, i));
+            const tabData: string[] = roundData[activeTab] || [];
+            
+            const isAllSelected = tabData.length === filteredLogs.length;
+
+            return {
+                ...prev,
+                [roundId]: {
+                    ...roundData,
+                    [activeTab]: isAllSelected ? [] : allIds,
+                },
+            };
+        });
+    };
+
+    const currentSelected = new Set<string>(
+        selectedRowsMap?.[roundId]?.[activeTab] || []
+    );
+
+    const isAllSelected =
+        filteredLogs.length > 0 &&
+        currentSelected.size === filteredLogs.length;
+
+    const isSomeSelected =
+        currentSelected.size > 0 &&
+        currentSelected.size < filteredLogs.length;
+
     return (
-        <div className="flex-1 overflow-auto rounded-xl border bg-background">
-            <Table className="w-full table-fixed border-separate border-spacing-y-2">
+        <div className="flex-1 w-full max-h-full overflow-auto rounded-md border bg-background">
+            <Table className="w-full table-fixed border-collapse">
+                <TableHeader className="sticky top-0 z-20 bg-muted/50 backdrop-blur-sm shadow-[0_1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.1)]">
+                    <TableRow className="hover:bg-transparent">
+                        {allColumns.map((col) => {
+                            const isCheckbox = col === "checkbox";
+                            const isTime = col === "time";
+                            const width = columnWidths[col] ?? 260;
 
-                {/* HEADER */}
-                <TableHeader className="sticky top-0 z-20 bg-background">
-                    <TableRow>
-                        <TableHead
-                            style={{ width: columnWidths["time"] }}
-                            className="relative px-4 py-4 text-xs font-medium text-muted-foreground"
-                        >
-                            Time
-
-                            <div
-                                onMouseDown={(e) => onMouseDown(e, "time")}
-                                className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/40"
-                            />
-                        </TableHead>
-
-                        {visibleColumns.map((col: string) => (
-                            <TableHead
-                                key={col}
-                                style={{ width: columnWidths[col] }}
-                                className="relative px-4 py-4 text-xs font-medium text-muted-foreground"
-                            >
-                                {col}
-
-                                <div
-                                    onMouseDown={(e) => onMouseDown(e, col)}
-                                    className="absolute right-0 top-0 h-full w-1 cursor-col-resize hover:bg-primary/40"
-                                />
-                            </TableHead>
-                        ))}
+                            return (
+                                <TableHead
+                                    key={col}
+                                    style={{ width, minWidth: width, maxWidth: width }}
+                                    className={cn(
+                                        "relative h-9 px-3 py-2 text-xs font-semibold text-foreground select-none truncate border-b border-r last:border-r-0",
+                                        isCheckbox && "text-center p-0 align-middle"
+                                    )}
+                                >
+                                    {isCheckbox ? (
+                                        <div className="flex items-center justify-center h-full">
+                                            <input
+                                                type="checkbox"
+                                                className="h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary accent-primary cursor-pointer"
+                                                checked={isAllSelected}
+                                                ref={(el) => {
+                                                    if (el) el.indeterminate = isSomeSelected;
+                                                }}
+                                                onChange={handleSelectAll}
+                                            />
+                                        </div>
+                                    ) : isTime ? (
+                                        "Time"
+                                    ) : (
+                                        col
+                                    )}
+                                    <div
+                                        onMouseDown={(e) => onMouseDown(e, col)}
+                                        className="absolute -right-0.5 top-0 h-full w-1 cursor-col-resize hover:bg-primary/50 transition-colors z-30"
+                                    />
+                                </TableHead>
+                            );
+                        })}
                     </TableRow>
                 </TableHeader>
-
-                {/* BODY */}
                 <TableBody>
-                    {filteredLogs.map((log: any, idx: number) => (
-                        <TableRow
-                            key={idx}
-                            className={cn(
-                                "bg-background",
-                                "hover:bg-muted/20 transition-colors"
-                            )}
-                        >
-                            {/* TIME */}
-                            <TableCell
-                                style={{ width: columnWidths["time"] }}
-                                className="px-4 py-4 align-top border-r"
+                    {filteredLogs.map((log: any, idx: number) => {
+                        const logId = getLogId(log, idx);
+                        const isChecked = currentSelected.has(logId);
+
+                        return (
+                            <TableRow
+                                key={logId} 
+                                className={cn(
+                                    "relative border-b last:border-b-0 group transition-colors hover:bg-muted/20",
+                                    isChecked && "bg-muted/40 hover:bg-muted/50"
+                                )}
                             >
-                                <div className="flex flex-col leading-6">
-                                    <span className="text-xs text-muted-foreground ">
-                                        {log.raw?.["@timestamp"]?.split("T")[0] || "--"}
-                                    </span>
+                                {allColumns.map((col) => {
+                                    const width = columnWidths[col] ?? 140;
 
-                                    <span className="text-foreground">
-                                        {log.raw?.["@timestamp"]
-                                            ?.split("T")[1]
-                                            ?.replace("Z", "") || "--"}
-                                    </span>
-                                </div>
-                            </TableCell>
+                                    if (col === "checkbox") {
+                                        return (
+                                            <TableCell
+                                                key={col}
+                                                style={{ width, minWidth: width, maxWidth: width }}
+                                                className="p-0 align-middle text-center border-r group-last:border-b-0"
+                                            >
+                                                <div className="flex items-center justify-center h-full">
+                                                    <input
+                                                        type="checkbox"
+                                                        className={cn(
+                                                            "h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary accent-primary cursor-pointer",
+                                                            // Invisible pseudo-element spreads over the entire 'relative' parent row
+                                                            // keeping the interactive hitbox huge, without breaking normal pointer-events below
+                                                            "after:absolute after:inset-0 after:z-10"
+                                                        )}
+                                                        checked={isChecked}
+                                                        onChange={() => handleRowCheck(logId)}
+                                                    />
+                                                </div>
+                                            </TableCell>
+                                        );
+                                    }
 
-                            {/* DYNAMIC COLUMNS */}
-                            {visibleColumns.map((col: string) => {
-                                const val = getNestedValue(log, col);
+                                    if (col === "time") {
+                                        const timestamp = log.timestamp || log.raw?.["@timestamp"];
+                                        return (
+                                            <TableCell
+                                                key={col}
+                                                style={{ width, minWidth: width, maxWidth: width }}
+                                                className="px-3 py-1.5 align-top border-r text-xs font-mono tracking-tight text-muted-foreground group-last:border-b-0"
+                                            >
+                                                <div className="flex flex-col space-y-0.5 truncate">
+                                                    <span>{timestamp ? new Date(timestamp).toUTCString() : "-"}</span>
+                                                </div>
+                                            </TableCell>
+                                        );
+                                    }
 
-                                return (
-                                    <TableCell
-                                        key={col}
-                                        style={{ width: columnWidths[col] }}
-                                        className="px-4 py-4 align-top border-r"
-                                    >
-                                        <div className="text-sm leading-6 whitespace-normal wrap-break-word overflow-wrap-anywhere">
-                                            {typeof val === "object" && val !== null ? (
-                                                <pre className="text-xs font-mono bg-muted/30 p-3 rounded-md whitespace-pre-wrap wrap-break-word overflow-wrap-anywhere">
-                                                    {JSON.stringify(val, null, 2)}
-                                                </pre>
-                                            ) : (
-                                                <span className="block whitespace-normal wrap-break-word overflow-wrap-anywhere">
-                                                    {String(val ?? "-")}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </TableCell>
-                                );
-                            })}
-                        </TableRow>
-                    ))}
+                                    const val = getNestedValue(log, col);
+                                    return (
+                                        <TableCell
+                                            key={col}
+                                            style={{ width, minWidth: width, maxWidth: width }}
+                                            className="px-3 py-1.5 align-top border-r last:border-r-0 group-last:border-b-0"
+                                        >
+                                            <div className="text-xs leading-5 break-words [overflow-wrap:anywhere]">
+                                                {typeof val === "object" && val !== null ? (
+                                                    <pre className="relative z-20 text-[11px] font-mono bg-muted/40 p-2 rounded border border-muted/50 whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-h-40 overflow-y-auto cursor-default">
+                                                        {JSON.stringify(val, null, 2)}
+                                                    </pre>
+                                                ) : (
+                                                    <span className="text-xs text-foreground/95 whitespace-pre-wrap break-all block">
+                                                        {String(val ?? "-")}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </TableCell>
+                                    );
+                                })}
+                            </TableRow>
+                        );
+                    })}
                 </TableBody>
             </Table>
         </div>

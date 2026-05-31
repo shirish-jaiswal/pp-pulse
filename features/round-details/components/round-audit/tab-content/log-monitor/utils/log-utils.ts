@@ -1,41 +1,40 @@
 export const getDeepKeys = (obj: any, prefix = ""): string[] => {
   const result: string[] = [];
 
-  if (
-    typeof obj !== "object" ||
-    obj === null ||
-    Array.isArray(obj)
-  ) {
+  if (typeof obj !== "object" || obj === null || Array.isArray(obj)) {
     return result;
   }
 
   for (const key of Object.keys(obj)) {
-    const name = prefix ? `${prefix}.${key}` : key;
-    let value = obj[key];
+    const value = obj[key];
+    const path = prefix ? `${prefix}.${key}` : key;
 
-    result.push(name); // ✅ ALWAYS include parent
-
-    // ✅ Try parsing JSON strings
-    if (typeof value === "string") {
-      try {
-        value = JSON.parse(value);
-      } catch {}
-    }
-
-    if (
-      typeof value === "object" &&
-      value !== null &&
-      !Array.isArray(value)
-    ) {
-      result.push(...getDeepKeys(value, name));
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      result.push(...getDeepKeys(value, path));
+    } else {
+      result.push(path);
     }
   }
 
   return result;
 };
+
 export const getNestedValue = (obj: any, path: string) => {
-  return path.split(".").reduce((acc, part) => {
-    if (acc == null) return undefined;
-    return acc[part];
-  }, obj);
+  if (!obj || !path) return undefined;
+
+  const parts = path.split(".");
+
+  // direct
+  let direct = parts.reduce((acc, p) => acc?.[p], obj);
+  if (direct !== undefined) return direct;
+
+  // fallback raw
+  let raw = parts.reduce((acc, p) => acc?.[p], obj?.raw);
+  if (raw !== undefined) return raw;
+
+  // fallback app
+  let app = parts.reduce((acc, p) => acc?.[p], obj?.app);
+  if (app !== undefined) return app;
+
+  return undefined;
 };

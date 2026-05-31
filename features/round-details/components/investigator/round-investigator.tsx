@@ -5,12 +5,11 @@ import { Activity } from "lucide-react";
 import { RoundDetailsInputProps } from "@/features/round-details/types/round-details-input";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { RoundDetailsForm } from "@/features/round-details/components/investigator/round-details-form";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { MultiRoundDetailsForm } from "@/features/round-details/components/investigator/round-details-from-bulk";
 import { cn } from "@/utils/cn";
+import { Button } from "@/components/ui/button";
 export function RoundInvestigator() {
   const router = useRouter();
 
@@ -20,12 +19,15 @@ export function RoundInvestigator() {
     setMultiIds,
   } = useRoundDetails();
 
+  const prevBulkMode = useRef(isBulkMode);
+
   useEffect(() => {
-    // if (isBulkMode) {
-    //   router.push("/round-activity/?isBulk=true");
-    //   setMultiIds({ round_ids: [], game_ids: [], user_id: "" });
-    // }
-  }, [isBulkMode, router, setMultiIds]);
+    if (prevBulkMode.current === true && isBulkMode === false) {
+      window.location.href = "/portal/round-activity";
+    }
+
+    prevBulkMode.current = isBulkMode;
+  }, [isBulkMode]);
 
   const handleSubmit = (data: RoundDetailsInputProps) => {
     if (isBulkMode) return;
@@ -57,24 +59,19 @@ export function RoundInvestigator() {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Label
-              htmlFor="bulk-mode"
-              className={cn(
-                "text-[10px] font-medium uppercase tracking-wider transition-colors",
-                isBulkMode ? "text-primary" : "text-muted-foreground"
-              )}
-            >
-              Bulk
-            </Label>
-
-            <Switch
-              id="bulk-mode"
-              checked={isBulkMode}
-              onCheckedChange={setBulkMode}
-              className="scale-75 transition-all active:scale-90"
-            />
-          </div>
+          <Button
+            type="button"
+            size="xs"
+            onClick={() => setBulkMode(!isBulkMode)}
+            className={cn(
+              "px-3 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wide transition-all border",
+              isBulkMode
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
+            )}
+          >
+            Bulk Mode: {isBulkMode ? "ON" : "OFF"}
+          </Button>
         </div>
 
         {/* CONTENT */}

@@ -36,6 +36,7 @@ export function useDataTable({ data, columns }: any) {
   const [columnVisibility, setColumnVisibility] =
     useState<VisibilityState>({});
 
+  // 1. Initial local state definitions
   const [compact, setCompact] = useState<boolean>(false);
 
   const [pagination, setPagination] =
@@ -72,7 +73,16 @@ export function useDataTable({ data, columns }: any) {
           setColumnVisibility(parsed.columnVisibility);
         }
 
-        if (parsed.pageSize) {
+        // 2. Hydrate compact preference
+        if (typeof parsed.compact === "boolean") {
+          setCompact(parsed.compact);
+        }
+
+        // 3. Hydrate full pagination instead of just pageSize
+        if (parsed.pagination) {
+          setPagination(parsed.pagination);
+        } else if (parsed.pageSize) {
+          // Fallback backward-compatibility check if user previously only had pageSize saved
           setPagination((prev) => ({
             ...prev,
             pageSize: parsed.pageSize,
@@ -86,6 +96,9 @@ export function useDataTable({ data, columns }: any) {
     }
   }, []);
 
+  // -----------------------------
+  // Save settings (Debounced)
+  // -----------------------------
   useEffect(() => {
     if (!hasHydrated) return;
 
@@ -97,7 +110,8 @@ export function useDataTable({ data, columns }: any) {
             sorting,
             columnFilters,
             columnVisibility,
-            pageSize: pagination.pageSize,
+            compact,
+            pagination,
           })
         );
       } catch (error) {
@@ -110,7 +124,8 @@ export function useDataTable({ data, columns }: any) {
     sorting,
     columnFilters,
     columnVisibility,
-    pagination.pageSize,
+    compact,
+    pagination,
     hasHydrated,
   ]);
 

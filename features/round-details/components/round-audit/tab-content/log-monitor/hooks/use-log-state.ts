@@ -1,3 +1,5 @@
+// @/features/round-details/components/round-audit/tab-content/log-monitor/hooks/useLogState.ts
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -13,53 +15,75 @@ const DEFAULT_COLUMNS_BY_TAB: Record<string, string[]> = {
     "raw.app.responseLog.log",
   ],
   lcTransactionLogs: ["message", "raw.contextMap"],
-  default: ["message", "raw.host"],
+  default: ["message"],
 };
 
 export function useLogState() {
   const {
     roundDetails,
-    accumulatedLogs,
     setAccumulatedLogs,
-    selectedRoundLogs,
+    accumulatedLogs,
   } = useRoundDetails();
 
   const roundId = roundDetails?.tptInfo?.[0]?.round_id || "";
   const timeStamp = roundDetails?.tptInfo?.[0]?.trans_date || "";
 
-  // 1. Fetch data for current single round layout view
-  const { data, isLoading, isError } = useTransactionLogs({
+  // 1. Memoize query params to ensure stable query key references in TanStack Query
+  const transactionParams = useMemo(() => {
+    return {
+      roundId,
+      timeStamp,
+      game_id: roundDetails?.tptInfo?.at(0)?.game_id as string,
+      user_id: roundDetails?.tptInfo?.at(0)?.user_id as string,
+      game_type: roundDetails?.gameDetails?.at(0)?.game_type as string,
+    };
+  }, [
     roundId,
     timeStamp,
-    game_id: roundDetails?.tptInfo?.at(0)?.game_id as string,
-    user_id: roundDetails?.tptInfo?.at(0)?.user_id as string,
-    game_type: roundDetails?.gameDetails?.at(0)?.game_type as string,
-  });
+    roundDetails?.tptInfo,
+    roundDetails?.gameDetails
+  ]);
 
-  // 2. Sync network response payload to background cache map when loaded
+  // 2. Fetch data via the updated factory hook
+  const { data, isLoading, isError, refetch, isRefetching } = useTransactionLogs(transactionParams);
+
+  // ✅ CHANGED: Always force-sync the cache payload down into your application state 
+  // even if it's already there (necessary for loading cache directly on page load/refreshes)
   useEffect(() => {
     if (data && !isLoading && !isError && roundId) {
       setAccumulatedLogs((prev) => {
-        if (prev[roundId]) return prev;
         return { ...prev, [roundId]: data };
       });
     }
   }, [data, isLoading, isError, roundId, setAccumulatedLogs]);
 
-  // 3. Extract active single view log map layer cleanly without cyclic side-effects
+  // Explicit targeted single round invalidation function
+  const refetchRoundLogs = async () => {
+    if (!roundId) return;
+
+    // Clear context storage immediately to force visual loading states
+    setAccumulatedLogs((prev) => {
+      const next = { ...prev };
+      delete next[roundId];
+      return next;
+    });
+
+    // Fire network call bypassing cached layer
+    await refetch();
+  };
+
   const currentRoundLogsData = useMemo(() => {
     if (!roundId) return null;
-    return selectedRoundLogs[roundId] || null;
-  }, [selectedRoundLogs, roundId]);
+    return accumulatedLogs[roundId] || null;
+  }, [accumulatedLogs, roundId]);
 
   const [activeTab, setActiveTab] = useState<string | null>("");
   const [query, setQuery] = useState("");
   const [tabColumnState, setTabColumnState] = useState<Record<string, string[]>>({});
 
-  // 4. Extract tabs available across ALL currently selected active items
   const availableTabs = useMemo(() => {
     const tabsSet = new Set<string>();
-    Object.values(selectedRoundLogs || {}).forEach((roundData: any) => {
+    Object.values(accumulatedLogs || {}).forEach((roundData: any) => {
       if (!roundData) return;
       Object.keys(roundData).forEach((k) => {
         if (Array.isArray(roundData[k])) {
@@ -68,7 +92,7 @@ export function useLogState() {
       });
     });
     return Array.from(tabsSet);
-  }, [selectedRoundLogs]);
+  }, [accumulatedLogs]);
 
   useEffect(() => {
     if (availableTabs.length && !activeTab) {
@@ -204,9 +228,11 @@ export function useLogState() {
           return fullText.includes(q.replace(/"/g, ""));
         }
       })
-      .sort((a: any, b: any) =>
-        new Date(a?.raw?.["@timestamp"] || 0).getTime() - new Date(b?.raw?.["@timestamp"] || 0).getTime()
-      );
+      .sort((a: any, b: any) => {
+        const timeA = new Date(a?.timestamp || a?.raw?.["@timestamp"] || 0).getTime();
+        const timeB = new Date(b?.timestamp || b?.raw?.["@timestamp"] || 0).getTime();
+        return timeA - timeB;
+      });
   }, [logs, query]);
 
   const resetToDefault = () => {
@@ -220,8 +246,10 @@ export function useLogState() {
 
   return {
     data: currentRoundLogsData,
-    allAccumulatedLogs: selectedRoundLogs, // Exposes only active checkbox round logs cleanly to toolbar plugin
-    isLoading,
+    allAccumulatedLogs: accumulatedLogs,
+    isLoading: (!currentRoundLogsData && isLoading) || isRefetching, 
+    isRefetching,
+    refetchRoundLogs,
     activeTab,
     setActiveTab,
     query,

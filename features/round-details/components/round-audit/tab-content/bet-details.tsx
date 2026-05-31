@@ -35,11 +35,24 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
     }
   };
 
-  // ✅ Hooks must be called BEFORE any early returns
-  const sortedItems = useMemo(() => {
-    if (!items || items.length === 0) return [];
+  // ✅ Computed values for sorting and footer totals
+  const { sortedItems, totalAmount, totalPayoff, netProfit } = useMemo(() => {
+    if (!items || items.length === 0) {
+      return { sortedItems: [], totalAmount: 0, totalPayoff: 0, netProfit: 0 };
+    }
 
-    return [...items].sort((a, b) => {
+    // 1. Calculate totals from the raw items
+    const totals = items.reduce(
+      (acc, curr) => {
+        acc.amount += curr.amount || 0;
+        acc.payoff += curr.payoff || 0;
+        return acc;
+      },
+      { amount: 0, payoff: 0 }
+    );
+
+    // 2. Sort items
+    const sorted = [...items].sort((a, b) => {
       let valueA = 0;
       let valueB = 0;
 
@@ -55,6 +68,13 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
 
       return sortOrder === "asc" ? valueA - valueB : valueB - valueA;
     });
+
+    return {
+      sortedItems: sorted,
+      totalAmount: totals.amount,
+      totalPayoff: totals.payoff,
+      netProfit: totals.payoff - totals.amount,
+    };
   }, [items, sortKey, sortOrder]);
 
   const handleSort = (key: SortKey) => {
@@ -66,7 +86,6 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
     }
   };
 
-  // ✅ Early return happens only after all hooks have been declared
   if (!items || items.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground text-sm italic border rounded-lg">
@@ -156,6 +175,26 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
             );
           })}
         </tbody>
+        <tfoot className="bg-muted/30 border-t font-medium text-xs">
+          <tr>
+            <td colSpan={3} className="px-4 py-3 text-left font-semibold text-muted-foreground">
+              Totals
+              <span className={cn(
+                "ml-2 text-[11px] px-1.5 py-0.5 rounded",
+                netProfit >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+              )}>
+                {netProfit >= 0 ? "+" : ""}{netProfit.toFixed(2)} P&L
+              </span>
+            </td>
+            <td className="px-4 py-3 text-right font-mono text-foreground">
+              {totalAmount.toFixed(2)}
+            </td>
+            <td className="px-4 py-3 text-right font-mono text-emerald-600">
+              {totalPayoff.toFixed(2)}
+            </td>
+            <td className="px-4 py-3" />
+          </tr>
+        </tfoot>
       </table>
     </div>
   );

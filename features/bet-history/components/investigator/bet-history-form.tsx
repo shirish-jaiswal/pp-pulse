@@ -14,11 +14,6 @@ import {
 import { useBetHistory } from "@/features/bet-history/context/bet-history-context";
 import { BetHistoryInputSchema } from "@/features/bet-history/types/bet-history-input";
 
-function toDatetimeLocal(dateString?: string): string {
-  if (!dateString) return "";
-  return dateString.slice(0, 16);
-}
-
 /**
  * Returns days in month WITHOUT using JS Date logic
  */

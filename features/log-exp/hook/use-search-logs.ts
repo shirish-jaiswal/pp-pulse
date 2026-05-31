@@ -169,11 +169,7 @@ export const searchHistogram = async (data: MatchPhraseData) => {
     },
   };
 
-  console.log("============= SEARCH HISTOGRAM REQUEST =============");
-  console.log("Endpoint:", `${data.dataView}/_search`);
-  console.log("Payload:", JSON.stringify(histogramPayload, null, 2));
-  console.log("====================================================");
-
+  
   return kibanaRequest<any>({
     method: "POST",
     endpoint: `${data.dataView}/_search`,

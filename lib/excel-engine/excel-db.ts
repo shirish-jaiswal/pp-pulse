@@ -91,3 +91,13 @@ export const KIBANA_DB_CONFIG = {
     },
   }
 }
+
+export const POTENTIAL_WIN_CONFIG = {
+  name: "potential_winnings",
+  tables: {
+    roulette: {
+      name: "roulette",
+      schema: ["id", "description", "bet_codes", "short_desc", "payout", "created_at", "updated_at"]
+    },
+  }
+};

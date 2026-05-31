@@ -1,8 +1,15 @@
 "use client";
 
 import * as React from "react";
-import { ListTree, Loader2, Database, Layers, ChevronRight, CornerDownRight } from "lucide-react";
+import { ListTree, Loader2 } from "lucide-react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
+import {
+  $getSelection,
+  $isRangeSelection,
+  $createRangeSelection,
+  $setSelection,
+} from "lexical";
+
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -10,15 +17,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { INSERT_LOGS_COMMAND } from "@/components/custom/text-editor/toolbar/logs/log-command";
-import { truncateLogs } from "@/components/custom/text-editor/toolbar/logs/log-utils";
 import { useLogState } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-log-state";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { cn } from "@/utils/cn";
 
-/**
- * Formats dirty strings (camelCase, kebab-case, snake_case) into readable text.
- * Example: "LcTransactionLogs" -> "Lc Transaction Logs"
- */
 const formatTabName = (str: string): string => {
   if (!str) return "";
   return str
@@ -26,7 +28,7 @@ const formatTabName = (str: string): string => {
     .replace(/[-_]/g, " ")
     .replace(/\s+/g, " ")
     .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
     .join(" ")
     .trim();
 };
@@ -43,169 +45,253 @@ export function LogTogglePlugin() {
     allAccumulatedLogs,
   } = useLogState();
 
-  const { selectedRoundDetailsMap } = useRoundDetails();
-  const checkedIds = React.useMemo(() => Object.keys(selectedRoundDetailsMap || {}), [selectedRoundDetailsMap]);
+  const {
+    activeId,
+    selectedRoundDetailsMap,
+    selectedRowsMap = {},
+  } = useRoundDetails();
 
   const [open, setOpen] = React.useState(false);
 
-  const allSelectedRoundsLogs = React.useMemo(() => {
+  // Hard-cached reference container for user selection snapshot
+  const cachedSelectionRef = React.useRef<{
+    anchorKey: string;
+    anchorOffset: number;
+    anchorType: "text" | "element";
+    focusKey: string;
+    focusOffset: number;
+    focusType: "text" | "element";
+  } | null>(null);
+
+  // Unified target round IDs execution layer
+  const targetRoundIds = React.useMemo(() => {
+    const checkedIds = Object.keys(selectedRoundDetailsMap || {});
+    const rawTargetIds =
+      checkedIds.length > 0
+        ? checkedIds
+        : activeId
+          ? [activeId]
+          : Object.keys(allAccumulatedLogs || {});
+
+    return rawTargetIds.filter(
+      (id): id is string => typeof id === "string" && id !== ""
+    );
+  }, [selectedRoundDetailsMap, activeId, allAccumulatedLogs]);
+
+  // FIXED: Robust ID Extractor properly matching selections by processing top-level ISO timestamps
+  const getLogId = React.useCallback((log: any, fallbackIdx: number): string => {
+    if (!log) return String(fallbackIdx);
+
+    const timestamp = log.timestamp || log.raw?.["@timestamp"];
+    if (timestamp) {
+      return `${String(timestamp)}-${fallbackIdx}`;
+    }
+
+    const id = log.id || log.logId || log.raw?.id || log.raw?.logId;
+    return id ? `${String(id)}-${fallbackIdx}` : String(fallbackIdx);
+  }, []);
+
+  const getSelectedRowsForTab = React.useCallback((roundId: string, tabName: string) => {
+    const rows = selectedRowsMap?.[roundId]?.[tabName];
+    return Array.isArray(rows) ? rows.filter((r) => r !== undefined && r !== null) : [];
+  }, [selectedRowsMap]);
+
+  // Synchronized grouping calculation pipeline
+  const groupedRoundLogs = React.useMemo(() => {
     if (!allAccumulatedLogs || !activeTab) return [];
 
-    const combined: any[] = [];
-    const targetIds = checkedIds.length > 0 ? checkedIds : Object.keys(allAccumulatedLogs);
+    const isGameLogTab = activeTab.toLowerCase().includes("game");
 
-    targetIds.forEach((id) => {
-      const roundData = allAccumulatedLogs[id];
-      const tabLogs = roundData?.[activeTab];
-      if (Array.isArray(tabLogs)) {
-        combined.push(...truncateLogs(tabLogs, 20));
-      }
-    });
+    return targetRoundIds
+      .map((id) => {
+        const roundLogs = allAccumulatedLogs[id];
+        const tabLogs = roundLogs?.[activeTab];
 
-    return combined;
-  }, [allAccumulatedLogs, activeTab, checkedIds]);
+        if (!Array.isArray(tabLogs) || tabLogs.length === 0) return null;
 
-  const hasLogs = allSelectedRoundsLogs.length > 0;
+        const sortedTabLogs = [...tabLogs].sort((a, b) => {
+          const timeA = new Date(a.timestamp || 0).getTime();
+          const timeB = new Date(b.timestamp || 0).getTime();
+          return timeA - timeB;
+        });
+
+        const selectedRows = getSelectedRowsForTab(id, activeTab).length > 0
+          ? getSelectedRowsForTab(id, activeTab)
+          : getSelectedRowsForTab("", activeTab);
+
+        const hasSelections = selectedRows.length > 0;
+
+        const filteredLogs = hasSelections
+          ? sortedTabLogs.filter((log, idx) => {
+            const logId = getLogId(log, idx);
+            return selectedRows.includes(logId);
+          })
+          : sortedTabLogs;
+
+        return filteredLogs.length > 0
+          ? { roundId: id, logs: filteredLogs }
+          : null;
+      })
+      .filter((g): g is { roundId: string; logs: any[] } => g !== null);
+  }, [allAccumulatedLogs, activeTab, targetRoundIds, getSelectedRowsForTab, getLogId]);
+
+  const totalLogCount = React.useMemo(() => {
+    return groupedRoundLogs.reduce((acc, curr) => acc + curr.logs.length, 0);
+  }, [groupedRoundLogs]);
+
+  const hasLogs = totalLogCount > 0;
+
+  // Track popover openings to clone selection vector state safely
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (nextOpen) {
+      editor.getEditorState().read(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection)) {
+          cachedSelectionRef.current = {
+            anchorKey: selection.anchor.key,
+            anchorOffset: selection.anchor.offset,
+            anchorType: selection.anchor.type,
+            focusKey: selection.focus.key,
+            focusOffset: selection.focus.offset,
+            focusType: selection.focus.type,
+          };
+        }
+      });
+    }
+
+    setOpen(nextOpen);
+  };
 
   const insertLogs = () => {
     if (!hasLogs) return;
 
+    editor.update(() => {
+      const snapshot = cachedSelectionRef.current;
+
+      if (snapshot) {
+        const selection = $createRangeSelection();
+
+        selection.anchor.set(
+          snapshot.anchorKey,
+          snapshot.anchorOffset,
+          snapshot.anchorType
+        );
+
+        selection.focus.set(
+          snapshot.focusKey,
+          snapshot.focusOffset,
+          snapshot.focusType
+        );
+        $setSelection(selection);
+      }
+    });
+
     editor.dispatchCommand(INSERT_LOGS_COMMAND, {
       activeTab: activeTab || "logs",
-      logs: allSelectedRoundsLogs,
+      groupedLogs: groupedRoundLogs,
       columns: visibleColumns,
     });
 
     setOpen(false);
+    cachedSelectionRef.current = null;
   };
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 border-zinc-200 shadow-sm hover:bg-zinc-50 dark:border-zinc-800 dark:hover:bg-zinc-950 transition-all rounded-md"
+          className="h-8 gap-1.5 border-zinc-200 shadow-sm"
         >
-          <ListTree className="h-3.5 w-3.5 text-zinc-500" />
-          <span className="font-medium text-xs text-zinc-700 dark:text-zinc-300">Insert Logs</span>
+          <ListTree className="h-3.5 w-3.5" />
+          <span className="text-xs font-medium">Insert Logs</span>
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent
-        className="w-105 p-0 overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-xl rounded-xl bg-white dark:bg-zinc-950"
-        align="start"
-        sideOffset={6}
-      >
+      <PopoverContent className="w-105 p-0" align="start">
         <div className="flex max-h-60">
+          {/* LEFT SIDEBAR PANEL */}
+          <div className="w-45 p-2.5 border-r overflow-y-auto max-h-60">
+            <div className="text-[10px] uppercase font-bold mb-2 text-zinc-400 tracking-wider">
+              Log Stream
+            </div>
 
-          {/* LEFT SIDEBAR: Log Selection */}
-          <div className="w-45 bg-zinc-50/50 dark:bg-zinc-900/30 border-r border-zinc-100 dark:border-zinc-800 p-2.5 flex flex-col justify-between">
+            <div className="space-y-0.5">
+              {availableTabs.map((tab) => {
+                const tabLogCount = targetRoundIds.reduce((sum, id) => {
+                  const tabLogs = allAccumulatedLogs?.[id]?.[tab] || [];
+                  const selectedRows = getSelectedRowsForTab(id, tab).length > 0
+                    ? getSelectedRowsForTab(id, tab)
+                    : getSelectedRowsForTab("", tab);
+                  return sum + (selectedRows.length > 0 ? selectedRows.length : tabLogs.length);
+                }, 0);
+
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={cn(
+                      "w-full text-left px-2 py-1 text-xs rounded flex items-center justify-between transition-colors",
+                      tab === activeTab
+                        ? "bg-black text-white font-medium"
+                        : "hover:bg-zinc-100 text-zinc-700"
+                    )}
+                  >
+                    <span className="truncate">{formatTabName(tab)}</span>
+                    {tabLogCount > 0 && (
+                      <span className={cn(
+                        "text-[10px] px-1.5 py-0.5 rounded-full ml-1 font-mono",
+                        tab === activeTab ? "bg-zinc-800 text-zinc-200" : "bg-zinc-100 text-zinc-500"
+                      )}>
+                        {tabLogCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* RIGHT ACTION PANEL */}
+          <div className="flex-1 p-4 flex flex-col justify-between bg-zinc-50/50 max-h-60 overflow-y-auto">
             <div>
-              <div className="px-2 pb-2 pt-1 flex items-center gap-1.5 text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
-                <Layers className="h-3 w-3 text-zinc-400" />
-                Log Stream
-              </div>
+              <h4 className="text-xs font-semibold text-zinc-900">
+                {activeTab ? formatTabName(activeTab) : "No Tab Selected"}
+              </h4>
 
-              <div className="space-y-0.5 overflow-y-auto max-h-47.5 pr-1">
-                {availableTabs.map((tab) => {
-                  const isSelected = tab === activeTab;
-                  return (
-                    <button
-                      key={tab}
-                      type="button"
-                      onClick={() => setActiveTab(tab)}
-                      className={cn(
-                        "w-full flex items-center justify-between px-2.5 py-1.5 rounded-md text-xs transition-all relative font-medium group",
-                        isSelected
-                          ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 shadow-sm"
-                          : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 hover:text-zinc-900 dark:hover:text-zinc-100"
-                      )}
-                    >
-                      <span className="truncate">{formatTabName(tab)}</span>
-                      <ChevronRight className={cn(
-                        "h-3 w-3 opacity-0 transform -translate-x-1 transition-all",
-                        isSelected ? "opacity-100 translate-x-0" : "group-hover:opacity-40"
-                      )} />
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+              <p className="text-[11px] text-zinc-500 mt-1">
+                {targetRoundIds.length > 0
+                  ? `Active Scope: ${targetRoundIds.length} round(s)`
+                  : "No data available"}
+              </p>
 
-          {/* RIGHT SIDE: Dynamic Info & Quick Action Button */}
-          <div className="flex-1 p-4 flex flex-col justify-between bg-white dark:bg-zinc-950">
-
-            {/* Top Info section */}
-            <div className="space-y-3">
-              <div>
-                <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider bg-zinc-100 dark:bg-zinc-900 px-1.5 py-0.5 rounded">
-                  Status Pane
-                </span>
-                <div className="flex items-start gap-1.5 mt-2.5">
-                  <CornerDownRight className="h-3.5 w-3.5 text-zinc-400 mt-0.5" />
-                  <div>
-                    <h5 className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                      {activeTab ? formatTabName(activeTab) : "No Stream Selected"}
-                    </h5>
-                    {/* ✅ Jargon replaced with helpful contextual round metrics */}
-                    <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 leading-snug">
-                      {checkedIds.length > 0 ? (
-                        <>
-                          Aggregating logs across{" "}
-                          <span className="font-semibold text-zinc-800 dark:text-zinc-200">
-                            {checkedIds.length} selected {checkedIds.length === 1 ? "round" : "rounds"}
-                          </span>
-                          .
-                        </>
-                      ) : (
-                        "1 Round logs"
-                      )}
-                    </p>
-                  </div>
+              <div className="mt-4 p-2 bg-white border border-zinc-100 rounded-md shadow-2xs">
+                <div className="flex justify-between items-center text-xs text-zinc-600">
+                  <span>Logs to Insert:</span>
+                  <span className="font-mono font-bold text-zinc-900 bg-zinc-100 px-1.5 py-0.5 rounded">
+                    {totalLogCount}
+                  </span>
                 </div>
               </div>
-
-              {!isLoading && (
-                <div className="flex items-center gap-3 bg-zinc-50 dark:bg-zinc-900/50 rounded-lg p-2 border border-zinc-100 dark:border-zinc-800/60">
-                  <Database className={cn("h-4 w-4 shrink-0", hasLogs ? "text-emerald-500" : "text-zinc-400")} />
-                  <div className="flex flex-col">
-                    <span className="text-[11px] font-medium text-zinc-500 dark:text-zinc-400 leading-none">Log Count</span>
-                    <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200 mt-1">
-                      {hasLogs ? `${allSelectedRoundsLogs.length} entries queued` : "0 logs matching filters"}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
-            {/* Bottom Actions based on States */}
-            <div className="pt-2">
+            <Button
+              disabled={!hasLogs || isLoading}
+              onClick={insertLogs}
+              className="mt-4 w-full"
+            >
               {isLoading ? (
-                <div className="w-full flex items-center justify-center gap-2 text-xs font-medium text-zinc-400 bg-zinc-50 dark:bg-zinc-900 border border-dashed rounded-lg py-2.5">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
-                  <span>Scanning rows...</span>
-                </div>
-              ) : hasLogs ? (
-                <Button
-                  className="w-full text-xs font-semibold h-9 shadow-sm bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:hover:bg-zinc-200 dark:text-zinc-950 rounded-md transition-colors"
-                  onClick={insertLogs}
-                >
-                  Confirm & Insert Logs
-                </Button>
+                <>
+                  <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                  Loading...
+                </>
               ) : (
-                <Button
-                  disabled
-                  className="w-full text-xs font-medium h-9 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 dark:text-zinc-600 rounded-md cursor-not-allowed"
-                >
-                  Empty Target Stream
-                </Button>
+                `Insert Logs (${totalLogCount})`
               )}
-            </div>
-
+            </Button>
           </div>
-
         </div>
       </PopoverContent>
     </Popover>

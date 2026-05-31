@@ -27,11 +27,9 @@ export type GameMetaData = {
   showPopupOf?: string;
 };
 
-// Map structure allows easy O(1) addition, deletion, and checks by ID
 export type SelectedRoundDetailsMap = Record<string, RoundDetailsResponse>;
-
-// Type tracking accumulated logs across multiple rounds
 export type AccumulatedLogsMap = Record<string, any>;
+export type SelectedRowsMap = Record<string, Record<string, string[]>>;
 
 type RoundDetailsContextType = {
   roundDetailsInput: RoundDetailsInputProps | null;
@@ -42,6 +40,9 @@ type RoundDetailsContextType = {
     val: Partial<MultiIdsState> | ((prev: MultiIdsState) => MultiIdsState)
   ) => void;
 
+  activeId: string;
+  setActiveId: Dispatch<SetStateAction<string>>;
+
   isBulkMode: boolean;
   setBulkMode: Dispatch<SetStateAction<boolean>>;
 
@@ -51,22 +52,22 @@ type RoundDetailsContextType = {
   roundDetails: RoundDetailsResponse | null;
   setRoundDetails: (val: RoundDetailsResponse | null) => void;
 
-  // Global state store tracking details of every checked round/game
   selectedRoundDetailsMap: SelectedRoundDetailsMap;
   setSelectedRoundDetailsMap: Dispatch<SetStateAction<SelectedRoundDetailsMap>>;
 
-  // Background raw cache tracking logs of every fetched round
   accumulatedLogs: AccumulatedLogsMap;
   setAccumulatedLogs: Dispatch<SetStateAction<AccumulatedLogsMap>>;
-
-  // EXPOSED TO EVERYONE: Returns all loaded data unfiltered so the dashboard works perfectly
-  selectedRoundLogs: AccumulatedLogsMap;
 
   roundOverview: InfoCardProps[] | null;
   setRoundOverview: (val: InfoCardProps[] | null) => void;
 
   gameMetadata: GameMetaData[] | null;
   setGameMetadata: (val: GameMetaData[] | null) => void;
+
+  selectedRowsMap: SelectedRowsMap;
+  setSelectedRowsMap: Dispatch<SetStateAction<SelectedRowsMap>>;
+
+  resetSelectionState: () => void;
 };
 
 const RoundDetailsContext = createContext<RoundDetailsContextType | null>(null);
@@ -75,37 +76,35 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
   const [roundDetailsInput, setRoundDetailsInput] =
     useState<RoundDetailsInputProps | null>(null);
 
-  const [resolutionEditorOpen, setResolutionEditorOpen] =
-    useState<boolean>(false);
+  const [resolutionEditorOpen, setResolutionEditorOpen] = useState(false);
+  const [isBulkMode, setBulkMode] = useState(false);
 
-  const [isBulkMode, setBulkMode] = useState<boolean>(false);
+  const [activeId, setActiveId] = useState<string>("");
 
   const [roundDetails, setRoundDetailsData] =
     useState<RoundDetailsResponse | null>(null);
 
-  // Global state store tracking details of every checked round/game
   const [selectedRoundDetailsMap, setSelectedRoundDetailsMap] =
     useState<SelectedRoundDetailsMap>({});
 
-  // Global background cache tracking logs of every fetched round
-  const [accumulatedLogs, setAccumulatedLogs] =
-    useState<AccumulatedLogsMap>({});
+  const [accumulatedLogs, setAccumulatedLogs] = useState<AccumulatedLogsMap>({});
+
+  const [selectedRowsMap, setSelectedRowsMap] = useState<SelectedRowsMap>({});
 
   const [roundOverview, setRoundOverviewData] =
     useState<InfoCardProps[] | null>(null);
 
-  const [multiIdsState, setMultiIdsState] =
-    useState<MultiIdsState>({
-      round_ids: [],
-      game_ids: [],
-      user_id: "",
-    });
+  const [multiIdsState, setMultiIdsState] = useState<MultiIdsState>({
+    round_ids: [],
+    game_ids: [],
+    user_id: "",
+  });
 
   const [gameMetadata, setGameMetadataData] =
     useState<GameMetaData[] | null>(null);
 
   const setMultiIds = useCallback(
-    (val: Partial<MultiIdsState> | ((prev: MultiIdsState) => MultiIdsState)) => {
+    (val: any) => {
       setMultiIdsState((prev) => {
         const next =
           typeof val === "function" ? val(prev) : { ...prev, ...val };
@@ -120,28 +119,28 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
     []
   );
 
-  const setRoundDetails = useCallback(
-    (val: RoundDetailsResponse | null) => {
-      setRoundDetailsData(val);
-    },
-    []
-  );
+  /**
+   * ✅ FIXED RESET (important)
+   * prevents ghost selection bugs in solo mode
+   */
+  const resetSelectionState = useCallback(() => {
+    setSelectedRoundDetailsMap({});
+    setAccumulatedLogs({});
+    setSelectedRowsMap({});
+    setActiveId("");
 
-  const setRoundOverview = useCallback(
-    (val: InfoCardProps[] | null) => {
-      setRoundOverviewData(val);
-    },
-    []
-  );
-
-  const setGameMetadata = useCallback((val: GameMetaData[] | null) => {
-    setGameMetadataData(val);
+    setMultiIdsState({
+      round_ids: [],
+      game_ids: [],
+      user_id: "",
+    });
   }, []);
 
-  // ✅ UNFILTERED FOR DASHBOARD: Simply points to the total accumulated cache
-  // This ensures the dashboard doesn't experience unintended missing logs
-  const selectedRoundLogs = accumulatedLogs;
-
+  /**
+   * IMPORTANT:
+   * DO NOT alias accumulatedLogs as selectedRoundLogs.
+   * If needed, compute filtered logs in consumers.
+   */
   const value = useMemo(
     () => ({
       roundDetailsInput,
@@ -150,6 +149,9 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
       multiIds: multiIdsState,
       setMultiIds,
 
+      activeId,
+      setActiveId,
+
       isBulkMode,
       setBulkMode,
 
@@ -157,7 +159,7 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
       setResolutionEditorOpen,
 
       roundDetails,
-      setRoundDetails,
+      setRoundDetails: setRoundDetailsData,
 
       selectedRoundDetailsMap,
       setSelectedRoundDetailsMap,
@@ -165,31 +167,37 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
       accumulatedLogs,
       setAccumulatedLogs,
 
-      selectedRoundLogs,
-
       roundOverview,
-      setRoundOverview,
+      setRoundOverview: setRoundOverviewData,
 
       gameMetadata,
-      setGameMetadata,
+      setGameMetadata: setGameMetadataData,
+
+      selectedRowsMap,
+      setSelectedRowsMap,
+
+      resetSelectionState,
     }),
     [
       roundDetailsInput,
       multiIdsState,
+      activeId,
       isBulkMode,
       resolutionEditorOpen,
       roundDetails,
       selectedRoundDetailsMap,
       accumulatedLogs,
-      selectedRoundLogs,
+      selectedRowsMap,
       roundOverview,
       gameMetadata,
       setRoundDetailsInput,
+      setMultiIds,
       setBulkMode,
       setResolutionEditorOpen,
-      setRoundDetails,
-      setRoundOverview,
-      setGameMetadata,
+      setRoundDetailsData,
+      setRoundOverviewData,
+      setGameMetadataData,
+      resetSelectionState,
     ]
   );
 
@@ -202,10 +210,6 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
 
 export function useRoundDetails() {
   const ctx = useContext(RoundDetailsContext);
-  if (!ctx) {
-    throw new Error(
-      "useRoundDetails must be used inside RoundDetailsProvider"
-    );
-  }
+  if (!ctx) throw new Error("useRoundDetails must be used inside provider");
   return ctx;
 }

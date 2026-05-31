@@ -1,8 +1,13 @@
 import { createCommand, LexicalCommand } from "lexical";
 
+export type GroupedRoundLogs = {
+  roundId: string;
+  logs: any[];
+};
+
 export type InsertLogsPayload = {
   activeTab: string;
-  logs: any[];
+  groupedLogs: GroupedRoundLogs[];
   columns: string[];
 };
 
