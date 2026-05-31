@@ -1,39 +1,21 @@
-// hooks/use-prefetch-transaction-logs.ts
+// @/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-transactionlogs.ts
 
 import { useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { c_getTransactionLogs } from "@/lib/api/round-details/transaction-logs";
+import { useQueryClient, useQuery, UseQueryResult } from "@tanstack/react-query";
+import { c_getTransactionLogs, TransactionLogsProps } from "@/lib/api/round-details/transaction-logs";
+import { transactionLogsKeys } from "@/lib/query-key/transaction-logs";
 
-interface Params {
-  roundId?: string;
-  timeStamp?: string;
-  game_id?: string;
-  user_id?: string;
-  game_type?: string;
-}
-
-export function usePrefetchTransactionLogs({
-  roundId,
-  timeStamp,
-  game_id,
-  user_id,
-  game_type,
-}: Params) {
+// --- Prefetch Hook ---
+export function usePrefetchTransactionLogs(params: TransactionLogsProps) {
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!roundId || !timeStamp) return;
+    if (!params?.roundId || !params?.timeStamp) return;
 
     queryClient.prefetchQuery({
-      queryKey: ["logs", { roundId, timeStamp, game_id, user_id, game_type }],
-      queryFn: () =>
-        c_getTransactionLogs({
-          roundId,
-          timeStamp,
-          game_id,
-          user_id,
-          game_type,
-        }),
+      queryKey: transactionLogsKeys.list(params), 
+      queryFn: () => c_getTransactionLogs(params),
+      staleTime: Infinity, // ✅ Treat prefetched data as fresh indefinitely
     });
-  }, [roundId, timeStamp, game_id, user_id, game_type]);
+  }, [params, queryClient]);
 }

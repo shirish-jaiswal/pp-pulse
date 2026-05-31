@@ -61,7 +61,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           <DoYouKnow />
           <KnowledgeQuiz />
           <ScrollArea className="flex-1 w-full">
-            <div className="p-3">{children}</div>
+            <div className="p-1">{children}</div>
           </ScrollArea>
         </RoundDetailsProvider>
       </SidebarInset>

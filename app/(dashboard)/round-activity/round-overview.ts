@@ -22,9 +22,6 @@ const safeString = (value: unknown): string =>
 const isValidErrorCode = (code: unknown) =>
   code !== null && code !== undefined && code !== "0" && code !== "";
 
-const isEmptyArray = (arr: unknown) =>
-  !Array.isArray(arr) || arr.length === 0;
-
 const hasValidData = (arr: any[]) =>
   Array.isArray(arr) &&
   arr.length > 0 &&
@@ -80,7 +77,7 @@ const buildTxnSection = (
   if (txns.length === 0) return null;
 
   return {
-    iName: icon,
+    icon: icon,
     items: [
       {
         label: title,
@@ -102,7 +99,6 @@ export default function generateRoundOverview(
 
   const { betInfo = [], tptInfo = [] } = roundDetails;
 
-  // 🚨 Early exit
   if (!hasValidData(betInfo) && !hasValidData(tptInfo)) {
     return { roundOverview: [] };
   }
@@ -116,6 +112,10 @@ export default function generateRoundOverview(
   const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id || firstTpt?.casino_id);
   const casinoName = safeString(firstBet?.casino_desc || firstTpt?.casino_name);
+  
+  // Extract wallet type safely for dynamic text icon generation
+  const walletType = safeString(firstTpt?.Wallet_Type || "WT");
+
   // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
@@ -123,16 +123,10 @@ export default function generateRoundOverview(
   const cancelledTxns = tptInfo.filter(txn => txn.action_type === "Cancelled");
   const adjustedTxns = tptInfo.filter(txn => txn.action_type === "Adjusted");
 
-  // Status logic
-  const hasPlacedError = placedTxns.some(txn =>
-    isValidErrorCode(txn.error_code)
-  );
-
+  const hasPlacedError = placedTxns.some(txn => isValidErrorCode(txn.error_code));
   const settledTxn = settledTxns[0];
   const hasSettledError = Boolean(
-    settledTxn &&
-      settledTxn.status_code !== "0" &&
-      isValidErrorCode(settledTxn.error_code)
+    settledTxn && settledTxn.status_code !== "0" && isValidErrorCode(settledTxn.error_code)
   );
 
   const isSettled = settledTxns.length > 0;
@@ -147,24 +141,18 @@ export default function generateRoundOverview(
       : "success";
 
   const hasCancelled = cancelledTxns.length > 0;
-  const hasCancelledError = cancelledTxns.some(txn =>
-    isValidErrorCode(txn.error_code)
-  );
-  const cancelledVariant: InfoCardProps["variant"] =
-    hasCancelledError ? "error" : "default";
+  const hasCancelledError = cancelledTxns.some(txn => isValidErrorCode(txn.error_code));
+  const cancelledVariant: InfoCardProps["variant"] = hasCancelledError ? "error" : "default";
 
-    const hasAdjusted = adjustedTxns.length > 0;
-    const hasAdjustedError = adjustedTxns.some(txn =>
-      isValidErrorCode(txn.error_code)
-    );
-    const adjustedVariant: InfoCardProps["variant"] =
-      hasAdjustedError ? "error" : "info";
-  // ------------------
-  // Build Sections
-  // ------------------
+  const hasAdjusted = adjustedTxns.length > 0;
+  const hasAdjustedError = adjustedTxns.some(txn => isValidErrorCode(txn.error_code));
+  const adjustedVariant: InfoCardProps["variant"] = hasAdjustedError ? "error" : "info";
+
   const sections: (InfoCardProps | null)[] = [
     {
-      iName: "landmark",
+      // Pass walletType string here. InfoCard processes strings as custom text SVGs
+      icon: walletType, 
+      variant: walletType.toLocaleLowerCase() === "sw" ? "success" : walletType === "bt" ? "info" : "default",
       isIconButton: true,
       items: [
         {
@@ -174,13 +162,13 @@ export default function generateRoundOverview(
         },
         {
           label: "Casino Name",
-          value: casinoName + " - " + firstTpt.Wallet_Type || "N/A",
+          value: casinoName || "N/A",
           ...createLink(casinoId, EXTERNAL_LINKS.casino),
         },
       ],
     },
     {
-      iName: "fingerprint",
+      icon: "fingerprint",
       isIconButton: true,
       items: [
         {
@@ -196,13 +184,7 @@ export default function generateRoundOverview(
       ],
     },
     buildTxnSection("Placed BETs", "coins", placedTxns, currency),
-    buildTxnSection(
-      "Settled BETs",
-      "hand_coins",
-      settledTxns,
-      currency,
-      transactionVariant
-    ),
+    buildTxnSection("Settled BETs", "hand_coins", settledTxns, currency, transactionVariant),
     buildTxnSection("Unknown BETs", "coins", unknownTxns, currency),
     buildTxnSection("Cancelled BETs", "alert", cancelledTxns, currency, cancelledVariant),
     buildTxnSection("Adjusted BETs", "alert", adjustedTxns, currency, adjustedVariant),

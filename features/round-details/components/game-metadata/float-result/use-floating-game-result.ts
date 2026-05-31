@@ -25,7 +25,6 @@ export function useFloatingGameResult(): FloatingGameResult | null {
         ? cards.filter(item => item && typeof item === 'object' && 'code' in item)
         : [];
 
-    console.log("CardsClean", cleanCardsArray)
     const plugin = gamePlugins[gameType];
 
     if (!plugin) {

@@ -19,7 +19,6 @@ import { Toolbar } from "@/components/custom/text-editor/toolbar/toolbar";
 import ImagesPlugin from "@/components/custom/text-editor/toolbar/image/image-plugin";
 import FieldPlugin from "@/components/custom/text-editor/toolbar/field-variables/field-plugin";
 import { FieldNode } from "@/components/custom/text-editor/toolbar/field-variables/field-node";
-import { LogTogglePlugin } from "./toolbar/logs/log-toggle-plugin";
 import LogPlugin from "./toolbar/logs/log-plugin";
 
 

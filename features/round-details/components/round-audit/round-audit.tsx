@@ -29,7 +29,7 @@ export default function RoundAudit() {
 
   return (
     <TooltipProvider delayDuration={0}>
-      <div className="flex w-full min-h-[calc(100vh-42vh)] max-h-screen bg-background border rounded-xl overflow-hidden shadow-md">
+      <div className="flex w-full min-h-[calc(100vh-37vh)] max-h-screen bg-background border rounded-xl overflow-hidden shadow-md">
         <RoundAuditSidebar
           tabs={tabs}
           activeTab={activeTab}

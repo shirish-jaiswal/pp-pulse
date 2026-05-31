@@ -1,4 +1,4 @@
-import React from 'react';
+"use client";
 import {
   Dices,
   History,
@@ -6,8 +6,14 @@ import {
   Users,
   Terminal
 } from 'lucide-react';
+import { useGetPotentialWinningsPayoutByGameName } from '@/hooks/excel-db/use-get-potential-winning-payout-details-by-game-name';
+
+const BET_CODES = ["7", "SB:31&32"];
 
 function HomePage() {
+  const { data, isLoading } = useGetPotentialWinningsPayoutByGameName("roulette", BET_CODES);
+
+  console.log("Potential Winning Payout Data:", data);
   return (
     <div className="p-6 space-y-8 min-h-[80vh] flex flex-col justify-between">
       <div className="space-y-8">
@@ -124,15 +130,6 @@ function HomePage() {
               <h3 className="font-semibold">Crash Games Expansion</h3>
               <p className="text-sm text-gray-600 mt-2">
                 Full integration of crash games into round activity tracking pipelines.
-              </p>
-            </div>
-
-            {/* Multi Round Resolution */}
-            <div className="border rounded-xl p-4 shadow-sm bg-blue-50/50">
-              <h3 className="font-semibold">Multi-Round Resolution Summary</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Aggregated resolution engine to generate combined summaries across
-                multiple selected game rounds for analytics and audit.
               </p>
             </div>
           </div>

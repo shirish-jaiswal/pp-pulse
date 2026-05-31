@@ -1,3 +1,4 @@
+// @/features/round-details/components/round-audit/tab-content/log-monitor/PremiumLogMonitor.tsx
 "use client";
 
 import { LogHeader } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-header";
@@ -22,14 +23,20 @@ export default function PremiumLogMonitor({ roundId, timeStamp, sharedState }: P
   }
 
   return (
-    <div className="h-screen w-full flex flex-col text-[13px] overflow-hidden">
+    <div className="h-[calc(100vh-2.5rem)] w-full flex flex-col text-[13px] overflow-hidden">
       <LogHeader {...state} />
 
+      {/* Main layout track: min-h-0 containerizes children */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <LogSidebar {...state} />
 
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
-          <LogTable {...state} />
+        {/* min-w-0 stops a wide table from bleeding horizontally into the sidebar track */}
+        <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+          <LogTable
+            filteredLogs={state.filteredLogs}
+            visibleColumns={state.visibleColumns}
+            activeTab={state.activeTab ?? "default"}
+          />
         </main>
       </div>
 

@@ -17,6 +17,7 @@ export const BetInfoSchema = z.object({
   casino_id: z.string().trim(),
   casino_desc: z.string().trim(),
   displayDescription: z.string().trim(),
+  env: z.string().trim(),
 });
 
 export const BetTableInfoSchema = z.array(BetInfoSchema);

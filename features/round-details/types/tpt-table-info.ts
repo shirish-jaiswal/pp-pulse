@@ -20,6 +20,8 @@ export const TransactionSchema = z.object({
   casino_id:z.string().trim(),
   casino_name:z.string().trim(),
   Wallet_Type:z.string().trim(),
+  balance_before: z.number(),
+  balance_after: z.number(),
 });
 
 export const TPTTableInfoSchema = z.array(TransactionSchema);

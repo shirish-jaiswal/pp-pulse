@@ -19,6 +19,8 @@ const TxnSettlementSchema = z.object({
   errorCode: z.string(),
   retryCount: z.string(),
   userId: z.string(),
+  balance_before: z.string(),
+  balance_after: z.string(),
 });
 
 const BetInfoSchema = z.object({
