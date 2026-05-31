@@ -1,5 +1,5 @@
 export const EXTERNAL_LINKS = {
-  "contextMap.casinoId": (id: string) => `/portal/casino-details/${id}`,
+ "contextMap.casinoId": (id: string) => `/portal/casino-details?casinoId=${id}`,
   "contextMap.userId": (id: string) => `/portal/user-management?userId=${id}`,
   "contextMap.roundId": (id: string) => `/portal/round-activity?roundId=${id}`,
   "contextMap.playerId": (id: string) => `/portal/user-management?playerId=${id}`
