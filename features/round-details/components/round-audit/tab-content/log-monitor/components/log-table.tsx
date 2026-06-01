@@ -1,3 +1,5 @@
+// @/features/round-details/components/round-audit/tab-content/log-monitor/components/LogTable.tsx
+
 "use client";
 
 import React, { useState, useRef } from "react";
@@ -17,9 +19,19 @@ interface LogTableProps {
     filteredLogs: any[];
     visibleColumns: string[];
     activeTab: string;
+    isLoading?: boolean;
+    isError?: boolean;
+    onRetry?: () => void;
 }
 
-export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }: LogTableProps) {
+export function LogTable({ 
+    filteredLogs, 
+    visibleColumns, 
+    activeTab = "default",
+    isLoading = false,
+    isError = false,
+    onRetry
+}: LogTableProps) {
     const { roundDetails, selectedRowsMap, setSelectedRowsMap, activeId } =
         useRoundDetails();
 
@@ -190,83 +202,115 @@ export function LogTable({ filteredLogs, visibleColumns, activeTab = "default" }
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                    {filteredLogs.map((log: any, idx: number) => {
-                        const logId = getLogId(log, idx);
-                        const isChecked = currentSelected.has(logId);
-
-                        return (
-                            <TableRow
-                                key={logId}
-                                className={cn(
-                                    "relative border-b last:border-b-0 group transition-colors hover:bg-muted/20",
-                                    isChecked && "bg-muted/40 hover:bg-muted/50"
-                                )}
-                            >
-                                {allColumns.map((col) => {
-                                    const width = columnWidths[col] ?? 140;
-
-                                    if (col === "checkbox") {
-                                        return (
-                                            <TableCell
-                                                key={col}
-                                                style={{ width, minWidth: width, maxWidth: width }}
-                                                className="p-0 align-middle text-center border-r group-last:border-b-0"
-                                            >
-                                                <div className="flex items-center justify-center h-full">
-                                                    <input
-                                                        type="checkbox"
-                                                        className={cn(
-                                                            "h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary accent-primary cursor-pointer",
-                                                            "after:absolute after:inset-0 after:z-10"
-                                                        )}
-                                                        checked={isChecked}
-                                                        onChange={() => handleRowCheck(logId)}
-                                                    />
-                                                </div>
-                                            </TableCell>
-                                        );
-                                    }
-
-                                    if (col === "time") {
-                                        const timestamp = log.timestamp || log.raw?.["@timestamp"];
-                                        return (
-                                            <TableCell
-                                                key={col}
-                                                style={{ width, minWidth: width, maxWidth: width }}
-                                                className="px-3 py-1.5 align-top border-r text-xs font-mono tracking-tight text-muted-foreground group-last:border-b-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
-                                            >
-                                                <div className="relative z-20 flex flex-col space-y-0.5 select-text whitespace-normal break-words">
-                                                    <span>{timestamp ? new Date(timestamp).toUTCString() : "-"}</span>
-                                                </div>
-                                            </TableCell>
-                                        );
-                                    }
-
-                                    const val = getNestedValue(log, col);
-                                    return (
-                                        <TableCell
-                                            key={col}
-                                            style={{ width, minWidth: width, maxWidth: width }}
-                                            className="px-3 py-1.5 align-top border-r last:border-r-0 group-last:border-b-0"
+                    {isLoading ? (
+                        <TableRow>
+                            <TableCell colSpan={allColumns.length} className="h-32 text-center align-middle">
+                                <div className="flex items-center justify-center space-x-2 font-mono text-xs text-muted-foreground">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                                    <span>Streaming live segment records...</span>
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ) : isError ? (
+                        <TableRow>
+                            <TableCell colSpan={allColumns.length} className="h-32 text-center align-middle">
+                                <div className="flex flex-col items-center justify-center space-y-2 text-xs">
+                                    <p className="text-destructive font-medium">This logging context failed to respond.</p>
+                                    {onRetry && (
+                                        <button 
+                                            onClick={onRetry}
+                                            className="px-3 py-1 border text-[11px] bg-secondary text-secondary-foreground rounded hover:bg-secondary/80 font-mono transition-all"
                                         >
-                                            {/* Added relative z-20 block here as well to unlock string content text selection */}
-                                            <div className="relative z-20 text-xs leading-5 break-words [overflow-wrap:anywhere] select-text">
-                                                {typeof val === "object" && val !== null ? (
-                                                    <pre className="relative z-20 text-[11px] font-mono bg-muted/40 p-2 rounded border border-muted/50 whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-h-40 overflow-y-auto cursor-default">
-                                                        {JSON.stringify(val, null, 2)}
-                                                    </pre>
-                                                ) : (
-                                                    <span className="text-xs text-foreground/95 whitespace-pre-wrap break-all block">
-                                                        {String(val ?? "-")}
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </TableCell>
-                                    );
-                                })}
-                            </TableRow>
-                        );
-                    })}
+                                            Retry Connection
+                                        </button>
+                                    )}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    ) : filteredLogs.length === 0 ? (
+                        <TableRow>
+                            <TableCell colSpan={allColumns.length} className="h-24 text-center align-middle text-xs text-muted-foreground font-mono">
+                                No logs recorded in this query view window.
+                            </TableCell>
+                        </TableRow>
+                    ) : (
+                        filteredLogs.map((log: any, idx: number) => {
+                            const logId = getLogId(log, idx);
+                            const isChecked = currentSelected.has(logId);
+
+                            return (
+                                <TableRow
+                                    key={logId}
+                                    className={cn(
+                                        "relative border-b last:border-b-0 group transition-colors hover:bg-muted/20",
+                                        isChecked && "bg-muted/40 hover:bg-muted/50"
+                                    )}
+                                >
+                                    {allColumns.map((col) => {
+                                        const width = columnWidths[col] ?? 140;
+
+                                        if (col === "checkbox") {
+                                            return (
+                                                <TableCell
+                                                    key={col}
+                                                    style={{ width, minWidth: width, maxWidth: width }}
+                                                    className="p-0 align-middle text-center border-r group-last:border-b-0"
+                                                >
+                                                    <div className="flex items-center justify-center h-full">
+                                                        <input
+                                                            type="checkbox"
+                                                            className={cn(
+                                                                "h-3.5 w-3.5 rounded border-muted-foreground/30 text-primary focus:ring-primary accent-primary cursor-pointer",
+                                                                "after:absolute after:inset-0 after:z-10"
+                                                            )}
+                                                            checked={isChecked}
+                                                            onChange={() => handleRowCheck(logId)}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            );
+                                        }
+
+                                        if (col === "time") {
+                                            const timestamp = log.timestamp || log.raw?.["@timestamp"];
+                                            return (
+                                                <TableCell
+                                                    key={col}
+                                                    style={{ width, minWidth: width, maxWidth: width }}
+                                                    className="px-3 py-1.5 align-top border-r text-xs font-mono tracking-tight text-muted-foreground group-last:border-b-0 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                                                >
+                                                    <div className="relative z-20 flex flex-col space-y-0.5 select-text whitespace-normal break-words">
+                                                        <span>{timestamp ? new Date(timestamp).toUTCString() : "-"}</span>
+                                                    </div>
+                                                </TableCell>
+                                            );
+                                        }
+
+                                        const val = getNestedValue(log, col);
+                                        return (
+                                            <TableCell
+                                                key={col}
+                                                style={{ width, minWidth: width, maxWidth: width }}
+                                                className="px-3 py-1.5 align-top border-r last:border-r-0 group-last:border-b-0"
+                                            >
+                                                <div className="relative z-20 text-xs leading-5 break-words [overflow-wrap:anywhere] select-text">
+                                                    {typeof val === "object" && val !== null ? (
+                                                        <pre className="relative z-20 text-[11px] font-mono bg-muted/40 p-2 rounded border border-muted/50 whitespace-pre-wrap break-words [overflow-wrap:anywhere] max-h-40 overflow-y-auto cursor-default">
+                                                            {JSON.stringify(val, null, 2)}
+                                                        </pre>
+                                                    ) : (
+                                                        <span className="text-xs text-foreground/95 whitespace-pre-wrap break-all block">
+                                                            {String(val ?? "-")}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </TableCell>
+                                        );
+                                    })}
+                                </TableRow>
+                            );
+                        })
+                    )}
                 </TableBody>
             </Table>
         </div>

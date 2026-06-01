@@ -32,6 +32,7 @@ function CasinoInfoTab({ data }: { data: NormalisedCasinoData }) {
 
             <KVRow label="Casino ID" value={data.casino_id} />
             <KVRow label="Casino Name" value={data.casino_desc} />
+            <KVRow label="Wallet Type" value={data.Wallet_Type} />
             <KVRow label="Main Env ID" value={data.main_env_id} />
             <KVRow label="Main Env Name" value={data.main_env_name} />
             <KVRow label="Extra Data On Bet" value={<BoolBadge value={!!data.extra_data_on_bet} />} />

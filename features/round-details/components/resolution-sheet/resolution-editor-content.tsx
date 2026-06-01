@@ -192,13 +192,13 @@ export function ResolutionEditorContent({
 
   return (
     <>
-      {Object.keys(selectedRoundDetailsMap).length > 1 && (
-        <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono text-right bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-          Bulk Mode Active: Compiling data for {Object.keys(selectedRoundDetailsMap).length} rounds
-        </div>
-      )}
-
       <TabsContent value={tabsValue} className="mt-0 border-none">
+        {Object.keys(selectedRoundDetailsMap).length > 1 && (
+          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-mono text-right bg-amber-500/10 px-2 py-0.5 mb-2 rounded border border-amber-500/20">
+            Bulk Mode Active: Compiling data for {Object.keys(selectedRoundDetailsMap).length} rounds
+          </div>
+        )}
+
         <Card className="border-none shadow-none bg-transparent pt-0">
           <CardContent className="p-2">
             {/* HEADER */}

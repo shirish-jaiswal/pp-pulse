@@ -1,6 +1,7 @@
+// @/features/round-details/components/round-audit/tab-content/log-monitor/components/log-header.tsx
 "use client";
 
-import { Search, Activity, RefreshCw } from "lucide-react";
+import { Search, Activity, RefreshCw, AlertCircle } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 interface LogHeaderProps {
@@ -10,8 +11,10 @@ interface LogHeaderProps {
   query: string;
   setQuery: (val: string) => void;
   roundId: string;
-  refetchRoundLogs: () => Promise<void>; // ✅ New prop
-  isLoading: boolean;                     // ✅ New prop
+  refetchRoundLogs: () => Promise<void>;
+  isLoading: boolean;
+  hasTxnError?: boolean;
+  hasGameError?: boolean;
 }
 
 export function LogHeader({
@@ -23,29 +26,49 @@ export function LogHeader({
   roundId,
   refetchRoundLogs,
   isLoading,
+  hasTxnError = false,
+  hasGameError = false,
 }: LogHeaderProps) {
   return (
     <header className="h-10 flex items-center border-b border-border px-3 bg-muted/60">
       
-      {/* LEFT: Tabs */}
+      {/* LEFT: Tabs with localized error indicators */}
       <div className="flex items-center gap-1 flex-shrink-0">
-        {availableTabs.map((tab: string) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition",
-              activeTab === tab
-                ? "border-foreground text-foreground"
-                : "border-transparent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {tab}
-          </button>
-        ))}
+        {availableTabs.map((tab: string) => {
+          const isGameLogsTab = tab === "gameLogs";
+          const isPlatformOrTxnTab = tab === "platformLogs" || tab === "lcTransactionLogs";
+          
+          // Match the tab with its specific error state
+          const tabHasFailed = (isGameLogsTab && hasGameError) || (isPlatformOrTxnTab && hasTxnError);
+
+          return (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                "relative flex items-center gap-1.5 px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition select-none",
+                activeTab === tab
+                  ? "border-foreground text-foreground"
+                  : "border-transparent text-muted-foreground hover:text-foreground",
+                tabHasFailed && "text-destructive hover:text-destructive/80"
+              )}
+              title={tabHasFailed ? "Warning: Failed to fetch records for this segment round query" : undefined}
+            >
+              <span>{tab}</span>
+              
+              {/* Pulsing Red Status Indicator Dot */}
+              {tabHasFailed && (
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* CENTER: Search (properly isolated) */}
+      {/* CENTER: Filter Input */}
       <div className="flex-1 flex justify-center">
         <div className="relative w-full max-w-3xl">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground" />
@@ -58,19 +81,24 @@ export function LogHeader({
         </div>
       </div>
 
-      {/* RIGHT: Status & Targeted Actions */}
+      {/* RIGHT: Status Tracking */}
       <div className="flex items-center gap-3 text-xs flex-shrink-0 text-muted-foreground">
+        {(hasGameError || hasTxnError) && (
+          <div className="flex items-center gap-1 text-red-500 font-medium font-mono text-[11px] animate-pulse">
+            <AlertCircle className="w-3 h-3" />
+            <span>PARTIAL ROUND FETCH ERROR</span>
+          </div>
+        )}
+
         <button
           onClick={refetchRoundLogs}
           disabled={isLoading || !roundId}
-          className={cn(
-            "flex items-center justify-center h-7 w-7 rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
-          )}
-          title="Bypass cache & force refresh current round logs"
+          className="flex items-center justify-center h-7 w-7 rounded-md border border-border bg-background text-foreground transition-colors hover:bg-muted focus-visible:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Bypass cache & force refresh current active query stream"
         >
           <RefreshCw 
             className={cn(
-              "w-3 h-3 text-muted-foreground transition-colors group-hover:text-foreground", 
+              "w-3 h-3 text-muted-foreground transition-colors", 
               isLoading && "animate-spin text-primary"
             )} 
           />

@@ -38,12 +38,12 @@ export function ResolutionEditor({ gameName }: ResolutionEditorProps) {
                 </SheetHeader>
 
                 <Tabs value={tabSelected} onValueChange={setTabSelected} className="flex-1 flex flex-col min-h-0">
-                    <TabsList className="flex w-full border-b justify-start overflow-x-auto overflow-y-hidden whitespace-nowrap gap-1 bg-transparent border-muted unique-scrollbar">
+                    <TabsList className="flex w-full border-b justify-start overflow-x-auto overflow-y-hidden p-4 whitespace-nowrap gap-1 bg-transparent border-muted unique-scrollbar">
                         {categories.map((cat) => (
                             <TabsTrigger
                                 key={cat.id}
                                 value={cat.title}
-                                className="shrink-0 text-sm font-medium data-[state=active]:border-b-2 data-[state=active]:border-primary"
+                                className="shrink-0 text-sm font-medium data-[state=active]:border-b-2 p-3 data-[state=active]:border-primary"
                             >
                                 {cat.title}
                             </TabsTrigger>
