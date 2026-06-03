@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Copy, Edit } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import BetTable from "@/features/round-details/components/round-audit/tab-content/bet-details";
 import PremiumLogMonitor from "@/features/round-details/components/round-audit/tab-content/log-monitor";
@@ -32,8 +31,12 @@ export function RoundAuditContent({
 
   const [copied, setCopied] = useState(false);
   const shortId = gameId.split("-").pop();
-  const env = roundDetails?.betInfo?.[0]?.env;
   const sharedLogState = useLogState();
+
+  // Create references for each section to enable scrolling
+  const betsRef = useRef<HTMLDivElement>(null);
+  const txRef = useRef<HTMLDivElement>(null);
+  const logsRef = useRef<HTMLDivElement>(null);
 
   usePrefetchTransactionLogs({
     roundId: roundDetails?.tptInfo?.[0]?.round_id as string,
@@ -43,6 +46,21 @@ export function RoundAuditContent({
     game_type: roundDetails?.gameDetails?.[0]?.game_type as string,
     operator: roundDetails?.tptInfo?.[0]?.Wallet_Type.toLowerCase() as string,
   });
+
+  // Listen to activeTab changes and trigger smooth scrolling
+  useEffect(() => {
+    const targetRef = 
+      activeTab === "bets" ? betsRef : 
+      activeTab === "tx" ? txRef : 
+      activeTab === "logs" ? logsRef : null;
+
+    if (targetRef?.current) {
+      targetRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [activeTab]);
 
   const handleCopy = async () => {
     try {
@@ -56,7 +74,7 @@ export function RoundAuditContent({
 
   return (
     <div className="flex flex-col flex-1 min-w-0 bg-card/40 border-border/40 overflow-hidden font-sans">
-      <header className="flex bg-card-foreground/10 items-center justify-between px-2 py-2 border-b border-border/30 backdrop-blur-sm">
+      <header className="flex bg-card-foreground/10 items-center justify-between px-2 py-2 border-b border-border/30 backdrop-blur-sm sticky top-0 z-10">
         <div className="flex items-center gap-4 min-w-0">
           <h3 className="text-sm font-semibold text-foreground tracking-tight truncate">
             {activeLabel}
@@ -84,7 +102,6 @@ export function RoundAuditContent({
           </div>
         </div>
 
-        {/* RIGHT ACTIONS */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
@@ -97,46 +114,39 @@ export function RoundAuditContent({
         </div>
       </header>
 
-      {/* CONTENT */}
-      <div className="flex-1 p-1 overflow-y-auto max-h-[57vh]">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="space-y-4"
+      <div className="flex-1 p-3 overflow-y-auto max-h-[57vh] space-y-4 scroll-smooth">
+        
+        {/* Section 1: Bets */}
+        <div ref={betsRef} className="scroll-mt-2">
+          <FullScreenWrapper
+            title="Bet History"
+            description="Player wagers overview"
           >
-            {activeTab === "bets" && (
-              <FullScreenWrapper
-                title="Bet History"
-                description="Player wagers overview"
-              >
-                <BetTable items={roundDetails?.betInfo} />
-              </FullScreenWrapper>
-            )}
+            <BetTable items={roundDetails?.betInfo} />
+          </FullScreenWrapper>
+        </div>
 
-            {activeTab === "tx" && (
-              <FullScreenWrapper
-                title="Transaction Audit"
-                description="Transaction logs"
-              >
-                <TransactionTable transactions={roundDetails?.tptInfo} />
-              </FullScreenWrapper>
-            )}
+        {/* Section 2: Transactions */}
+        <div ref={txRef} className="scroll-mt-2">
+          <FullScreenWrapper
+            title="Transaction Audit"
+            description="Transaction logs"
+          >
+            <TransactionTable transactions={roundDetails?.tptInfo} />
+          </FullScreenWrapper>
+        </div>
 
-            {activeTab === "logs" && (
-              <FullScreenWrapper title="Execution Logs">
-                <PremiumLogMonitor
-                  roundId={roundDetails?.tptInfo?.[0]?.round_id || ""}
-                  timeStamp={roundDetails?.tptInfo?.[0]?.trans_date || ""}
-                  sharedState={sharedLogState}
-                />
-              </FullScreenWrapper>
-            )}
-          </motion.div>
-        </AnimatePresence>
+        {/* Section 3: Execution Logs */}
+        <div ref={logsRef} className="scroll-mt-4">
+          <FullScreenWrapper title="Execution Logs">
+            <PremiumLogMonitor
+              roundId={roundDetails?.tptInfo?.[0]?.round_id || ""}
+              timeStamp={roundDetails?.tptInfo?.[0]?.trans_date || ""}
+              sharedState={sharedLogState}
+            />
+          </FullScreenWrapper>
+        </div>
+
       </div>
     </div>
   );

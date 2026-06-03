@@ -9,7 +9,7 @@ import axios, {
 import { cookies } from "next/headers";
 
 const BASE_URL =
-  (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "");
+  (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "") || "";
 
 export const serverAxiosClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,

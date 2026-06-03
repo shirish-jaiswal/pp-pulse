@@ -10,14 +10,14 @@ type KibanaRequestOptions<T = unknown> = {
   baseURL?: string;
 };
 
-const KIBANA_BASE_URL = process.env.NEXT_PUBLIC_KIBANA_URL;
-const KIBANA_API_KEY = process.env.NEXT_PUBLIC_KIBANA_API_KEY;
+const KIBANA_BASE_URL = process.env.NEXT_PUBLIC_KIBANA_URL || "";
+const KIBANA_API_KEY = process.env.NEXT_PUBLIC_KIBANA_API_KEY || "";
 
-if (!KIBANA_BASE_URL) {
+if (!KIBANA_BASE_URL || KIBANA_BASE_URL === "") {
   throw new Error("Missing KIBANA_URL or NEXT_PUBLIC_KIBANA_URL");
 }
 
-if (!KIBANA_API_KEY) {
+if (!KIBANA_API_KEY || KIBANA_API_KEY === "") {
   throw new Error("Missing KIBANA_API_KEY or NEXT_PUBLIC_KIBANA_API_KEY");
 }
 

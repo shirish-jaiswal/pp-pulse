@@ -33,7 +33,7 @@ export default function TransactionTable({
   };
 
   const isError = (tx: any) =>
-    !(tx.error_code === "0" || tx.error_code === null);
+    !(tx.error_code === "0" || tx.error_code === null || tx.error_code === undefined);
   
   const getTime = (value: any) => {
     if (!value) return 0;
@@ -94,6 +94,7 @@ export default function TransactionTable({
             <th className="px-4 py-3 text-left font-medium">Platform</th>
             <th className="px-4 py-3 text-right font-medium">Amount / Wallet Balance</th>
             <th className="px-4 py-3 text-center font-medium">Status</th>
+            <th className="px-4 py-3 text-left font-medium">Error Code & Description</th>
             <th className="px-4 py-3 text-center font-medium">Retry</th>
           </tr>
         </thead>
@@ -101,7 +102,7 @@ export default function TransactionTable({
         {/* BODY */}
         <tbody>
           {sortedTransactions.map((tx, i) => {
-            const error = isError(tx);
+            const hasError = isError(tx);
             const retryVal = tx.retry_counter || 0;
             const currency = tx.currency_code?.trim() || "";
 
@@ -111,7 +112,7 @@ export default function TransactionTable({
                 className={cn(
                   "border-b last:border-0 transition",
                   "hover:bg-muted/30",
-                  error && "bg-rose-50/30"
+                  hasError && "bg-rose-50/30"
                 )}
               >
 
@@ -172,18 +173,33 @@ export default function TransactionTable({
                 <td className="px-4 py-3 text-center">
                   <span
                     className={cn(
-                      "text-xs font-medium",
-                      error ? "text-rose-600" : "text-emerald-600"
+                      "text-xs font-medium px-2 py-0.5 rounded",
+                      hasError 
+                        ? "text-rose-700 bg-rose-50 border border-rose-100" 
+                        : "text-emerald-700 bg-emerald-50 border border-emerald-100"
                     )}
                   >
-                    {error ? "Failed" : "Success"}
+                    {hasError ? "Failed" : "Success"}
                   </span>
+                </td>
 
-                  {error && tx.error_description && (
-                    <div className="text-[10px] text-muted-foreground mt-1 max-w-35 truncate">
-                      {tx.error_description}
+                {/* NEW COLUMN: ERROR & ERROR DESCRIPTION */}
+                <td className="px-4 py-3 text-left max-w-xs">
+                  <div className="flex flex-col gap-0.5">
+                    <div className="font-mono text-xs font-medium">
+                      <span className="text-muted-foreground mr-1">Code:</span>
+                      <span className={cn(hasError ? "text-rose-600 font-semibold" : "text-muted-foreground")}>
+                        {tx.error_code ?? "—"}
+                      </span>
                     </div>
-                  )}
+                    {tx.error_description ? (
+                      <div className="text-[11px] text-muted-foreground/90 leading-tight line-clamp-2" title={tx.error_description}>
+                        {tx.error_description}
+                      </div>
+                    ) : (
+                      <div className="text-[11px] text-muted-foreground/40 italic">No description</div>
+                    )}
+                  </div>
                 </td>
 
                 {/* RETRY */}
@@ -199,7 +215,6 @@ export default function TransactionTable({
                     {retryVal}
                   </span>
                 </td>
-
               </tr>
             );
           })}

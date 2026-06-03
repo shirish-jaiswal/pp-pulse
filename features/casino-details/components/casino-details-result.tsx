@@ -29,7 +29,6 @@ function CasinoInfoTab({ data }: { data: NormalisedCasinoData }) {
     return (
         <div className="max-w-xl border rounded-md p-4 bg-background">
             <h3 className="text-sm font-semibold mb-3">Casino Info</h3>
-
             <KVRow label="Casino ID" value={data.casino_id} />
             <KVRow label="Casino Name" value={data.casino_desc} />
             <KVRow label="Wallet Type" value={data.Wallet_Type} />

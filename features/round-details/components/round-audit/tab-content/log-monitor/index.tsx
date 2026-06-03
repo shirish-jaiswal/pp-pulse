@@ -37,7 +37,7 @@ export default function PremiumLogMonitor({ sharedState }: PremiumLogMonitorProp
     : state.filteredLogs;
 
   return (
-    <div className="h-[calc(100vh-2.5rem)] w-full flex flex-col text-[13px] overflow-hidden">
+    <div className="h-[calc(100vh-2.5rem)] w-full flex flex-col text-[13px] overflow-hidden rounded-xl border">
       <LogHeader {...state} />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">

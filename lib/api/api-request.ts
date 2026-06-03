@@ -10,7 +10,7 @@ type ApiRequestOptions<T = unknown> = {
   baseURL?: string;
 };
 
-const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "");
+const DEFAULT_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL?.replace(/\/$/, "") || "";
 
 if (!DEFAULT_BASE_URL) {
   throw new Error("Missing NEXT_PUBLIC_BACKEND_URL");
