@@ -1,5 +1,3 @@
-// @/lib/api/round-details/transaction-logs.ts
-
 import apiRequest from "@/lib/api/api-request";
 import { getBroadCategory, getGameType } from "@/utils/get-game-type";
 
@@ -29,8 +27,8 @@ function buildLogQueryWindows(data: TransactionLogsProps) {
         txnQueryParams.from = new Date(anchorTime.getTime() - 15 * 60 * 1000).toISOString();
         txnQueryParams.to = new Date(anchorTime.getTime() + 24 * 60 * 60 * 1000).toISOString();
 
-        gameLogQueryParams.from = new Date(anchorTime.getTime() - 5 * 60 * 1000).toISOString();
-        gameLogQueryParams.to = new Date(anchorTime.getTime() + 15 * 60 * 1000).toISOString();
+        gameLogQueryParams.from = new Date(anchorTime.getTime() - 2 * 60 * 1000).toISOString();
+        gameLogQueryParams.to = new Date(anchorTime.getTime() + 4 * 60 * 1000).toISOString();
     }
 
     return { txnQueryParams, gameLogQueryParams };
@@ -52,8 +50,6 @@ export async function fetchTransactionLogs(data: TransactionLogsProps) {
         params: txnQueryParams,
         requireCookie: true,
     }).catch((err) => {
-        // ✅ Prevent unhandled server rejections from breaking dehydration
-        console.error("Transaction/Platform logs backend failure:", err);
         return { lcTransactionLogs: [], platformLogs: [], isTxnError: true };
     });
 }

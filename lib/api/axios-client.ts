@@ -7,7 +7,7 @@ import axios, {
 } from "axios";
 
 const BASE_URL =
-  (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "");
+  (process.env.NEXT_PUBLIC_NEXT_URL as string).replace(/\/$/, "") || "";
 
 export const axiosClient: AxiosInstance = axios.create({
   baseURL: `${BASE_URL}`,
@@ -23,9 +23,6 @@ const pendingRequests = new Map<string, AbortController>();
 const createRequestKey = (config: AxiosRequestConfig) =>
   `${config.method}-${config.url}-${JSON.stringify(config.params || {})}`;
 
-/**
- * REQUEST INTERCEPTOR (CLIENT SAFE ONLY)
- */
 axiosClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // dedupe requests
