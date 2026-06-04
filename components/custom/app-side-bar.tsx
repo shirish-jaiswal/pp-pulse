@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react"; // Added useEffect
+import { useEffect } from "react";
 import {
   BookOpen,
   Building2,
@@ -35,6 +35,7 @@ import LogoutButton from "@/components/custom/logout-button";
 import { useProfile } from "@/context/use-profile";
 import Image from "next/image";
 
+// Icon Map definition matching database/JSON configurations
 const ICON_MAP: Record<string, any> = {
   HomeIcon,
   DicesIcon,
@@ -48,28 +49,30 @@ const ICON_MAP: Record<string, any> = {
   UserIcon,
 };
 
+// Expanded MenuItem type to handle optional metric/status badges
 type MenuItem = {
   title: string;
   url: string;
   icon: string;
   group: string;
   enabled?: boolean;
+  badge?: string | number; 
 };
 
 export function AppSidebar({ menu }: { menu: MenuItem[] }) {
-  const { state, setOpen } = useSidebar(); // Destructured setOpen from hook
+  const { state, setOpen } = useSidebar();
   const pathname = usePathname();
   const isCollapsed = state === "collapsed";
   const { user } = useProfile();
 
-  // Automatically collapse if pathname starts with /log-exp
+  // Automatically collapse sidebar if pathname starts with /log-exp
   useEffect(() => {
     if (pathname.startsWith("/log-exp")) {
       setOpen(false);
     }
   }, [pathname, setOpen]);
 
-  // Group items smoothly
+  // Group navigation items cleanly and filter out disabled entries
   const grouped = menu.reduce((acc, item) => {
     if (item.enabled === false) return acc;
     const group = item.group || "OTHER";
@@ -78,6 +81,7 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
     return acc;
   }, {} as Record<string, MenuItem[]>);
 
+  // Dynamic menu mapper
   const renderMenu = (items: MenuItem[]) =>
     items.map((item) => {
       const isActive = pathname.startsWith(item.url);
@@ -112,9 +116,17 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
                 )}
               </div>
 
-              {/* Subtle design polish: mini-arrow indicator for active links when expanded */}
-              {!isCollapsed && isActive && (
-                <ChevronRight className="w-3.5 h-3.5 text-primary/70 shrink-0" />
+              {/* Action item content (Badge counter or subtle Active arrow) */}
+              {!isCollapsed && (
+                <div className="flex items-center justify-end ml-auto shrink-0">
+                  {item.badge ? (
+                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wide transition-all">
+                      {item.badge}
+                    </span>
+                  ) : (
+                    isActive && <ChevronRight className="w-3.5 h-3.5 text-primary/70" />
+                  )}
+                </div>
               )}
             </Link>
           </SidebarMenuButton>
@@ -140,7 +152,6 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
               <Image src="/portal/logo.png" alt="logo" width={90} height={40} />
             </div>
           ) : (
-            // Professional minimal logomark placeholder
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground font-semibold text-sm shadow-sm transition-all duration-300 animate-in fade-in zoom-in-75">
               P
             </div>
@@ -159,7 +170,6 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
                   {group}
                 </p>
               ) : (
-                // Clean visual spacer between icon blocks when collapsed instead of leaving weird layout voids
                 <div className="mx-2 my-1 border-t border-border/30 first:hidden" />
               )}
 
@@ -197,12 +207,13 @@ export function AppSidebar({ menu }: { menu: MenuItem[] }) {
                   </div>
 
                   {!isCollapsed && (
-                    <div className="flex flex-col items-start ml-0.5 min-w-0 leading-tight">
+                    <div className="flex flex-col items-start ml-0.5 min-w-0 leading-none gap-0.5">
                       <span className="truncate text-sm font-medium text-foreground capitalize">
                         {user.name}
                       </span>
-                      <span className="truncate text-[11px] text-muted-foreground font-normal">
-                        View profile
+                      {/* Added multi-field compatibility fallback if user data yields role/email strings */}
+                      <span className="truncate text-[10.5px] text-muted-foreground/80 font-normal">
+                        {user.email || "View profile"}
                       </span>
                     </div>
                   )}
