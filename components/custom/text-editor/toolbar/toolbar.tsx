@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Separator } from "@/components/ui/separator";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,11 +12,12 @@ import { InsertControls } from "./insert-controls";
 import { FieldDropdown } from "./field-variables/field-dropdown";
 import { CopyHtmlButton } from "./copy-html/copy-html-button";
 import { LogTogglePlugin } from "./logs/log-toggle-plugin";
+import { GameResultDropdown } from "./game-result/GameResultDropdown";
 
 interface ToolbarProps {
   copyPopup?: boolean;
   showFieldPlugin?: boolean;
-  showLogsToggle?: boolean
+  showLogsToggle?: boolean;
 }
 
 export function Toolbar({ copyPopup, showFieldPlugin, showLogsToggle }: ToolbarProps) {
@@ -25,7 +25,7 @@ export function Toolbar({ copyPopup, showFieldPlugin, showLogsToggle }: ToolbarP
 
   return (
     <TooltipProvider delayDuration={400}>
-      <div className="sticky top-0 z-20 flex items-center justify-between w-full p-1.5 bg-background border-b border-border rounded-t-xl shadow-sm min-h-11">
+      <div className="sticky top-0 z-20 flex items-center justify-between w-full p-1.5 bg-background border-b border-border rounded-t-xl shadow-sm min-h-11 select-none">
 
         <div className="flex items-center gap-0.5 flex-wrap">
           <HistoryControls editor={editor} />
@@ -38,6 +38,8 @@ export function Toolbar({ copyPopup, showFieldPlugin, showLogsToggle }: ToolbarP
 
           <InsertControls editor={editor} />
 
+          <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
+
           {showFieldPlugin && (
             <>
               <Separator orientation="vertical" className="h-6 mx-1 hidden sm:block" />
@@ -45,10 +47,13 @@ export function Toolbar({ copyPopup, showFieldPlugin, showLogsToggle }: ToolbarP
             </>
           )}
         </div>
-        <div className="flex">
+
+        <div className="flex items-center gap-1">
           {showLogsToggle && (
             <LogTogglePlugin />
           )}
+          <GameResultDropdown />
+
           <CopyHtmlButton
             copyPopup={copyPopup}
             getHtml={async () => {

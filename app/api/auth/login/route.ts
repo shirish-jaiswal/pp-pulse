@@ -29,12 +29,9 @@ export async function POST(request: NextRequest) {
       { status: 200 }
     );
 
-    // 3. Extract cookies from backend and proxy them to the browser
     const setCookieHeader = response.headers["set-cookie"];
 
     if (setCookieHeader) {
-      // IMPORTANT: Loop and append. Do NOT use .set() with .join(",")
-      // Joining with commas breaks cookies that have 'Expires=Mon, 01-Jan...'
       setCookieHeader.forEach((cookie) => {
         nextResponse.headers.append("Set-Cookie", cookie);
       });

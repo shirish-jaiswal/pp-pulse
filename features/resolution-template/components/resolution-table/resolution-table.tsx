@@ -10,7 +10,6 @@ import {
   useReactTable,
   ColumnFiltersState,
 } from "@tanstack/react-table";
-
 import {
   Table,
   TableBody,
@@ -19,8 +18,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-import { Badge } from "@/components/ui/badge";
 import { ResolutionTemplate } from "@/lib/excel-engine/resolution-template/resolution/get-all";
 import { getResolutionColumns } from "@/features/resolution-template/components/resolution-table/columns";
 import ColumnFilter from "@/features/template-gallery/components/template-table/column-filters";
@@ -60,7 +57,6 @@ export function ResolutionTable({ data, onEdit, onDelete }: Props) {
             <TableRow key={hg.id}>
               {hg.headers.map((header) => {
                 const column = header.column;
-                const filterValue = column.getFilterValue();
                 return (
                   <TableHead key={header.id} className="h-9 px-2 text-xs">
                     <div className="flex items-right gap-2">

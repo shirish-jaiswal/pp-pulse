@@ -225,3 +225,20 @@
 .dark .ProseMirror th {
   border-color: var(--border);
 }
+
+/* Ensure Lexical decorators override parent content layout constraints cleanly */
+.game-result-node-wrapper {
+  display: block !important;
+  width: 100% !important;
+  min-h: 100px;
+  visibility: visible !important;
+  opacity: 1 !important;
+  clear: both;
+}
+
+/* Ensure child layouts render accurately inside Lexical space canvases */
+.game-result-node-wrapper [contenteditable="false"] {
+  user-select: none;
+  pointer-events: auto !important;
+}
+

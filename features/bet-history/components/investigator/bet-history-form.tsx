@@ -1,31 +1,32 @@
 "use client";
 
+import * as React from "react";
 import { useForm } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 import { useBetHistory } from "@/features/bet-history/context/bet-history-context";
 import { BetHistoryInputSchema } from "@/features/bet-history/types/bet-history-input";
+import { IntegratedDateTimeRangePicker } from "@/features/log-exp/date-time-range-picker/components/integrated-date-time-range-picker";
+import { DateRangeValue } from "@/features/log-exp/date-time-range-picker/types";
 
 /**
- * Returns days in month WITHOUT using JS Date logic
+ * Utility to stringify dates to safe ISO strings without local offset mutation
  */
-function getDaysInMonth(year: number, month: number) {
-  const days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+function toUTCIsoString(date: Date | undefined): string {
+  if (!date) return "";
+  return date.toISOString().split(".")[0]; // YYYY-MM-DDTHH:mm:ss
+}
 
-  const isLeap =
-    (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-
-  if (month === 2 && isLeap) return 29;
-
-  return days[month - 1];
+/**
+ * Utility to parse an ISO string directly into a explicit UTC Date object
+ */
+function parseUTCIsoString(isoStr: string | undefined): Date | undefined {
+  if (!isoStr) return undefined;
+  // Append trailing 'Z' if missing to guarantee standard parsing behavior
+  const cleanStr = isoStr.endsWith("Z") ? isoStr : `${isoStr}Z`;
+  const parsed = new Date(cleanStr);
+  return isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
 export function BetHistoryForm() {
@@ -34,65 +35,37 @@ export function BetHistoryForm() {
   const form = useForm({
     defaultValues: {
       playerId: input.playerId || "",
-      from: input.from,
-      durationValue: 1,
-      durationUnit: "hours",
+      // Maintain state structure mapping exactly back to your API context layer
+      range: {
+        from: parseUTCIsoString(input.from) || new Date(Date.now() - 15 * 60 * 1000),
+        to: parseUTCIsoString(input.to) || new Date(),
+      } as DateRangeValue,
     },
 
     onSubmit: async ({ value }) => {
-      const from = value.from;
+      let fromDate = value.range?.from;
+      let toDate = value.range?.to;
 
-      const durationInMinutes =
-        value.durationUnit === "hours"
-          ? Number(value.durationValue) * 60
-          : Number(value.durationValue);
+      if (!fromDate || !toDate) return;
 
-      const safeDuration = Math.min(durationInMinutes, 1440);
+      const maxDurationMs = 2 * 24 * 60 * 60 * 1000; // Exactly 48 Hours
+      let durationMs = toDate.getTime() - fromDate.getTime();
 
-      const [datePart, timePart] = from!.split("T");
-      let [year, month, day] = datePart.split("-").map(Number);
-      let [hour, minute] = timePart.split(":").map(Number);
-
-      // add duration
-      let totalMinutes = hour * 60 + minute + safeDuration;
-
-      const minutesInDay = 1440;
-
-      // handle time overflow
-      let dayOffset = Math.floor(totalMinutes / minutesInDay);
-      totalMinutes = totalMinutes % minutesInDay;
-
-      let newHour = Math.floor(totalMinutes / 60);
-      let newMinute = totalMinutes % 60;
-
-      // apply day overflow manually
-      day += dayOffset;
-
-      while (true) {
-        const daysInMonth = getDaysInMonth(year, month);
-
-        if (day <= daysInMonth) break;
-
-        day -= daysInMonth;
-        month++;
-
-        if (month > 12) {
-          month = 1;
-          year++;
-        }
+      // Enforce the 2-day selection maximum threshold cap safely 
+      if (durationMs > maxDurationMs) {
+        toDate = new Date(fromDate.getTime() + maxDurationMs);
       }
 
-      const to =
-        `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}` +
-        `T${String(newHour).padStart(2, "0")}:${String(newMinute).padStart(2, "0")}`;
+      // Ensure the range remains logical
+      if (durationMs < 0) {
+        toDate = fromDate;
+      }
 
       const payload = {
         playerId: value.playerId,
-        from,
-        to,
+        from: toUTCIsoString(fromDate),
+        to: toUTCIsoString(toDate),
       };
-
-      console.log("Payload ::", payload);
 
       const result = BetHistoryInputSchema.safeParse(payload);
       if (!result.success) return;
@@ -109,69 +82,54 @@ export function BetHistoryForm() {
       }}
       className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end mb-2"
     >
-      <form.Field
-        name="playerId"
-        children={(field) => (
-          <Input
-            className="h-9 text-sm"
-            placeholder="Player ID"
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
-        )}
-      />
+      {/* Player Identifier Field */}
+      <div className="sm:col-span-2">
+        <form.Field
+          name="playerId"
+          children={(field) => (
+            <Input
+              className="h-9 text-sm"
+              placeholder="Player ID"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+            />
+          )}
+        />
+      </div>
 
-      <form.Field
-        name="from"
-        children={(field) => (
-          <Input
-            className="h-9 text-sm"
-            type="datetime-local"
-            lang="en-GB"
-            step="1"
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-          />
-        )}
-      />
+      {/* Unified Range Selection Field */}
+      <div className="sm:col-span-2">
+        <form.Field
+          name="range"
+          children={(field) => (
+            <IntegratedDateTimeRangePicker
+              value={field.state.value}
+              onChange={(nextRange) => {
+                if (!nextRange.from || !nextRange.to) {
+                  field.handleChange(nextRange);
+                  return;
+                }
 
-      <form.Field
-        name="durationValue"
-        children={(field) => (
-          <Input
-            className="h-9 text-sm w-full"
-            type="number"
-            min={1}
-            max={1440}
-            placeholder="Dur"
-            value={field.state.value}
-            onChange={(e) =>
-              field.handleChange(Number(e.target.value))
-            }
-          />
-        )}
-      />
+                // Inline enforcement logic during live interface selection
+                const maxDurationMs = 2 * 24 * 60 * 60 * 1000;
+                const currentDiff = nextRange.to.getTime() - nextRange.from.getTime();
 
-      <form.Field
-        name="durationUnit"
-        children={(field) => (
-          <Select
-            value={field.state.value}
-            onValueChange={field.handleChange}
-          >
-            <SelectTrigger className="h-9 text-sm w-full">
-              <SelectValue placeholder="Unit" />
-            </SelectTrigger>
+                if (currentDiff > maxDurationMs) {
+                  field.handleChange({
+                    from: nextRange.from,
+                    to: new Date(nextRange.from.getTime() + maxDurationMs),
+                  });
+                } else {
+                  field.handleChange(nextRange);
+                }
+              }}
+            />
+          )}
+        />
+      </div>
 
-            <SelectContent>
-              <SelectItem value="hours">Hrs</SelectItem>
-              <SelectItem value="minutes">Min</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-      />
-
-      <Button type="submit" className="h-9 text-sm px-4">
+      {/* Execution Actions Button */}
+      <Button type="submit" className="h-9 text-sm px-4 w-full">
         Fetch
       </Button>
     </form>

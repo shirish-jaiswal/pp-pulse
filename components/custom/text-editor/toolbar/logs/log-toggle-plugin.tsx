@@ -200,13 +200,13 @@ export function LogTogglePlugin() {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+       <Button
+          variant="ghost"
           size="sm"
-          className="h-8 gap-1.5 border-zinc-200 shadow-sm"
+          className="h-8 px-2 gap-1 font-mono text-xs border border-dashed border-gray-300 hover:bg-gray-50 text-gray-700"
         >
-          <ListTree className="h-3.5 w-3.5" />
-          <span className="text-xs font-medium">Insert Logs</span>
+          <ListTree className="h-3.5 w-3.5 text-gray-500" />
+          <span>Insert Logs</span>
         </Button>
       </PopoverTrigger>
 

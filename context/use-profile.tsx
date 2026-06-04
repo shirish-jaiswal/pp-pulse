@@ -16,6 +16,7 @@ type User = {
   email?: string;
   role?: string;
   freshdesk?: string;
+  isFreshDesk?: boolean;
 };
 
 type ProfileContextType = {
@@ -33,8 +34,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
-
-  useEffect(() => {
+console.log("ProfileProvider rendered, loading:", user);
+    useEffect(() => {
     let alive = true;
 
     const loadUser = async () => {

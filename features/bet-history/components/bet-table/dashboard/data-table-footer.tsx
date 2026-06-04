@@ -8,7 +8,8 @@ import {
 
 export function DataTableFooter({ totals }: any) {
   return (
-    <TableFooter>
+    /* Added sticky, bottom position, background, higher z-index, and top shadow */
+    <TableFooter className="sticky bottom-0 bg-background z-20 shadow-[0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_0_0_rgba(255,255,255,0.1)]">
       <TableRow className="bg-muted font-semibold">
         <TableCell colSpan={4} className="text-right">
           Totals

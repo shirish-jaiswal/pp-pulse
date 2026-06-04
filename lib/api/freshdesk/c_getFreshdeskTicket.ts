@@ -1,17 +1,16 @@
-import apiRequest from "@/lib/api/api-request";
-import { decryptData } from "@/utils/crypto";
+"use server";
 
-export async function c_getFreshdeskTicket(ticketId: string, freshdesk?: string) {
+import apiRequest from "@/lib/api/api-request";
+import c_getDecryptedFdKey from "./c_getDecryptedFdKey";
+
+export async function c_getFreshdeskTicket(ticketId: string, ) {
   try {
     if (!ticketId) {
       throw new Error("Missing ticketId");
     }
-    const fdKey = decryptData(freshdesk || "");
-
+      const fdKey = await c_getDecryptedFdKey();
     const DOMAIN = process.env.NEXT_PUBLIC_FRESHDESK_DOMAIN!;
-
     const authHeader = Buffer.from(`${fdKey}:X`).toString("base64");
-
     const headers = {
       Authorization: `Basic ${authHeader}`,
     };

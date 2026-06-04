@@ -16,30 +16,6 @@ export function DataTablePagination({ table }: any) {
   const selectedRows = table.getSelectedRowModel().rows;
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
-
-      <div className="flex items-center gap-2">
-        <span>Rows per page:</span>
-
-        <Select
-          value={String(table.getState().pagination.pageSize)}
-          onValueChange={(value) =>
-            table.setPageSize(Number(value))
-          }
-        >
-          <SelectTrigger className="w-20 h-8">
-            <SelectValue />
-          </SelectTrigger>
-
-          <SelectContent>
-            {[10, 20, 50, 100].map((size) => (
-              <SelectItem key={size} value={String(size)}>
-                {size}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div>
         Page {table.getState().pagination.pageIndex + 1} of{" "}
         {table.getPageCount()}
@@ -64,6 +40,26 @@ export function DataTablePagination({ table }: any) {
           Next
         </Button>
 
+        <div className="flex items-center gap-2">
+          <Select
+            value={String(table.getState().pagination.pageSize)}
+            onValueChange={(value) =>
+              table.setPageSize(Number(value))
+            }
+          >
+            <SelectTrigger className="w-20 h-8">
+              <SelectValue />
+            </SelectTrigger>
+
+            <SelectContent>
+              {[10, 20, 50, 100].map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         <BulkRoundsAction selectedRows={selectedRows} />
       </div>
     </div>

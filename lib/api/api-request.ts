@@ -4,6 +4,7 @@ type ApiRequestOptions<T = unknown> = {
   method: Method;
   endpoint: string;
   data?: T;
+  body?: T; // Added support for 'body' keyword
   params?: Record<string, any>;
   requireCookie?: boolean;
   headers?: Record<string, string>;
@@ -20,6 +21,7 @@ async function apiRequest<R = any, T = unknown>({
   method,
   endpoint,
   data,
+  body,
   params,
   requireCookie = true,
   headers = {},
@@ -27,12 +29,17 @@ async function apiRequest<R = any, T = unknown>({
 }: ApiRequestOptions<T>): Promise<R> {
   try {
     if (!endpoint) throw new Error("Endpoint is required");
+    
     const cleanEndpoint = endpoint.replace(/^\//, "");
-    const finalBaseURL = (baseURL || DEFAULT_BASE_URL as string).replace(/\/$/, "");
+    const finalBaseURL = (baseURL || (DEFAULT_BASE_URL as string)).replace(/\/$/, "");
+    
+    // Fallback to 'data' if 'body' is provided, matching Axios expectations
+    const payload = data !== undefined ? data : body;
+
     const config: AxiosRequestConfig = {
       method,
       url: `${finalBaseURL}/${cleanEndpoint}`,
-      data,
+      data: payload,
       params,
       withCredentials: requireCookie,
       headers: {
@@ -40,6 +47,7 @@ async function apiRequest<R = any, T = unknown>({
         ...headers,
       },
     };
+    
     const response = await axios.request<R>(config);
     return response.data;
   } catch (error: any) {

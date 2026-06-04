@@ -110,9 +110,8 @@ export default function generateRoundOverview(
   const roundId = safeString(firstBet?.round_id || firstTpt?.round_id);
   const casinoId = safeString(firstBet?.casino_id || firstTpt?.casino_id);
   const casinoName = safeString(firstBet?.casino_desc || firstTpt?.casino_name);
-  const walletType = safeString(firstTpt?.Wallet_Type || "NA");
+  const walletType = safeString(firstTpt?.Wallet_Type || "NA").toLocaleLowerCase();
 
-  // Group transactions
   const placedTxns = tptInfo.filter(txn => txn.action_type === "Placed");
   const settledTxns = tptInfo.filter(txn => txn.action_type === "Settled");
   const unknownTxns = tptInfo.filter(txn => txn.action_type === "Unknown");
@@ -194,20 +193,13 @@ export default function generateRoundOverview(
           label: "Final Balance",
           value: appendCurrency([{ label: formatAmount(finalBalance), variant: "default" }], currency),
         },
-        // {
-        //   label: "Net Change",
-        //   value: [{ 
-        //     label: `${delta >= 0 ? "+" : ""}${formatAmount(delta)}`, 
-        //     variant: delta >= 0 ? "success" : "error" 
-        //   }],
-        // },
       ],
     };
   }
 
   const sections: (InfoCardProps | null)[] = [
     {
-      icon: walletType, 
+      icon: walletType.toUpperCase(), 
       variant: walletType.toLocaleLowerCase() === "sw" ? "success" : walletType === "bt" ? "info" : "default",
       isIconButton: true,
       items: [

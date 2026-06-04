@@ -199,7 +199,7 @@ export function ResolutionEditorContent({
           </div>
         )}
 
-        <Card className="border-none shadow-none bg-transparent pt-0">
+        <Card className="border-none shadow-none bg-transparent py-0 max-h-[calc(100vh-10rem)]">
           <CardContent className="p-2">
             {/* HEADER */}
             <div className="flex items-center justify-between gap-3">

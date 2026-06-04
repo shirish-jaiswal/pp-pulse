@@ -18,7 +18,7 @@ export function BetHistoryInvestigator() {
 
 
     return (
-        <Card className="shadow-sm border-border/60 p-0 bg-background">
+        <Card className="shadow-lg border-border/60 p-0 bg-background-muted">
             <CardContent className="p-2 pb-0 space-y-2">
                 <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 text-muted-foreground">

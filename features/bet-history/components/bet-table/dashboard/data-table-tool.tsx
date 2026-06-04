@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ColumnVisibilityMenu } from "@/features/bet-history/components/bet-table/dashboard/column-visibility-menu";
 import { useBetHistory } from "@/features/bet-history/context/bet-history-context";
-import { ExternalLink } from "lucide-react";
 
 export function DataTableToolbar({
   globalFilter,
@@ -44,7 +43,7 @@ export function DataTableToolbar({
       <Button
         size="sm"
         variant="link"
-        onClick={() => window.open(`/portal/user-management?userId=${input}`, "_blank", "noopener,noreferrer")}
+        onClick={() => window.open(`/portal/user-management?userId=${input.playerId}`, "_blank", "noopener,noreferrer")}
         disabled={!input}
         className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 gap-1 px-2 h-9 font-medium"
       >

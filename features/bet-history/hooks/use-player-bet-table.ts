@@ -65,10 +65,6 @@ export function useDataTable({ data, columns }: any) {
           setSorting(parsed.sorting);
         }
 
-        if (parsed.columnFilters) {
-          setColumnFilters(parsed.columnFilters);
-        }
-
         if (parsed.columnVisibility) {
           setColumnVisibility(parsed.columnVisibility);
         }
@@ -108,7 +104,6 @@ export function useDataTable({ data, columns }: any) {
           "table-settings",
           JSON.stringify({
             sorting,
-            columnFilters,
             columnVisibility,
             compact,
             pagination,
@@ -122,7 +117,6 @@ export function useDataTable({ data, columns }: any) {
     return () => clearTimeout(timeoutId);
   }, [
     sorting,
-    columnFilters,
     columnVisibility,
     compact,
     pagination,
