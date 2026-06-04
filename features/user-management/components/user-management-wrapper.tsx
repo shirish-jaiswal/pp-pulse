@@ -36,7 +36,6 @@ function UserManagementContent() {
         fetchByUserId
     } = useUserManagementQuery();
 
-    // ✅ Auto-load when URL has param
     useEffect(() => {
         if (queryUserId) {
             setActiveTab("userId");
@@ -45,21 +44,16 @@ function UserManagementContent() {
         }
     }, [queryUserId]);
 
-    // ✅ UPDATED: Sync UI → URL
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
         if (activeTab === "email" && emailQuery.trim()) {
             fetchByEmail(emailQuery.trim());
-
-            // ✅ update URL
             router.push(`/user-management?email=${emailQuery.trim()}`);
         }
 
         if (activeTab === "userId" && userIdQuery.trim()) {
             fetchByUserId(userIdQuery.trim());
-
-            // ✅ THIS FIXES YOUR ISSUE
             router.push(`/user-management?userId=${userIdQuery.trim()}`);
         }
     };
@@ -70,10 +64,8 @@ function UserManagementContent() {
     return (
         <div className="flex flex-col gap-2">
 
-            {/* Search Card */}
             <Card className="shadow-sm border-border/60 p-0 bg-background">
                 <CardContent className="p-2 pb-3 space-y-2">
-
                     <div className="flex items-center gap-2 text-muted-foreground mb-1">
                         <Users className="h-4 w-4" />
                         <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
@@ -81,7 +73,6 @@ function UserManagementContent() {
                         </span>
                     </div>
 
-                    {/* Tabs */}
                     <div className="flex border border-border rounded-md w-fit overflow-hidden">
                         <button
                             type="button"

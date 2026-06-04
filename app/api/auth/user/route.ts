@@ -15,7 +15,8 @@ export async function POST(req: Request) {
             );
         }
 
-        const user = { email, name, role, freshdesk };
+        const isFreshDesk = freshdesk === "" ? false : true;
+        const user = { email, name, role, isFreshDesk };
 
         // Create JWT
         const token = jwt.sign(user, SECRET_KEY, {

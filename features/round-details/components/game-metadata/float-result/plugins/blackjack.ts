@@ -28,18 +28,20 @@ export const blackjackPlugin: GamePlugin = {
         const dealer = result.dealer;
         const players = result.players;
         const winners = result.winners;
+        const pushes = result.pushes || [];
 
         const winnerCount = winners.length;
+        const pushCount = pushes.length;
         const totalPlayers = players.length;
 
-        let label = "PUSH";
+        let label = "LOSE";
 
         if (winnerCount === totalPlayers && totalPlayers > 0) {
             label = "WIN";
-        } else if (winnerCount > 0) {
-            label = "PARTIAL";
-        } else {
-            label = "LOSE";
+        } else if (pushCount === totalPlayers && totalPlayers > 0) {
+            label = "PUSH";
+        } else if (winnerCount > 0 || pushCount > 0) {
+            label = "Half Win";
         }
 
         /**
@@ -55,12 +57,9 @@ export const blackjackPlugin: GamePlugin = {
             label = "BLACKJACK";
         }
 
-        /**
-         * STYLE MAP
-         */
         const classMap: Record<string, string> = {
             WIN: styleMap["blackjack-win"],
-            PARTIAL: styleMap["blackjack-partial"],
+            "Half Win": styleMap["blackjack-partial"],
             LOSE: styleMap["blackjack-lose"],
             PUSH: styleMap["blackjack-push"],
             "DLR BUST": styleMap["blackjack-dealer-bust"],

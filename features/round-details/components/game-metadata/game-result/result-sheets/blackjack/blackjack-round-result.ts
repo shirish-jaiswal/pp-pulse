@@ -3,15 +3,12 @@ import { CardDetailsInfo } from "@/features/round-details/types/card-details";
 import {
     BlackjackRoundResult,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-types";
-
 import {
     getDealerHand,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-dealer-rules";
-
 import {
     getBlackjackPlayers,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-player-rules";
-
 import {
     getBlackjackWinners,
 } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-winner-rules";
@@ -34,7 +31,7 @@ export const getBlackjackRoundResult = (
         betTable || []
     );
 
-    const winners = getBlackjackWinners(
+    const { winners, pushes } = getBlackjackWinners(
         players,
         dealer
     );
@@ -43,5 +40,6 @@ export const getBlackjackRoundResult = (
         dealer,
         players,
         winners,
+        pushes,
     };
 };

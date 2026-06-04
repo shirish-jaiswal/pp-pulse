@@ -25,22 +25,23 @@ export function DataTable({ columns, data }: any) {
 
   return (
     <div className="space-y-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-md border border-neutral-200 dark:border-neutral-800 p-4">
+        <DataTableToolbar
+          globalFilter={globalFilter}
+          setGlobalFilter={setGlobalFilter}
+          compact={compact}
+          setCompact={setCompact}
+          table={table}
+          onExport={() => exportTableCSV(table)}
+        />
+        <DataTablePagination table={table} />
+      </div>
 
-      <DataTableToolbar
-        globalFilter={globalFilter}
-        setGlobalFilter={setGlobalFilter}
-        compact={compact}
-        setCompact={setCompact}
-        table={table}
-        onExport={() => exportTableCSV(table)}
-      />
-      <DataTablePagination table={table} />
-
-      <div className="border rounded-md max-h-[70vh] overflow-auto">
-        <Table>
-          <DataTableHeader table={table} />
+      <div className="border rounded-md max-h-[75dvh] overflow-auto">
+        <Table className="border-collapse separate border-spacing-0">
+          <DataTableHeader table={table} className="sticky top-0 z-10 bg-background shadow-[0_1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[0_1px_0_0_rgba(255,255,255,0.1)]" />
           <DataTableBody table={table} compact={compact} columns={columns} />
-          <DataTableFooter totals={totals} />
+          <DataTableFooter totals={totals} className="sticky bottom-0 z-10 bg-background shadow-[0_-1px_0_0_rgba(0,0,0,0.1)] dark:shadow-[0_-1px_0_0_rgba(255,255,255,0.1)]" />
         </Table>
       </div>
 

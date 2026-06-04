@@ -35,7 +35,6 @@ export default function BetTable({ items }: { items?: BetTableInfo }) {
     }
   };
 
-  // ✅ Computed values for sorting and footer totals
   const { sortedItems, totalAmount, totalPayoff, netProfit } = useMemo(() => {
     if (!items || items.length === 0) {
       return { sortedItems: [], totalAmount: 0, totalPayoff: 0, netProfit: 0 };

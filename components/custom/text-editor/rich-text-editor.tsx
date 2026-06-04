@@ -20,7 +20,8 @@ import ImagesPlugin from "@/components/custom/text-editor/toolbar/image/image-pl
 import FieldPlugin from "@/components/custom/text-editor/toolbar/field-variables/field-plugin";
 import { FieldNode } from "@/components/custom/text-editor/toolbar/field-variables/field-node";
 import LogPlugin from "./toolbar/logs/log-plugin";
-
+import GameResultPlugin from "./toolbar/game-result/GameResultPlugin";
+import { GameResultNode } from "./toolbar/game-result/GameResultNode";
 
 export default function RichTextEditor({
   onChange,
@@ -66,7 +67,8 @@ export default function RichTextEditor({
       TableCellNode,
       LinkNode,
       ImageNode,
-      FieldNode
+      FieldNode,
+      GameResultNode,
     ],
     onError: (e: Error) => console.error(e),
 
@@ -87,7 +89,6 @@ export default function RichTextEditor({
   return (
     <LexicalComposer initialConfig={editorConfig}>
       <div className="border rounded-md shadow-sm bg-white overflow-auto max-h-full mx-auto">
-
         <Toolbar copyPopup={copyPopup} showFieldPlugin={showFieldPlugin} showLogsToggle={showLogsToggle} />
         <div className="relative">
           <RichTextPlugin
@@ -108,6 +109,7 @@ export default function RichTextEditor({
         <TablePlugin />
         <ImagesPlugin />
         <LogPlugin />
+        <GameResultPlugin /> 
 
         <OnChangePlugin
           onChange={(editorState) => {
