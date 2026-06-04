@@ -16,7 +16,7 @@ import { ResolutionEditorContent } from "@/features/round-details/components/res
 import FreshdeskWorkspace from "../freshdesk/freshdesk-workspace";
 import { PanelLeftClose, PanelLeftOpen, Search } from "lucide-react";
 import { motion } from "framer-motion";
-import PushResolutionButton from "./PushResolutionButton";
+import PushResolutionButton from "./push-resolution-button";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/context/use-profile";
 import { toast } from "sonner";
