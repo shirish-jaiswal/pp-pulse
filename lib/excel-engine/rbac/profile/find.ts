@@ -8,7 +8,6 @@ export async function findProfile(filters: {
 }) {
    try {
     const rows = await ExcelEngine.findRows(DB_NAME, TABLE_NAME, filters);
-    console.log("ROWS FOUND:", rows);
 
     return JSON.parse(JSON.stringify(rows));
   } catch (e) {

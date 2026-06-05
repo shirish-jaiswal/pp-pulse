@@ -58,7 +58,6 @@ export default function LoginPage() {
           return;
         }
 
-        console.log("Login successful, user data:", user);
         await c_requestUserCookie({
           email: user.email,
           name: user.name,

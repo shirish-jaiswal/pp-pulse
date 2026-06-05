@@ -225,7 +225,6 @@ export const ExcelEngine = {
   tableName: string,
   filters: Record<string, string | string[]>
 ) {
-  console.log("Finding rows with filters:", filters);
 
   const wb = loadWB(dbName);
   const sheet = wb.Sheets[tableName];

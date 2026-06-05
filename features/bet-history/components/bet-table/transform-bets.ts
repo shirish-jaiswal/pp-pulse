@@ -51,7 +51,6 @@ export function transformToRounds(data: any[]): RoundRow[] {
     let status: RoundRow["status"] = "BREAKEVEN";
     if (profitLoss > 0) status = "WIN";
     else if (profitLoss < 0) status = "LOSS";
-    console.log("g", g);
     return {
       roundId: g.roundId,
       gameId: g.gameId,

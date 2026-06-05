@@ -51,13 +51,9 @@ export async function c_getKibanaLogs(data: LogRequestParams) {
             }
         });
 
-        console.log("Response :: ", response.data.data);
         return response.data.data;
 
     } catch (error: any) {
-        console.log("==========================================================================================")
-        console.log(error)
-        console.log("==========================================================================================")
         const errorMessage = error.response?.data?.error || "Failed to fetch transaction info";
         throw new Error(errorMessage);
     }

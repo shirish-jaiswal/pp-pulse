@@ -76,7 +76,6 @@ export const SmartSearchBar: React.FC<SmartSearchBarProps> = ({
     // Captures the active snapshot layout rather than waiting for global state sync
     const handleGenerate = useCallback(() => {
         isGeneratingRef.current = true;
-console.log("Triggering API with value:", localValue);
         triggerApi(localValue);
     }, [localValue, triggerApi]);
 

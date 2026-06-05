@@ -48,7 +48,6 @@ export function DashboardTabs() {
   } = useLogData(logPayload as any)
 
 
-  console.log("log Data ::", logData)
   const defaultParams = {
     gameParamId: "round_id",
     game_id: "",

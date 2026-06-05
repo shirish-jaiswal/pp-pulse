@@ -14,8 +14,6 @@ export const extractIdentifiersFromLookupToken = (rawInputToken: string): Extrac
   // 2. Split the token values into segments by hyphens
   const segments = cleanToken.split("-");
 
-  console.log("Splitting token segments:", { rawInputToken, cleanToken, segments });
-
   // Case 1: Stored as @-gameId-userId (e.g. "", "-13386797111", "ppc1735125590048")
   if (segments[0] === "" && segments.length >= 3) {
     return {

@@ -38,8 +38,6 @@ export async function kibanaRequest<R = any, T = unknown>({
     const finalBaseURL = normalizeUrl(baseURL || (KIBANA_BASE_URL as string));
     const cleanEndpoint = endpoint.replace(/^\//, "");
 
-    console.log(`${finalBaseURL}/${cleanEndpoint}`);
-
     const config: AxiosRequestConfig = {
       method,
       url: `${finalBaseURL}/${cleanEndpoint}`,

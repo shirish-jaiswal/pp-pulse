@@ -7,7 +7,6 @@ export async function getPotentialWinningPayoutsByGameName(tableName: string, fi
 }) {
    try {
     const rows = await ExcelEngine.findRows(DB_NAME, tableName, filters);
-    console.log("ROWS FOUND:", rows);
 
     return JSON.parse(JSON.stringify(rows));
   } catch (e) {

@@ -12,7 +12,6 @@ export async function GET(req: NextRequest) {
   }
 
   const filePath = path.join(process.cwd(), "db_storage", fileName);
-  console.log("Downloading:", filePath);
 
   if (!fs.existsSync(filePath)) {
     return new Response("File not found", { status: 404 });

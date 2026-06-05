@@ -54,7 +54,6 @@ export async function c_getRoundDetails(
     const isCrashGame = gameType === "spaceman" || gameType === "big-bass" || gameType === "highflyer";
     const isHighflyer = gameType === "highflyer";
     
-    console.log("GameType:", gameType, "IsCardGame:", cardGame, "IsCrashGame:", isCrashGame, "IsHighflyer:", isHighflyer);
     
     let cardDetails = null;
     let crashGamesData = null;
