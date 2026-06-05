@@ -23,8 +23,11 @@ export function BetHistoryInvestigator() {
                 <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 text-muted-foreground">
                         <Activity className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80 inline-flex items-center gap-1.5">
                             Player Bet History
+                            <span className="text-[10px] font-bold normal-case tracking-normal px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 ml-0.5">
+                                Max 48h
+                            </span>
                         </span>
                     </div>
                 </div>

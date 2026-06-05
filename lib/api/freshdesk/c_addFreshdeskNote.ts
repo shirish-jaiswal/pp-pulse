@@ -38,7 +38,7 @@ export async function c_addFreshdeskNote(
       requireCookie: false,
       body: {
         body: htmlContent,
-        private: true, // true for private internal note, false for public reply
+        private: true, 
       },
     });
 

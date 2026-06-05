@@ -17,10 +17,10 @@ import { Input } from "@/components/ui/input";
 import { useProfileForm } from "@/features/profile/hooks/use-profile-form";
 import ProfileHeader from "@/features/profile/components/profile-header";
 import SettingsSection from "@/features/profile/components/settings-section";
+import TimeZone from "@/components/custom/time-zone";
 
 export default function ProfilePage() {
   const { user } = useProfile();
-
   const { data, isLoading, isError } = useFindProfile({
     email: user?.email as string,
   });
@@ -74,6 +74,24 @@ export default function ProfilePage() {
             <Badge>{profile?.role}</Badge>
           </div>
 
+          {/* DEFAULT TIMEZONE REGION */}
+          <div>
+            <div className="text-sm text-muted-foreground mb-1.5">Default Time Display Country</div>
+            {form.isEditing ? (
+              <TimeZone
+                defaultCountryName={form.localSettings?.defaultCountry || profile?.settings?.defaultCountry}
+                onCountrySelect={(countryName) => 
+                  form.updateSettings({ ...form.localSettings, defaultCountry: countryName })
+                } 
+              />
+            ) : (
+              <div className="font-medium text-sm">
+                {form.localSettings?.defaultCountry || profile?.settings?.defaultCountry || "Not Configured"}
+              </div>
+            )}
+          </div>
+
+          {/* FRESHDESK */}
           <div>
             <div className="text-sm text-muted-foreground">Freshdesk</div>
 
