@@ -12,7 +12,7 @@ export default function generateGameMetaData(
     : data ?? {};
 
   const gameType = getGameType(d?.game_type);
-  const isCrashGame = gameType === "crash-game";
+  const isCrashGame = gameType === "spaceman" || gameType === "big-bass" || gameType === "highflyer";
 
   const resultValue = isCrashGame
     ? d?.state_indicator != null

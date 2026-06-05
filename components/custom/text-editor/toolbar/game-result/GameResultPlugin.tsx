@@ -7,6 +7,7 @@ import {
   $isRangeSelection, 
   $getRoot,
   $insertNodes,
+  $createParagraphNode,
   COMMAND_PRIORITY_EDITOR, 
   createCommand, 
   LexicalCommand 
@@ -30,15 +31,21 @@ export default function GameResultPlugin(): null {
       (configJson) => {
         editor.focus();
 
-        const selection = $getSelection();
-        const gameResultNode = $createGameResultNode(configJson);
+        editor.update(() => {
+          const selection = $getSelection();
+          const gameResultNode = $createGameResultNode(configJson);
 
-        if ($isRangeSelection(selection)) {
-          $insertNodes([gameResultNode]);
-        } else {
-          const root = $getRoot();
-          root.append(gameResultNode);
-        }
+          if ($isRangeSelection(selection)) {
+            $insertNodes([gameResultNode]);
+          } else {
+            const root = $getRoot();
+            root.append(gameResultNode);
+            
+            const emptyParagraph = $createParagraphNode();
+            root.append(emptyParagraph);
+          }
+        });
+
         return true;
       },
       COMMAND_PRIORITY_EDITOR

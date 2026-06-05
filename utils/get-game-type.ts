@@ -1,3 +1,5 @@
+"use client";
+
 export type GameType =
   | "blackjack"
   | "baccarat"
@@ -5,7 +7,9 @@ export type GameType =
   | "roulette"
   | "game-show"
   | "treasure-island"
-  | "crash-game"
+  | "spaceman"         // Dedicated type
+  | "highflyer"        // Dedicated type
+  | "big-bass"         // Added dedicated type
   | "sweet-bonanza"
   | "other-card-game"
   | "non-card"
@@ -41,7 +45,7 @@ export function getGameType(gameType?: string): GameType {
   // -----------------------
   // Baccarat
   // -----------------------
-  if (text.includes("baccarat") || /\bbaccarat\b/.test(text)) {
+  if (text.includes("baccarat")) {
     return "baccarat";
   }
 
@@ -86,7 +90,7 @@ export function getGameType(gameType?: string): GameType {
   }
 
   // -----------------------
-  // Treasure Island (IMPORTANT: before game-show)
+  // Treasure Island
   // -----------------------
   if (
     text.includes("treasure island") ||
@@ -108,16 +112,32 @@ export function getGameType(gameType?: string): GameType {
   }
 
   // -----------------------
-  // Crash Games
+  // Spaceman
+  // -----------------------
+  if (text.includes("spaceman") || /\bspaceman\b/.test(text)) {
+    return "spaceman";
+  }
+
+  // -----------------------
+  // High Flyer
   // -----------------------
   if (
-    text.includes("spaceman") ||
     text.includes("high flyer") ||
     text.includes("highflyer") ||
-    /\bspaceman\b/.test(text) ||
     /\bhigh\s*flyer\b/.test(text)
   ) {
-    return "crash-game";
+    return "highflyer";
+  }
+
+  // -----------------------
+  // Big Bass
+  // -----------------------
+  if (
+    text.includes("big bass") ||
+    text.includes("bigbass") ||
+    /\bbig\s*bass\b/.test(text)
+  ) {
+    return "big-bass";
   }
 
   // -----------------------
@@ -146,7 +166,7 @@ const CARD_GAME_KEYWORDS: Array<RegExp> = [
 ];
 
 const CARD_GAME_ALIASES: string[] = [
-  "21", // Blackjack alias
+  "21",
 ];
 
 /**
@@ -156,6 +176,17 @@ export function isCardGame(gameType?: string): boolean {
   if (!gameType) return false;
 
   const text = normalize(gameType);
+
+  // Guardrail: Explicitly ensure Spaceman, High Flyer, and Big Bass skip card checks
+  if (
+    text.includes("spaceman") ||
+    text.includes("high flyer") ||
+    text.includes("highflyer") ||
+    text.includes("big bass") ||
+    text.includes("bigbass")
+  ) {
+    return false;
+  }
 
   if (
     text.includes("blackjack") ||
@@ -179,7 +210,9 @@ export function isCardGame(gameType?: string): boolean {
 export type BroadCategory =
   | "BLACKJACK"
   | "BACCARAT"
-  | "CRASH"
+  | "SPACEMAN"        // Broad category
+  | "HIGHFLYER"       // Broad category
+  | "BIG_BASS"        // Added broad category
   | "SWEET_BONANZA"
   | "TREASURE_ISLAND"
   | "OTHER";
@@ -195,8 +228,14 @@ export function getBroadCategory(gameType: GameType): BroadCategory {
     case "baccarat":
       return "BACCARAT";
 
-    case "crash-game":
-      return "CRASH";
+    case "spaceman":
+      return "SPACEMAN";
+
+    case "highflyer":
+      return "HIGHFLYER";
+
+    case "big-bass":
+      return "BIG_BASS";
 
     case "sweet-bonanza":
       return "SWEET_BONANZA";

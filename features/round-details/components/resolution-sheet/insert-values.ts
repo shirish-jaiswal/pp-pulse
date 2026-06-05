@@ -330,7 +330,7 @@ function formatStatus(status: string) {
 
 function formatDate(date: string) {
   if (!date) return "";
-  try { return new Date(date).toLocaleString(); } catch { return date; }
+  try { return new Date(date).toUTCString(); } catch { return date; }
 }
 
 export function buildLinkNode(template: string, data: Record<string, any>, textLabel?: string) {
