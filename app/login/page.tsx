@@ -58,11 +58,13 @@ export default function LoginPage() {
           return;
         }
 
+        console.log("Login successful, user data:", user);
         await c_requestUserCookie({
           email: user.email,
           name: user.name,
           role: user.role,
           freshdesk: user.freshdesk,
+          defaultCountry: JSON.parse(user.settings).defaultCountry || "United States",
         });
 
         toast.success("Welcome back!");

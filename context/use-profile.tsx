@@ -34,7 +34,6 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [authReady, setAuthReady] = useState(false);
-console.log("ProfileProvider rendered, loading:", user);
     useEffect(() => {
     let alive = true;
 

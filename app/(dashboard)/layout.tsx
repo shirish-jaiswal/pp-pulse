@@ -14,6 +14,7 @@ import DoYouKnow from "@/components/custom/do-you-know";
 import { useRbacMenu } from "@/hooks/use-rbac-menu";
 import KnowledgeQuiz from "@/components/custom/k-quiz";
 import TimeZone from "@/components/custom/time-zone";
+import IPTracker from "@/components/custom/IPTracker";
 
 // Import your newly created dynamic public API timezone selector component
 
@@ -52,9 +53,9 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           {/* RIGHT SIDE: Dynamic Timezones (API Loaded) + Kibana Access Link */}
           <div className="flex items-center gap-3">
             {/* Live country/flag clock selector running smoothly beside the action link */}
+            <IPTracker />
             <TimeZone />
-            
-            <a
+            {/* <a
               href="/portal/log-exp"
               target="_blank"
               rel="noopener noreferrer"
@@ -62,7 +63,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               className="text-sm font-medium px-3 py-1.5 rounded-md bg-[#00BFB3]/5 hover:bg-[#00BFB3]/15 border border-[#00BFB3]/10 hover:border-[#00BFB3]/30 transition-all duration-200 shrink-0"
             >
               Kibana
-            </a>
+            </a> */}
           </div>
         </header>
 

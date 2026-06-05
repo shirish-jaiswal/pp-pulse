@@ -6,7 +6,7 @@ export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        const { email, name, role, freshdesk } = body;
+        const { email, name, role, freshdesk, defaultCountry } = body;
 
         if (!email || !name || !role) {
             return NextResponse.json(
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
         }
 
         const isFreshDesk = freshdesk === "" ? false : true;
-        const user = { email, name, role, isFreshDesk };
+        const user = { email, name, role, isFreshDesk,  defaultCountry };
 
         // Create JWT
         const token = jwt.sign(user, SECRET_KEY, {

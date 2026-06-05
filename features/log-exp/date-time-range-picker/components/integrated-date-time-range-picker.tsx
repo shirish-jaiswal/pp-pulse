@@ -97,7 +97,7 @@ export function IntegratedDateTimeRangePicker({ value, onChange }: Props) {
   }
 
   return (
-    <FieldGroup className="max-w-2xl w-4xl">
+    <FieldGroup className="max-w-2xl w-fit">
       <Field className="max-w-xl">
         <Popover open={picker.open} onOpenChange={picker.setOpen}>
           <PopoverTrigger asChild>

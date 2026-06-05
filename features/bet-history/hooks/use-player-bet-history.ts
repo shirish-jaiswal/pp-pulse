@@ -16,45 +16,44 @@ export function usePlayerBetHistory(
 
     paramsRef.current = params;
 
-    /**
-     * Stable key for deduplication
-     */
     const getKey = (item: any) =>
         item.TransactionId ||
         item.ThirdPartyTxnId ||
         `${item.RoundId}-${item.Time}`;
 
     /**
-     * Format WITHOUT timezone conversion
-     * Keeps exact "YYYY-MM-DDTHH:mm"
+     * Formats an absolute Date object using pure UTC methods
+     * Keeps exact "YYYY-MM-DDTHH:mm" in standard UTC
      */
-    const format = (d: Date) => {
+    const formatUTC = (d: Date) => {
         const pad = (n: number) => String(n).padStart(2, "0");
 
         return (
-            `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}` +
-            `T${pad(d.getHours())}:${pad(d.getMinutes())}`
+            `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +
+            `T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`
         );
     };
 
     /**
-     * Build exact 1-hour chunks:
-     * 12:00 → 13:00
-     * 13:00 → 14:00
+     * Build exact 1-hour chunks safely processing explicitly closed UTC bounds
      */
-    const buildChunks = (from: string, to: string) => {
+    const buildChunks = (fromStr: string, toStr: string) => {
         const chunks: { from: string; to: string }[] = [];
 
-        let current = new Date(from);
-        const end = new Date(to);
+        // Appending 'Z' guarantees JavaScript parses it as exact UTC time
+        const cleanFrom = fromStr.endsWith("Z") ? fromStr : `${fromStr}Z`;
+        const cleanTo = toStr.endsWith("Z") ? toStr : `${toStr}Z`;
+
+        let current = new Date(cleanFrom);
+        const end = new Date(cleanTo);
 
         while (current < end) {
-            const next = new Date(current);
-            next.setHours(next.getHours() + 1);
+            const next = new Date(current.getTime());
+            next.setUTCHours(next.getUTCHours() + 1);
 
             chunks.push({
-                from: format(current),
-                to: format(next > end ? end : next),
+                from: formatUTC(current),
+                to: formatUTC(next > end ? end : next),
             });
 
             current = next;
@@ -63,9 +62,6 @@ export function usePlayerBetHistory(
         return chunks;
     };
 
-    /**
-     * Fetch logic
-     */
     const fetchData = useCallback(async () => {
         const { playerId, from, to } = paramsRef.current;
 
@@ -95,14 +91,11 @@ export function usePlayerBetHistory(
                 }
             }
 
-            // Deduplicate safely
             setData(() => {
                 const map = new Map<string, any>();
-
                 merged.forEach((item) => {
                     map.set(getKey(item), item);
                 });
-
                 return Array.from(map.values());
             });
         } catch (err) {
@@ -111,7 +104,6 @@ export function usePlayerBetHistory(
             setLoading(false);
         }
     }, []);
-
 
     useEffect(() => {
         if (!params.playerId) {
