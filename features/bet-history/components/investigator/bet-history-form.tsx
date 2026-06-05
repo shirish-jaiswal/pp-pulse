@@ -72,8 +72,9 @@ export function BetHistoryForm() {
         e.preventDefault();
         form.handleSubmit();
       }}
-      className="grid grid-cols-1 sm:grid-cols-4 gap-2 items-end mb-2"
+      className="grid grid-cols-1 sm:grid-cols-5 gap-2 items-end mb-2"
     >
+      {/* Kept at 2 columns */}
       <div className="sm:col-span-2">
         <form.Field
           name="playerId"
@@ -88,7 +89,8 @@ export function BetHistoryForm() {
         />
       </div>
 
-      <div className="sm:col-span-1">
+      {/* Increased from sm:col-span-1 to sm:col-span-2 to give the picker room */}
+      <div className="sm:col-span-2 ">
         <form.Field
           name="range"
           children={(field) => (
@@ -103,7 +105,6 @@ export function BetHistoryForm() {
                 const maxDurationMs = 48 * 60 * 60 * 1000;
                 const currentDiff = nextRange.to.getTime() - nextRange.from.getTime();
 
-                // Intercept selection and force auto-cap if higher than 48 hours
                 if (currentDiff > maxDurationMs) {
                   field.handleChange({
                     from: nextRange.from,
@@ -118,9 +119,12 @@ export function BetHistoryForm() {
         />
       </div>
 
-      <Button type="submit" className="h-9 text-sm px-4 w-full">
-        Fetch
-      </Button>
+      {/* Explicitly defined spanning 1 column and forcing full width inside its cell */}
+      <div className="sm:col-span-1">
+        <Button type="submit" className="w-full h-9">
+          Fetch
+        </Button>
+      </div>
     </form>
   );
 }
