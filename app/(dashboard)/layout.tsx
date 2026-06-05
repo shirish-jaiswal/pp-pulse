@@ -53,7 +53,7 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
           {/* RIGHT SIDE: Dynamic Timezones (API Loaded) + Kibana Access Link */}
           <div className="flex items-center gap-3">
             {/* Live country/flag clock selector running smoothly beside the action link */}
-            <IPTracker />
+            {/* <IPTracker /> */}
             <TimeZone />
             {/* <a
               href="/portal/log-exp"
