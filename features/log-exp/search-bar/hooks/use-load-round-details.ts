@@ -30,8 +30,6 @@ export const useLoadRoundDetails = ({ value }: UseSmartSearchApiProps) => {
         return extractIdentifiersFromLookupToken(value);
     }, [value, parseTokenIdentifiers]);
 
-    console.log("Current Parsed Identifiers from Search Input:", currentIdentifiers);
-
     // 3. Connect the parsed identifiers right into your custom data fetcher hook scope
     const {
         data: roundDetails,

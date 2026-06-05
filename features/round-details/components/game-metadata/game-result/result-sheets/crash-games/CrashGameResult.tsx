@@ -26,7 +26,6 @@ const CrashGameResult = () => {
   const gameCrashedAt = roundDetails?.gameDetails?.[0]?.state_indicator 
     ? (Number(roundDetails.gameDetails[0].state_indicator) / 100).toFixed(2) 
     : null;
-    console.log("Round Details in CrashGameResult:", roundDetails);
   return (
     <div className="flex flex-col gap-3 w-full text-sm">
       {bets.map((bet: any, index: number) => {

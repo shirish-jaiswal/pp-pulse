@@ -17,7 +17,6 @@ export async function c_tptTableInfo(rawData: RoundDetailsInputProps): Promise<a
       if (data.user_id) queryParams.userId = data.user_id;
     }
 
-    console.log("queryParams", queryParams);
     const response = await apiRequest({
       method: "GET",
       endpoint: "tpttableinfo",

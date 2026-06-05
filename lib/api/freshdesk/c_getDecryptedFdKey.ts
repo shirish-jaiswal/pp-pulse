@@ -48,6 +48,5 @@ export default async function c_getDecryptedFdKey(): Promise<string> {
 
 async function fetchEncryptedKeyFromDatabase(email: string): Promise<string> {
   const profile = await findProfile({ email });
-  console.log("Fetched profile for email:", email, profile);
   return profile.at(0)?.freshdesk || "";
 }

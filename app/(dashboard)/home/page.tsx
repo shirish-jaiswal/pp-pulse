@@ -13,7 +13,6 @@ const BET_CODES = ["7", "SB:31&32"];
 function HomePage() {
   const { data, isLoading } = useGetPotentialWinningsPayoutByGameName("roulette", BET_CODES);
 
-  console.log("Potential Winning Payout Data:", data);
   return (
     <div className="p-6 space-y-8 min-h-[80vh] flex flex-col justify-between">
       <div className="space-y-8">

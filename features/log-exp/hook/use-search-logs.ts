@@ -128,11 +128,6 @@ const calculateOptimalInterval = (
  */
 export const searchLogs = async (data: MatchPhraseData) => {
   const requestPayload = buildRequestPayload(data);
-  console.log("requestPayload", requestPayload);
-  console.log("================ SEARCH LOGS REQUEST ================");
-  console.log("Endpoint:", `${data.dataView}/_search`);
-  console.log("Payload:", JSON.stringify(requestPayload, null, 2));
-  console.log("=====================================================");
 
   return kibanaRequest<KibanaSearchResponse>({
     method: "POST",

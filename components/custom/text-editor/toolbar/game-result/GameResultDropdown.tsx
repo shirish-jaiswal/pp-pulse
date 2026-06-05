@@ -112,7 +112,6 @@ export function GameResultDropdown() {
         }
       }).filter(Boolean);
 
-      console.log("📦 [Dropdown] Total successfully transformed payloads:", processedRoundsPayloads.length);
 
       if (processedRoundsPayloads.length === 0) {
         return;
@@ -130,7 +129,6 @@ export function GameResultDropdown() {
         editor.update(() => {
           editor.dispatchCommand(INSERT_GAME_RESULT_COMMAND, serializedPayload);
         });
-        console.log("✈️ [Dropdown] editor.dispatchCommand event sent to Lexical queue.");
       }, 60);
 
     } catch (err) {
