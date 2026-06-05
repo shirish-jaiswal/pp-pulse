@@ -2,8 +2,8 @@ import { GamePlugin } from "@/features/round-details/components/game-metadata/fl
 import { getFirst } from "@/features/round-details/components/game-metadata/float-result/utils/get-first";
 
 export const crashPlugin: GamePlugin = {
-    key: "crash-game",
-
+    key: "spaceman",
+    
     resolve: ({ gameDetails, styleMap }) => {
         const value = Number(getFirst(gameDetails, "state_indicator") ?? 0);
 

@@ -52,22 +52,30 @@ export class GameResultNode extends DecoratorNode<React.JSX.Element> {
 
   private parseConfig(): UniversalGameConfig | MultiGameResultConfig | null {
     try {
-      if (this.__configJson) {
-        return typeof this.__configJson === "string" ? JSON.parse(this.__configJson) : this.__configJson;
+      if (!this.__configJson) return null;
+      
+      // Explicitly check if it's already an object representation to prevent triple-parsing edge cases
+      if (typeof this.__configJson === "object") {
+        return this.__configJson;
       }
+      
+      return JSON.parse(this.__configJson);
     } catch (e) {
-      console.error("Malformed mixed-game block payload stream:", e);
+      console.error("❌ [GameResultNode] Malformed mixed-game JSON parsing error:", e, "Raw data stream:", this.__configJson);
+      return null;
     }
-    return null;
   }
 
   private renderRounds(parsedConfig: UniversalGameConfig | MultiGameResultConfig): React.JSX.Element {
-    // 1. Handle Multi-Round Configurations (Can contain mixed games)
+    if (!parsedConfig) {
+      return <div className="text-xs text-red-500 font-mono">Empty rendering dataset metadata provided.</div>;
+    }
+
+    // 1. Handle Multi-Round Configurations
     if ("rounds" in parsedConfig && Array.isArray(parsedConfig.rounds)) {
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "20px" }} className="multi-round-stack">
           {parsedConfig.rounds.map((roundData, rIdx) => {
-            // Dynamically resolve renderer based on EACH round's specific game type
             const TargetRenderer = getGameRenderer(roundData.gameType);
             
             return (
@@ -87,9 +95,13 @@ export class GameResultNode extends DecoratorNode<React.JSX.Element> {
       );
     }
 
-    // 2. Fallback to single round rendering if structure isn't an array wrapper
-    const SingleRenderer = getGameRenderer(parsedConfig.gameType);
-    return <SingleRenderer config={parsedConfig} />;
+    // 2. Fallback to single round rendering loop structures
+    if (parsedConfig.gameType) {
+      const SingleRenderer = getGameRenderer(parsedConfig.gameType);
+      return <SingleRenderer config={parsedConfig} />;
+    }
+
+    return <div className="text-xs text-amber-500 font-mono">Unrecognized dynamic configuration shape structure payload.</div>;
   }
 
   override exportDOM(editor: LexicalEditor): DOMExportOutput {
@@ -100,7 +112,12 @@ export class GameResultNode extends DecoratorNode<React.JSX.Element> {
     container.style.fontFamily = "Arial, sans-serif";
 
     if (parsedConfig) {
-      container.innerHTML = ReactDOMServer.renderToStaticMarkup(this.renderRounds(parsedConfig));
+      try {
+        container.innerHTML = ReactDOMServer.renderToStaticMarkup(this.renderRounds(parsedConfig));
+      } catch (err) {
+        console.error("❌ [GameResultNode] Static SSR generation compilation crash:", err);
+        container.innerText = "[Crash compilation execution context trace]";
+      }
     } else {
       container.innerText = "[Empty/Invalid Game Result Block]";
     }
@@ -120,7 +137,9 @@ export class GameResultNode extends DecoratorNode<React.JSX.Element> {
         {parsedConfig ? (
           this.renderRounds(parsedConfig)
         ) : (
-          <div className="text-xs text-red-500 font-mono">Error reading platform block configuration parameters.</div>
+          <div className="text-xs text-red-500 font-mono p-2 bg-red-50 rounded border border-red-200">
+            Error reading platform block configuration parameters. Check inspector terminal console logs.
+          </div>
         )}
       </div>
     );

@@ -5,26 +5,35 @@ export interface BaseStatus {
   variant: "success" | "danger" | "warning" | "default";
 }
 
-export interface BaseHeader {
-  title: string;
+export interface UniversalGameHeader {
+  title?: string;
   playerId: string;
   roundId: string;
   gameId: string;
+  gameCrashedAt?: string; // Added to seamlessly support crash game configurations safely
+}
+
+export interface UniversalGameSection {
+  title: string;
+  subtitle: string;
+  wager?: number;
+  payout?: number;
+  score?: string;
+  status: BaseStatus;
+  metrics?: Array<{ label: string; value: string }>;
+  cards?: any[];
+  actions?: string[];
 }
 
 export interface UniversalGameConfig {
-  gameType: string; // Moved here to allow mixed-game lists!
-  header?: {
-    title: string;
-    playerId: string;
-    roundId: string;
-    gameId: string;
-  };
-  sections: any[];
-  [key: string]: any;
+  gameType: string; // Keeps registry lookup clean inside GameResultNode loops
+  header?: UniversalGameHeader;
+  sections: UniversalGameSection[];
+  actions?: string[];
+  [key: string]: any; // Catch-all fallback matrix support
 }
 
 export interface MultiGameResultConfig {
-  gameType: "mixed" | string; // Flags a heterogeneous or unified list
+  gameType: "mixed" | string; 
   rounds: UniversalGameConfig[];
 }

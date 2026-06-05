@@ -3,11 +3,11 @@
 import React, { useMemo } from "react";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { Button } from "@/components/ui/button";
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { Dices } from "lucide-react";
 import { INSERT_GAME_RESULT_COMMAND } from "./GameResultPlugin";
@@ -21,10 +21,12 @@ import { getGameType } from "@/utils/get-game-type";
 import { getBlackjackRoundResult } from "@/features/round-details/components/game-metadata/game-result/result-sheets/blackjack/blackjack-round-result";
 import { transformBlackjackToConfig } from "@/components/custom/text-editor/toolbar/game-result/blackjack/blackjack-transformer";
 import { transformBaccaratToConfig } from "./baccarat/baccarat-trasnformer";
+import { transformHighflyerToConfig } from "./carash-games/highflyer-transformer";
+import { transformSpacemanToConfig } from "./carash-games/spaceman-transformer";
 
 export function GameResultDropdown() {
   const [editor] = useLexicalComposerContext();
-  
+
   const { roundDetails, selectedRoundDetailsMap } = useRoundDetails();
 
   // 1. Prioritize multi-select map values, default back to round details
@@ -55,19 +57,30 @@ export function GameResultDropdown() {
 
   const { data: cardDetails } = useFindCards({ code: resultCodes });
 
-  const hasData = roundItemsArray.length > 0 && allEvents.length > 0;
+  // 3. Dynamic Evaluation Check to handle both Card-based and Telemetry-based (Crash) Rounds
+  const hasData = useMemo(() => {
+    if (roundItemsArray.length === 0) return false;
 
-  // 3. Process layout configurations sequentially with independent dynamic type routing
+    return roundItemsArray.some((round) => {
+      const hasCards = Array.isArray(round?.cardDetails) && round.cardDetails.length > 0;
+      const hasCrashData = Array.isArray(round?.crashGamesData) && round.crashGamesData.length > 0;
+      const hasHighflyerData = Array.isArray(round?.highflyerData) && round.highflyerData.length > 0;
+
+      return hasCards || hasCrashData || hasHighflyerData;
+    });
+  }, [roundItemsArray]);
+
   const handleInsertLiveResult = () => {
     if (!hasData) return;
 
     try {
-      const processedRoundsPayloads = roundItemsArray.map((roundContextItem) => {
+      const processedRoundsPayloads = roundItemsArray.map((roundContextItem, rIdx) => {
         const roundEvents = roundContextItem?.cardDetails || [];
         const roundBetTable = roundContextItem?.betInfo || [];
-        
-        // Dynamic evaluation target unique to THIS round item instance
-        const currentRoundGameType = getGameType(roundContextItem?.gameDetails?.at(0)?.game_type?.toLowerCase()) || "";
+
+        // Get the raw string and normalized type
+        const rawTypeFromPayload = roundContextItem?.gameDetails?.at(0)?.game_type;
+        const currentRoundGameType = getGameType(rawTypeFromPayload?.toLowerCase()) || "";
 
         switch (currentRoundGameType) {
           case "blackjack": {
@@ -86,43 +99,49 @@ export function GameResultDropdown() {
             });
             return baccaratConfig ? { ...baccaratConfig, gameType: "baccarat" } : null;
           }
+          case "spaceman":
+          case "big-bass":
+            const spacemanConfig = transformSpacemanToConfig({ roundDetails: roundContextItem });
+            return spacemanConfig ? { ...spacemanConfig, gameType: currentRoundGameType } : null;
+          case "highflyer": {
+            const highflyerConfig = transformHighflyerToConfig({ roundDetails: roundContextItem });
+            return highflyerConfig ? { ...highflyerConfig, gameType: currentRoundGameType } : null;
+          }
           default:
-            console.warn(`Dropdown Transformer: Unsupported round game variant ignored: "${currentRoundGameType}"`);
             return null;
         }
       }).filter(Boolean);
 
+      console.log("📦 [Dropdown] Total successfully transformed payloads:", processedRoundsPayloads.length);
+
       if (processedRoundsPayloads.length === 0) {
-        console.warn("⚠️ GameResultDropdown: Transformer yielded an empty array.");
         return;
       }
 
-      // 4. Wrap elements inside a multi-round payload flagged as mixed
       const finalizedMultiRoundConfig = {
-        gameType: "mixed", 
+        gameType: "mixed",
         rounds: processedRoundsPayloads,
       };
 
-      console.log("🔥 MIXED GAMES TRANSFORMED PAYLOAD ARCHIVE:", finalizedMultiRoundConfig);
       const serializedPayload = JSON.stringify(finalizedMultiRoundConfig);
 
+      editor.focus();
       setTimeout(() => {
-        editor.focus();
         editor.update(() => {
           editor.dispatchCommand(INSERT_GAME_RESULT_COMMAND, serializedPayload);
         });
-      }, 50);
+        console.log("✈️ [Dropdown] editor.dispatchCommand event sent to Lexical queue.");
+      }, 60);
 
     } catch (err) {
-      console.error("Critical error in mixed-game multi-round generation pipeline:", err);
+      console.error("Critical error in drop-down pipeline execution context:", err);
     }
   };
 
   // Determine label layout text strings matching context arrays count dynamically
   const dropDownLabel = useMemo(() => {
     if (roundItemsArray.length === 0) return "Insert Live Result";
-    
-    // Scan if multiple game categories exist in the list
+
     const gameTypesInList = new Set(
       roundItemsArray.map(rd => getGameType(rd?.gameDetails?.at(0)?.game_type?.toLowerCase()))
     );
@@ -133,18 +152,18 @@ export function GameResultDropdown() {
 
     const singleDetectedType = Array.from(gameTypesInList)[0] || "Result";
     const titleBase = singleDetectedType.charAt(0).toUpperCase() + singleDetectedType.slice(1);
-    
-    return roundItemsArray.length > 1 
-      ? `${titleBase} (${roundItemsArray.length} Rounds) Result` 
+
+    return roundItemsArray.length > 1
+      ? `${titleBase} (${roundItemsArray.length} Rounds) Result`
       : `${titleBase} Live Result`;
   }, [roundItemsArray]);
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           disabled={!hasData}
           className="h-8 px-2 gap-1 font-mono text-xs border border-dashed border-gray-300 hover:bg-gray-50"
         >
@@ -152,7 +171,7 @@ export function GameResultDropdown() {
           <span>Insert Result</span>
         </Button>
       </DropdownMenuTrigger>
-      
+
       <DropdownMenuContent align="start" className="bg-popover border text-popover-foreground rounded-md shadow-md min-w-[180px] p-1 font-mono z-[50]">
         <DropdownMenuItem asChild className="text-xs px-2 py-1.5 cursor-pointer rounded-sm outline-none focus:bg-accent focus:text-accent-foreground">
           <button type="button" className="w-full text-left block" onClick={handleInsertLiveResult}>
