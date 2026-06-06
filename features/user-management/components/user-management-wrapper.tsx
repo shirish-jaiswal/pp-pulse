@@ -9,161 +9,165 @@ import { Button } from "@/components/ui/button";
 import { Users } from "lucide-react";
 
 import {
-    UserManagementResult,
-    UserManagementResultById
+  UserManagementResult,
+  UserManagementResultById,
 } from "./user-management-result";
 
 import { useUserManagementQuery } from "@/features/user-management/hooks/use-user-management";
+import { UserData } from "@/lib/api/user-management/user-management";
 
 type Tab = "email" | "userId";
 
 function UserManagementContent() {
-    const [activeTab, setActiveTab] = useState<Tab>("email");
-    const [emailQuery, setEmailQuery] = useState("");
-    const [userIdQuery, setUserIdQuery] = useState("");
+  const [activeTab, setActiveTab] = useState<Tab>("email");
+  const [emailQuery, setEmailQuery] = useState("");
+  const [userIdQuery, setUserIdQuery] = useState("");
 
-    const router = useRouter();
-    const searchParams = useSearchParams();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
-    const queryUserId = searchParams.get("userId");
+  const queryUserId = searchParams.get("userId");
 
-    const {
-        data,
-        loading,
-        error,
-        fetchState,
-        fetchByEmail,
-        fetchByUserId
-    } = useUserManagementQuery();
+  const {
+    data,
+    loading,
+    error,
+    fetchState,
+    fetchByEmail,
+    fetchByUserId,
+  } = useUserManagementQuery();
 
-    useEffect(() => {
-        if (queryUserId) {
-            setActiveTab("userId");
-            setUserIdQuery(queryUserId);
-            fetchByUserId(queryUserId);
-        }
-    }, [queryUserId]);
+  useEffect(() => {
+    if (queryUserId) {
+      setActiveTab("userId");
+      setUserIdQuery(queryUserId);
+      fetchByUserId(queryUserId);
+    }
+  }, [queryUserId]);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
 
-        if (activeTab === "email" && emailQuery.trim()) {
-            fetchByEmail(emailQuery.trim());
-            router.push(`/user-management?email=${emailQuery.trim()}`);
-        }
+    if (activeTab === "email" && emailQuery.trim()) {
+      fetchByEmail(emailQuery.trim());
+      router.push(`/user-management?email=${emailQuery.trim()}`);
+    }
 
-        if (activeTab === "userId" && userIdQuery.trim()) {
-            fetchByUserId(userIdQuery.trim());
-            router.push(`/user-management?userId=${userIdQuery.trim()}`);
-        }
-    };
+    if (activeTab === "userId" && userIdQuery.trim()) {
+      fetchByUserId(userIdQuery.trim());
+      router.push(`/user-management?userId=${userIdQuery.trim()}`);
+    }
+  };
 
-    const currentQuery =
-        activeTab === "email" ? emailQuery : userIdQuery;
+  const currentQuery =
+    activeTab === "email" ? emailQuery : userIdQuery;
 
-    return (
-        <div className="flex flex-col gap-2">
+  /* ✅ ✅ ✅ ✅ FINAL FIX */
+  const normalizedData: UserData[] = data;
 
-            <Card className="shadow-sm border-border/60 p-0 bg-background">
-                <CardContent className="p-2 pb-3 space-y-2">
-                    <div className="flex items-center gap-2 text-muted-foreground mb-1">
-                        <Users className="h-4 w-4" />
-                        <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
-                            User Management
-                        </span>
-                    </div>
+  return (
+    <div className="flex flex-col gap-4">
 
-                    <div className="flex border border-border rounded-md w-fit overflow-hidden">
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("email")}
-                            className={`px-3 py-1.5 text-xs font-medium ${
-                                activeTab === "email"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-background text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Search by Email
-                        </button>
+      {/* ✅ SEARCH CARD */}
+      <Card className="shadow-sm border bg-white">
+        <CardContent className="p-4 space-y-4">
 
-                        <button
-                            type="button"
-                            onClick={() => setActiveTab("userId")}
-                            className={`px-3 py-1.5 text-xs font-medium border-l ${
-                                activeTab === "userId"
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-background text-muted-foreground hover:bg-muted"
-                            }`}
-                        >
-                            Search by User ID
-                        </button>
-                    </div>
+          <div className="flex items-center gap-2 text-muted-foreground">
+            <Users className="h-4 w-4" />
+            <span className="text-sm font-semibold text-gray-800">
+              User Management
+            </span>
+          </div>
 
-                    {/* Input */}
-                    <form onSubmit={handleSubmit} className="flex gap-2 items-center">
-                        {activeTab === "email" ? (
-                            <Input
-                                className="h-9 text-sm max-w-sm"
-                                placeholder="Search by email address"
-                                value={emailQuery}
-                                onChange={(e) => setEmailQuery(e.target.value)}
-                                disabled={loading}
-                            />
-                        ) : (
-                            <Input
-                                className="h-9 text-sm max-w-sm"
-                                placeholder="User ID"
-                                value={userIdQuery}
-                                onChange={(e) => setUserIdQuery(e.target.value)}
-                                disabled={loading}
-                            />
-                        )}
+          {/* ✅ TABS */}
+          <div className="flex rounded-md border overflow-hidden w-fit">
+            <button
+              onClick={() => setActiveTab("email")}
+              className={`px-4 py-2 text-sm ${
+                activeTab === "email"
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Search by Email
+            </button>
 
-                        <Button
-                            type="submit"
-                            className="h-9 px-4"
-                            disabled={loading || !currentQuery.trim()}
-                        >
-                            {loading ? "Searching..." : "Search"}
-                        </Button>
-                    </form>
-                </CardContent>
-            </Card>
-
-            {/* Loading */}
-            {loading && (
-                <div className="rounded-md border p-6 text-center">
-                    <p className="text-sm text-muted-foreground">Searching...</p>
-                </div>
-            )}
-
-            {/* Error */}
-            {!loading && fetchState === "error" && (
-                <div className="rounded-md border p-4">
-                    <p className="text-sm text-destructive font-medium">Error</p>
-                    <p className="text-xs">{error}</p>
-                </div>
-            )}
-
-            {/* Empty */}
-            {!loading && fetchState === "empty" && (
-                <div className="rounded-md border p-6 text-center">
-                    <p className="text-sm text-muted-foreground">
-                        No user found.
-                    </p>
-                </div>
-            )}
-
-            {/* ✅ RESULTS */}
-            {!loading && fetchState === "success" && (
+            <button
+              onClick={() => setActiveTab("userId")}
+              className={`px-4 py-2 text-sm border-l ${
                 activeTab === "userId"
-                    ? <UserManagementResultById data={data} />
-                    : <UserManagementResult data={data} />
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-50 text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Search by User ID
+            </button>
+          </div>
+
+          {/* ✅ INPUT */}
+          <form onSubmit={handleSubmit} className="flex gap-3 items-center">
+            {activeTab === "email" ? (
+              <Input
+                placeholder="Enter email address"
+                value={emailQuery}
+                onChange={(e) => setEmailQuery(e.target.value)}
+                disabled={loading}
+                className="max-w-sm"
+              />
+            ) : (
+              <Input
+                placeholder="Enter user ID"
+                value={userIdQuery}
+                onChange={(e) => setUserIdQuery(e.target.value)}
+                disabled={loading}
+                className="max-w-sm"
+              />
             )}
+
+            <Button
+              type="submit"
+              disabled={loading || !currentQuery.trim()}
+            >
+              {loading ? "Searching..." : "Search"}
+            </Button>
+          </form>
+
+        </CardContent>
+      </Card>
+
+      {/* ✅ LOADING */}
+      {loading && (
+        <div className="rounded-md border p-6 text-center text-sm text-gray-500">
+          Searching...
         </div>
-    );
+      )}
+
+      {/* ✅ ERROR */}
+      {!loading && fetchState === "error" && (
+        <div className="rounded-md border p-4 bg-red-50">
+          <p className="text-sm text-red-600 font-medium">Error</p>
+          <p className="text-xs text-red-500">{error}</p>
+        </div>
+      )}
+
+      {/* ✅ EMPTY */}
+      {!loading && fetchState === "empty" && (
+        <div className="rounded-md border p-6 text-center text-sm text-gray-500">
+          No user found
+        </div>
+      )}
+
+      {/* ✅ RESULTS */}
+      {!loading && fetchState === "success" && (
+        activeTab === "userId"
+          ? <UserManagementResultById data={normalizedData} />
+          : <UserManagementResult data={normalizedData} />
+      )}
+
+    </div>
+  );
 }
 
 export function UserManagementWrapper() {
-    return <UserManagementContent />;
+  return <UserManagementContent />;
 }

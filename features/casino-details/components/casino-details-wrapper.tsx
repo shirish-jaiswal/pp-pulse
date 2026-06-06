@@ -4,6 +4,9 @@ import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Skeleton } from "@/components/ui/skeleton";
+
 import { Building2 } from "lucide-react";
 
 import { CasinoSearchForm } from "./casino-search-form";
@@ -20,12 +23,11 @@ function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
 
   const queryCasinoId = searchParams.get("casinoId");
 
-  const { data, loading, error, fetchState, fetch } = useCasinoDetailsQuery();
+  const { data, loading, error, fetchState, fetch } =
+    useCasinoDetailsQuery();
 
-  // ✅ Decide final ID source (query > dynamic route)
   const finalCasinoId = queryCasinoId || initialCasinoId || "";
 
-  // ✅ Auto-fetch when page loads
   useEffect(() => {
     if (finalCasinoId.trim()) {
       fetch(finalCasinoId);
@@ -33,61 +35,61 @@ function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
   }, [finalCasinoId, fetch]);
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-3">
 
-      {/* ✅ Search Card */}
-      <Card className="shadow-sm border-border/60 p-0 bg-background">
-        <CardContent className="p-2 pb-3 space-y-2">
+      {/* ✅ SEARCH CARD */}
+      <Card className="shadow-sm">
+        <CardContent className="p-3 space-y-2">
 
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-muted-foreground">
             <Building2 className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
+            <span className="text-xs font-semibold uppercase tracking-wide">
               Casino Details
             </span>
           </div>
 
-          {/* ✅ FIXED: Pass value into input */}
           <CasinoSearchForm
-            initialValue={finalCasinoId}   // ✅ THIS FIXES EMPTY INPUT
+            initialValue={finalCasinoId}
             onSubmit={(casinoId: string) => {
               fetch(casinoId);
-
-              // ✅ Update URL correctly (NO duplicate /portal)
               router.push(`/casino-details?casinoId=${casinoId}`);
             }}
             loading={loading}
           />
-
         </CardContent>
       </Card>
 
-      {/* ✅ Loading */}
+      {/* ✅ LOADING → SKELETON */}
       {loading && (
-        <div className="rounded-md border border-border bg-card p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            Fetching casino details...
-          </p>
-        </div>
+        <Card>
+          <CardContent className="p-4 space-y-3">
+            <Skeleton className="h-4 w-[200px]" />
+            <Skeleton className="h-4 w-[250px]" />
+            <Skeleton className="h-4 w-[180px]" />
+            <Skeleton className="h-[200px] w-full" />
+          </CardContent>
+        </Card>
       )}
 
-      {/* ✅ Error */}
+      {/* ✅ ERROR → ALERT */}
       {!loading && fetchState === "error" && (
-        <div className="rounded-md border border-destructive/40 bg-destructive/5 p-4">
-          <p className="text-sm text-destructive font-medium">Error</p>
-          <p className="text-xs text-destructive/80 mt-1">{error}</p>
-        </div>
+        <Alert variant="destructive">
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
-      {/* ✅ Empty */}
+      {/* ✅ EMPTY → ALERT */}
       {!loading && fetchState === "empty" && (
-        <div className="rounded-md border border-border bg-card p-6 text-center">
-          <p className="text-sm text-muted-foreground">
+        <Alert>
+          <AlertTitle>No Results</AlertTitle>
+          <AlertDescription>
             No data found for this Casino ID.
-          </p>
-        </div>
+          </AlertDescription>
+        </Alert>
       )}
 
-      {/* ✅ Result */}
+      {/* ✅ RESULT */}
       {!loading && fetchState === "success" && data && (
         <CasinoDetailsResult data={data} />
       )}
@@ -96,6 +98,9 @@ function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
   );
 }
 
-export function CasinoDetailsWrapper({ initialCasinoId }: CasinoDetailsWrapperProps) {
+/* ✅ Export wrapper */
+export function CasinoDetailsWrapper({
+  initialCasinoId,
+}: CasinoDetailsWrapperProps) {
   return <CasinoDetailsContent initialCasinoId={initialCasinoId} />;
 }

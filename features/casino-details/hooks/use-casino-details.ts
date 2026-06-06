@@ -1,52 +1,77 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { 
+import { useCallback, useRef, useState } from "react";
+import {
   getCasinoDetails,
-  getCasinoTables, 
-  NormalisedCasinoData 
+  getCasinoTables,
+  NormalisedCasinoData,
 } from "@/lib/api/casino-details/casino-details";
 
 type FetchState = "idle" | "loading" | "success" | "error" | "empty";
 
 export function useCasinoDetailsQuery() {
-    const [data, setData] = useState<NormalisedCasinoData | null>(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [fetchState, setFetchState] = useState<FetchState>("idle");
+  const [data, setData] = useState<NormalisedCasinoData | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchState, setFetchState] = useState<FetchState>("idle");
 
-    const fetch = useCallback(async (casinoId: string) => {
-        if (!casinoId.trim()) return;
+  const requestIdRef = useRef(0);
 
-        setLoading(true);
-        setError(null);
+  const fetch = useCallback(async (casinoId: string) => {
+    const trimmedId = casinoId.trim();
+    if (!trimmedId) return;
+
+    const requestId = ++requestIdRef.current;
+
+    setLoading(true);
+    setError(null);
+    setFetchState("loading");
+
+    try {
+      const [casinoRes, tablesRes] = await Promise.all([
+        getCasinoDetails({ casinoId: trimmedId }),
+        getCasinoTables({ casinoId: trimmedId }),
+      ]);
+
+      if (requestId !== requestIdRef.current) return;
+
+      if (casinoRes) {
+        // ✅ IMPORTANT FIX: clone deeply
+        const safeData: NormalisedCasinoData = {
+          ...casinoRes,
+          sharedEnvs: [...(casinoRes.sharedEnvs || [])], // ✅ FORCE re-render
+          tables: tablesRes ?? [],
+        };
+
+        setData(safeData);
+        setFetchState("success");
+      } else {
         setData(null);
-        setFetchState("loading");
+        setFetchState("empty");
+      }
+    } catch (err: unknown) {
+      if (requestId !== requestIdRef.current) return;
 
-        try {
-            // ✅ CALL BOTH APIs
-            const [casinoRes, tablesRes] = await Promise.all([
-                getCasinoDetails({ casinoId: casinoId.trim() }),
-                getCasinoTables({ casinoId: casinoId.trim() }), 
-            ]);
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch casino details";
 
-            if (casinoRes) {
-                // ✅ MERGE TABLES INTO DATA
-                setData({
-                    ...casinoRes,
-                    tables: tablesRes,
-                });
-                setFetchState("success");
-            } else {
-                setFetchState("empty");
-            }
-        } catch (err: any) {
-            setError(err?.message || "Failed to fetch casino details");
-            setFetchState("error");
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+      setError(message);
+      setFetchState("error");
+      setData(null);
+    } finally {
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
-    return { data, loading, error, fetchState, fetch };
+  return {
+    data,
+    loading,
+    error,
+    fetchState,
+    fetch,
+  };
 }

@@ -1,6 +1,6 @@
 import apiRequest from "@/lib/api/api-request";
 
-export async function c_getAuditLogs(limit: number = 200) {
+export async function c_getAuditLogs(limit: number = 20000) {
 
   const res = await apiRequest({
     method: "GET",
