@@ -23,8 +23,15 @@ function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
 
   const queryCasinoId = searchParams.get("casinoId");
 
-  const { data, loading, error, fetchState, fetch } =
-    useCasinoDetailsQuery();
+const { 
+  data, 
+  loading, 
+  error, 
+  fetchState, 
+  tables,           // ✅ ADD
+  tablesLoading,    // ✅ ADD
+  fetch 
+} = useCasinoDetailsQuery();
 
   const finalCasinoId = queryCasinoId || initialCasinoId || "";
 
@@ -91,7 +98,12 @@ function CasinoDetailsContent({ initialCasinoId }: CasinoDetailsWrapperProps) {
 
       {/* ✅ RESULT */}
       {!loading && fetchState === "success" && data && (
-        <CasinoDetailsResult data={data} />
+       
+<CasinoDetailsResult
+  data={data}
+  tables={tables}               // ✅ ADD
+  tablesLoading={tablesLoading} // ✅ ADD
+/>
       )}
 
     </div>

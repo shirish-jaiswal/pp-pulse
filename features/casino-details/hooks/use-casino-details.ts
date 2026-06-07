@@ -15,36 +15,67 @@ export function useCasinoDetailsQuery() {
   const [error, setError] = useState<string | null>(null);
   const [fetchState, setFetchState] = useState<FetchState>("idle");
 
+  const [tables, setTables] = useState<any[]>([]);
+  const [tablesLoading, setTablesLoading] = useState(false);
+
   const requestIdRef = useRef(0);
 
+  // ✅ prevent duplicate table calls
+  const fetchedTablesRef = useRef<string | null>(null);
+
+  // ✅ TABLE FETCH (SAFE)
+  const fetchTables = useCallback(async (casinoId: string) => {
+    if (!casinoId) return;
+
+    if (fetchedTablesRef.current === casinoId) return; // ✅ only once
+    fetchedTablesRef.current = casinoId;
+
+    try {
+      setTablesLoading(true);
+
+      const res = await getCasinoTables({ casinoId });
+
+      setTables(res ?? []);
+    } catch (err) {
+      console.error("Tables fetch failed", err);
+    } finally {
+      setTablesLoading(false);
+    }
+  }, []);
+
+  // ✅ MAIN FETCH
   const fetch = useCallback(async (casinoId: string) => {
     const trimmedId = casinoId.trim();
     if (!trimmedId) return;
 
     const requestId = ++requestIdRef.current;
 
+    // ✅ reset state
+    fetchedTablesRef.current = null;
+    setTables([]);
+
     setLoading(true);
     setError(null);
     setFetchState("loading");
 
     try {
-      const [casinoRes, tablesRes] = await Promise.all([
-        getCasinoDetails({ casinoId: trimmedId }),
-        getCasinoTables({ casinoId: trimmedId }),
-      ]);
+      const casinoRes = await getCasinoDetails({
+        casinoId: trimmedId,
+      });
 
       if (requestId !== requestIdRef.current) return;
 
       if (casinoRes) {
-        // ✅ IMPORTANT FIX: clone deeply
-        const safeData: NormalisedCasinoData = {
+        setData({
           ...casinoRes,
-          sharedEnvs: [...(casinoRes.sharedEnvs || [])], // ✅ FORCE re-render
-          tables: tablesRes ?? [],
-        };
+          sharedEnvs: [...(casinoRes.sharedEnvs || [])],
+        });
 
-        setData(safeData);
         setFetchState("success");
+
+        // ✅ ✅ PRELOAD TABLES ONCE (NO LOOP)
+        fetchTables(trimmedId);
+
       } else {
         setData(null);
         setFetchState("empty");
@@ -65,13 +96,17 @@ export function useCasinoDetailsQuery() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [fetchTables]);
 
   return {
     data,
     loading,
     error,
     fetchState,
+
+    tables,
+    tablesLoading,
+
     fetch,
   };
 }

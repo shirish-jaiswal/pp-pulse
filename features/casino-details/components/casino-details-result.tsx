@@ -162,7 +162,7 @@ function ConfigurationsTab({ data }: { data: NormalisedCasinoData }) {
   };
 
   return (
-    <div className="flex flex-col gap-3 h-full min-h-[calc(100vh-12rem)]">
+   <div className="flex flex-col gap-3 flex-1 min-h-0">
       <div className="flex gap-2 items-center justify-between shrink-0">
         <div className="relative w-full max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
@@ -185,9 +185,8 @@ function ConfigurationsTab({ data }: { data: NormalisedCasinoData }) {
           {copied ? "Copied" : "Copy Buffer"}
         </Button>
       </div>
-
-      <div className="flex-1 overflow-auto border border-gray-200 bg-white rounded-xl shadow-xs">
-        <Table className="table-fixed w-full">
+<div className="flex-1 overflow-auto border border-gray-200 bg-white rounded-xl shadow-xs min-h-0">
+        <Table className="table-fixed w-full min-w-[800px]">
           <TableBody>
             {filtered.map((line, i) => {
               const [k, ...v] = line.split("=");
@@ -277,8 +276,26 @@ function TablesTab({ tables }: { tables: any[] }) {
     return matchQuery && matchStatus && matchConfig;
   });
 
+  
+// Pagination block //
+const [page, setPage] = useState(1);
+const rowsPerPage = 25;
+const totalPages = Math.max(1, Math.ceil(filtered.length / rowsPerPage));
+
+const start = (page - 1) * rowsPerPage;
+
+const paginatedData =
+  start >= filtered.length
+    ? filtered.slice(0, rowsPerPage)
+    : filtered.slice(start, page * rowsPerPage);
+
+
+React.useEffect(() => {
+  setPage(1);
+}, [search, statusFilter, configFilter]);
+
   return (
-    <div className="flex flex-col gap-3 h-full min-h-[calc(100vh-12rem)]">
+  <div className="flex flex-col gap-3 h-full">
       
       {/* FILTER & CONTROL TASKBAR */}
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3 shrink-0">
@@ -336,57 +353,87 @@ function TablesTab({ tables }: { tables: any[] }) {
         </div>
       </div>
 
-      {/* CORE MATRIX GRID */}
-      <div className="flex-1 overflow-auto border border-gray-200 bg-white rounded-xl shadow-xs">
-        <Table className="table-fixed w-full">
-          <TableHeader className="bg-gray-50 sticky top-0 border-b border-gray-200 z-10">
-            <TableRow className="hover:bg-transparent">
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[25%]">Table Name</TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Game ID</TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Table ID</TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[20%]">Environment</TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[10%]">Status</TableHead>
-              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Configuration</TableHead>
-            </TableRow>
-          </TableHeader>
+  {/* CORE MATRIX GRID */}
+<div className="flex flex-col border border-gray-200 bg-white rounded-xl shadow-xs flex-1 min-h-0">
+  {/* ✅ TABLE SCROLL */}
+  <div className="flex-1 overflow-auto">
+    <Table className="table-fixed w-full min-w-[1000px]">
+      <TableHeader className="bg-gray-50 sticky top-0 border-b border-gray-200 z-10">
+        <TableRow className="hover:bg-transparent">
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[25%]">Table Name</TableHead>
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Game ID</TableHead>
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Table ID</TableHead>
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[20%]">Environment</TableHead>
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[10%]">Status</TableHead>
+          <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Configuration</TableHead>
+        </TableRow>
+      </TableHeader>
 
-          <TableBody>
-            {filtered.map((t, i) => (
-              <TableRow key={i} className="hover:bg-muted/30 border-b border-gray-100 last:border-0 font-medium text-sm">
-                <TableCell className="font-semibold text-foreground break-all whitespace-pre-wrap">{t.table_name}</TableCell>
-                <TableCell className="font-mono text-xs text-muted-foreground break-all whitespace-pre-wrap">{t.operator_game_id}</TableCell>
-                <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{t.table_id}</TableCell>
-                <TableCell className="text-xs break-words whitespace-pre-wrap">{t.env_name}</TableCell>
-                <TableCell>
-                  <Badge variant={t.table_open ? "success" : "default"} className="text-[10px]">
-                    {t.table_open ? "Open" : "Closed"}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {!t.tc_conf_data || t.tc_conf_data === "#" ? (
-                    <span className="text-xs text-muted-foreground/60 pl-2 break-words">System default</span>
-                  ) : (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="h-7 text-xs font-semibold gap-1 px-2 border-gray-200 shadow-3xs"
-                      onClick={() => {
-                        setConfig(t.tc_conf_data);
-                        setDialogSearch("");
-                        setSelectedRows([]);
-                      }}
-                    >
-                      <Eye className="w-3 h-3 text-muted-foreground" />
-                      View Layer
-                    </Button>
-                  )}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <TableBody>
+        {paginatedData.map((t, i) => (
+          <TableRow key={i} className="hover:bg-muted/30 border-b border-gray-100 last:border-0 font-medium text-sm">
+            <TableCell className="font-semibold text-foreground break-all whitespace-pre-wrap">{t.table_name}</TableCell>
+            <TableCell className="font-mono text-xs text-muted-foreground">{t.operator_game_id}</TableCell>
+            <TableCell className="font-mono text-xs">{t.table_id}</TableCell>
+            <TableCell className="text-xs">{t.env_name}</TableCell>
 
+            <TableCell>
+              <Badge variant={t.table_open ? "success" : "default"} className="text-[10px]">
+                {t.table_open ? "Open" : "Closed"}
+              </Badge>
+            </TableCell>
+
+            <TableCell>
+              {!t.tc_conf_data || t.tc_conf_data === "#" ? (
+                <span className="text-xs text-muted-foreground/60 pl-2">System default</span>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-7 text-xs font-semibold gap-1 px-2 border-gray-200"
+                  onClick={() => {
+                    setConfig(t.tc_conf_data);
+                    setDialogSearch("");
+                    setSelectedRows([]);
+                  }}
+                >
+                  <Eye className="w-3 h-3" />
+                  View Layer
+                </Button>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  </div>
+
+  {/* ✅ PAGINATION (INSIDE SAME BOX) */}
+  <div className="flex items-center justify-between px-3 py-2 border-t text-xs bg-gray-50">
+    <span>Page {page} of {totalPages}</span>
+
+    <div className="flex gap-2">
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={page === 1}
+        onClick={() => setPage(p => Math.max(1, p - 1))}
+      >
+        Prev
+      </Button>
+
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={page === totalPages}
+        onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+      >
+        Next
+      </Button>
+    </div>
+  </div>
+
+</div>
       {/* ───────── DRAWER CONFIG MODAL ───────── */}
       <Dialog open={!!config} onOpenChange={() => setConfig(null)}>
         <DialogContent className="w-[90vw] max-w-4xl max-h-[85vh] flex flex-col p-5 rounded-xl">
@@ -490,7 +537,17 @@ function TablesTab({ tables }: { tables: any[] }) {
 
 /* ───────── MAIN MANAGEMENT MODULE ───────── */
 
-export function CasinoDetailsResult({ data }: { data: NormalisedCasinoData }) {
+
+export function CasinoDetailsResult({
+  data,
+  tables,
+  tablesLoading,
+}: {
+  data: NormalisedCasinoData;
+  tables: any[];
+  tablesLoading: boolean;
+})
+{
   const shardedCount = data.sharedEnvs?.length || 0;
 
   return (
@@ -542,8 +599,18 @@ export function CasinoDetailsResult({ data }: { data: NormalisedCasinoData }) {
         <div className="flex-1 w-full pt-1">
           <TabsContent value="casino" className="mt-0 focus-visible:outline-none h-full"><CasinoInfoTab data={data} /></TabsContent>
           <TabsContent value="sharded" className="mt-0 focus-visible:outline-none h-full"><ShardedDetailsTab data={data} /></TabsContent>
-          <TabsContent value="config" className="mt-0 focus-visible:outline-none h-full"><ConfigurationsTab data={data} /></TabsContent>
-          <TabsContent value="tables" className="mt-0 focus-visible:outline-none h-full"><TablesTab tables={data?.tables || []} /></TabsContent>
+          <TabsContent value="config" className="mt-0 focus-visible:outline-none h-full flex flex-col overflow-hidden"><ConfigurationsTab data={data} /></TabsContent>
+          
+<TabsContent value="tables" className="mt-0 focus-visible:outline-none h-full">
+  {tablesLoading && tables.length === 0 ? (
+    <div className="p-8 text-center text-sm text-muted-foreground">
+      Loading LC enabled tables...
+    </div>
+  ) : (
+    <TablesTab tables={tables} />
+  )}
+</TabsContent>
+
         </div>
       </Tabs>
     </div>
