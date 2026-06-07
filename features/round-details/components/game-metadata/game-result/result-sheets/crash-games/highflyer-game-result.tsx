@@ -6,11 +6,18 @@ import { formatCurrency, formatDate } from "./helper";
 
 const HighflyerGameResult = () => {
   const { roundDetails } = useRoundDetails();
-  
+
   const bets: HighflyerBetType[] = roundDetails?.highflyerData || [];
   const currency = roundDetails?.tptInfo?.at(0)?.currency_code as string;
-  const gameCrashedAt = roundDetails?.gameDetails?.[0]?.state_indicator 
-    ? (Number(roundDetails.gameDetails[0].state_indicator) / 100).toFixed(2) 
+  const totalPayout = roundDetails?.tptInfo?.find(
+    (item: any) => item.action_type?.toLowerCase() === "settled"
+  )?.amount ?? 0;
+  const totalBet = roundDetails?.tptInfo?.find(
+    (item: any) => item.action_type?.toLowerCase() === "placed"
+  )?.amount ?? 0;
+
+  const gameCrashedAt = roundDetails?.gameDetails?.[0]?.state_indicator
+    ? (Number(roundDetails.gameDetails[0].state_indicator) / 100).toFixed(2)
     : null;
 
   // Reference first item for common metadata elements
@@ -27,7 +34,7 @@ const HighflyerGameResult = () => {
   return (
     <div className="flex flex-col gap-3 w-full text-sm">
       <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
-        
+
         <div className="px-5 py-4 border-b border-border bg-muted/20">
           <div className="flex items-start justify-between gap-4">
             {/* LEFT */}
@@ -62,41 +69,65 @@ const HighflyerGameResult = () => {
         </div>
 
         {/* WORKSPACE BODY - SPLIT CARD VIEW FOR PARALLEL BETSPOTS */}
-        <div className="p-5">
+        <div className="p-5 flex flex-col gap-5">
+          
+          {/* TOTAL SUMMARY METRICS SECTION */}
+          <div className="grid grid-cols-2 gap-4 border-b border-border pb-5">
+            <div className="rounded-xl border border-border bg-muted/10 p-4">
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Bet</p>
+              <p className="text-xl font-bold font-mono mt-1 text-foreground">
+                {formatCurrency(currency, totalBet)}
+              </p>
+            </div>
+            <div className={`rounded-xl border p-4 ${totalPayout > 0 ? "border-emerald-100 bg-emerald-50/10" : "border-border bg-muted/10"}`}>
+              <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Win</p>
+              <p className={`text-xl font-bold font-mono mt-1 ${totalPayout > 0 ? "text-emerald-600" : "text-foreground"}`}>
+                {formatCurrency(currency, totalPayout)}
+              </p>
+            </div>
+          </div>
+
           <div className={`grid grid-cols-1 gap-4 ${bets.length > 1 ? "md:grid-cols-2" : ""}`}>
             {bets.map((bet: HighflyerBetType, index: number) => {
-              // --- 1. DATA AND MULTIPLIER RESOLUTION ---
-              const wageredAmount = bet.bet_amount ?? 0;
-              const mainMultiplier = bet.multiplier ?? 0;
-              const isBusted = mainMultiplier === -1 || mainMultiplier <= 0;
 
-              // --- 2. CONFIGURATION STRINGS ---
-              const rawTarget = bet.requested_cash_out;
-              const requestedCashout = rawTarget ?? null;
+              // Fixed function declaration syntax
+              const typeOfCashout = (
+                auto_cashout_requested: null | number,
+                manual_cashout_requested: null | number,
+                forced_cashout_requested: null | number
+              ) => {
+                if (auto_cashout_requested !== null) return 1;
+                else if (manual_cashout_requested !== null) return 2;
+                else if (forced_cashout_requested !== null) return 3;
+                else return 0;
+              };
 
-              // --- 3. PAYOUT CALCULATION ---
-              const totalPayout = isBusted ? 0 : wageredAmount * mainMultiplier;
+              const getRedableCashoutType = (id: number) => {
+                if (id === 1) return "Auto Cashout";
+                if (id === 2) return "Manual Cashout";
+                if (id === 3) return "Forced Cashout";
+                return "No Cashout";
+              };
 
-              // --- 4. EXECUTED CASHOUT SCHEME TYPE ---
-              let cashOutTypeDisplay = "Not Settled";
-
-              if (isBusted) {
-                cashOutTypeDisplay = "Bust / Lost";
-              } else if (bet.force_cash_out) {
-                cashOutTypeDisplay = "Force Cashout";
-              } else if (bet.auto_cash_out === null || bet.auto_cash_out === undefined) {
-                // business rule verified: if null, it was a manual user cashout
-                cashOutTypeDisplay = "Manual Cashout";
-              } else {
-                // if not null, it was an automatic setup triggering settlement
-                cashOutTypeDisplay = "Auto Cashout";
+              const getRequestedCashoutAmount = (id: number) => {
+                if (id === 1) return bet.auto_cash_out;
+                if (id === 2) return bet.requested_cash_out;
+                if (id === 3) return bet.force_cash_out;
+                return -1;
               }
+              const bet_amount = bet.bet_amount ?? 0;
+              const multiplier = bet.multiplier > 0 ? `${bet.multiplier}x` : '-';
+
+              const id_typeOfCashout = typeOfCashout(bet.auto_cash_out, bet.requested_cash_out, bet.force_cash_out);
+              const requestedCashout = getRedableCashoutType(id_typeOfCashout);
+
+              const requested_cashout_amount = formatCurrency(currency, getRequestedCashoutAmount(id_typeOfCashout));
 
               const isDisconnected = bet.is_disconnected === true;
 
               return (
-                <div 
-                  key={bet.bet_id || index} 
+                <div
+                  key={bet.bet_id || index}
                   className="rounded-xl border border-border bg-muted/5 p-4 flex flex-col gap-4 shadow-sm"
                 >
                   {/* Spot Label Header */}
@@ -106,7 +137,7 @@ const HighflyerGameResult = () => {
                         Spot Position #0{index + 1}
                       </h3>
                       <span className="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
-                        {cashOutTypeDisplay}
+                        {requestedCashout}
                       </span>
                     </div>
                   </div>
@@ -116,13 +147,13 @@ const HighflyerGameResult = () => {
                     <div className="rounded-xl border border-border bg-background p-3">
                       <p className="text-xs text-muted-foreground">Bet Amount</p>
                       <p className="text-base font-semibold mt-1">
-                        {formatCurrency(currency, wageredAmount)}
+                        {formatCurrency(currency, bet_amount)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border bg-background p-3">
                       <p className="text-xs text-muted-foreground">Payout Received</p>
                       <p className={`text-base font-semibold mt-1 ${totalPayout > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
-                        {formatCurrency(currency, totalPayout)}
+                        {requested_cashout_amount}
                       </p>
                     </div>
                   </div>
@@ -132,13 +163,11 @@ const HighflyerGameResult = () => {
                     <div className="flex flex-col gap-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Executed Multiplier</span>
-                        <span className={`font-mono font-bold ${isBusted ? "text-red-500" : "text-indigo-600"}`}>
-                          {isBusted ? "Bust" : `${mainMultiplier.toFixed(2)}x`}
-                        </span>
+                        <span className="font-mono font-medium text-indigo-700">{multiplier}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Requested Cashout</span>
-                        <span className="font-mono font-medium">{requestedCashout ? requestedCashout : "—"}</span>
+                        <span className="text-muted-foreground">Requested Cashout Amount</span>
+                        <span className="font-mono font-medium">{requested_cashout_amount}</span>
                       </div>
                     </div>
 
@@ -159,7 +188,7 @@ const HighflyerGameResult = () => {
 
                     <div className="pt-2 border-t border-dashed border-indigo-100 flex justify-between items-center text-xs">
                       <span className="text-indigo-900/60 font-medium">Payout :</span>
-                      <span className="text-emerald-600 font-bold text-sm">{formatCurrency(currency, totalPayout)}</span>
+                      <span className="text-emerald-600 font-bold text-sm">{requested_cashout_amount}</span>
                     </div>
                   </div>
 
@@ -179,7 +208,6 @@ const HighflyerGameResult = () => {
                     )}
                   </div>
 
-                  {/* IDENTIFIER HASH FOOTER */}
                   <div className="bg-muted/40 p-2 rounded-lg border border-border/60 flex flex-col gap-1 text-[11px] font-mono">
                     <span className="text-muted-foreground">Bet ID</span>
                     <span className="text-foreground select-all break-all">{bet.bet_id || "—"}</span>

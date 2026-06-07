@@ -1,7 +1,5 @@
 "use client";
 
-import React from "react";
-
 interface SpacemanResultRendererProps {
   config: {
     gameType: string;
@@ -14,32 +12,32 @@ interface SpacemanResultRendererProps {
       userId: string;
       gameId: string;
       currency: string;
-      wageredAmount: number; // maps to bet.betAmount
-      totalPayout: number;    // maps to combined HC + FC cash payouts
-      full_cashout_opted_enabled: string; // bet.multiplier > 0 ? ...
-      half_cashout_opted_enabled: string; // bet.halfmultiplier > 0 ? ...
+      wageredAmount: number; 
+      totalPayout: number; 
+      full_cashout_opted_enabled: string;
+      half_cashout_opted_enabled: string;
       statusVariant: "success" | "danger" | "warning";
       isBustedLabel: string;
       hc: {
-        typeName: string;     // half_cashout_type
-        target: string;       // half_cashout_requested_at
-        allocation: number;   // bet.HC_BetAmount
-        multiplier: string;   // half_cashout_executed_at
-        payout: number;       // bet.HC_CashPayOut
-        requested: string;    // bet.HC_Requested
-        requestTime: string;  // bet.HC_RequestTime
-        settleTime: string;   // bet.HC_SettleTime
+        typeName: string;     
+        target: string;       
+        allocation: number;   
+        multiplier: string;   
+        payout: number;       
+        requested: string;    
+        requestTime: string;  
+        settleTime: string;   
         isBusted: boolean;
       };
       co: {
-        typeName: string;     // full_cashout_type
-        target: string;       // full_cashout_requested_at
-        allocation: number;   // bet.FC_BetAmount
-        multiplier: string;   // full_cashout_executed_at
-        payout: number;       // bet.FC_CashPayOut
-        requested: string;    // bet.FC_Requested
-        requestTime: string;  // bet.FC_RequestTime
-        settleTime: string;   // bet.FC_SettleTime
+        typeName: string;    
+        target: string;      
+        allocation: number;  
+        multiplier: string;  
+        payout: number;      
+        requested: string;   
+        requestTime: string; 
+        settleTime: string;  
         isBusted: boolean;
       };
       meta: {
@@ -328,7 +326,7 @@ export function SpacemanResultRenderer({ config }: SpacemanResultRendererProps) 
                                 backgroundColor: bet.meta.isDisconnected ?  "rgba(245, 158, 11, 0.1)" : "rgba(16, 185, 129, 0.1)",
                                 color: bet.meta.isDisconnected ? "#d97706" : "#10b981",
                               }}>
-                                {bet.meta.isDisconnected ? "YES" : "NO"}
+                                {(bet.meta.isDisconnected == null || bet.meta.isDisconnected == false) ? "NO" : "YES"}
                               </td>
                             </tr>
                           </tbody>

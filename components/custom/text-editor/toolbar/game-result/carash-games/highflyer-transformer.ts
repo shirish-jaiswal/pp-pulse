@@ -16,6 +16,15 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
   const stateIndicator = roundDetails?.gameDetails?.[0]?.state_indicator;
   const gameCrashedAt = stateIndicator ? (Number(stateIndicator) / 100).toFixed(2) + "x" : "BUST";
 
+  // Extraction rules derived directly from HighflyerGameResult UI logic
+  const totalPayout = roundDetails?.tptInfo?.find(
+    (item: any) => item.action_type?.toLowerCase() === "settled"
+  )?.amount ?? 0;
+
+  const totalBet = roundDetails?.tptInfo?.find(
+    (item: any) => item.action_type?.toLowerCase() === "placed"
+  )?.amount ?? 0;
+
   if (!Array.isArray(roundDetails?.highflyerData) || roundDetails.highflyerData.length === 0) {
     return null;
   }
@@ -34,36 +43,61 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
   const playerId = validBets[0]?.user_id || "N/A";
 
   const sections = validBets.map((bet, index) => {
-    const isBusted = bet.multiplier === -1 || bet.multiplier <= 0;
-    const payoutReceived = isBusted ? 0 : bet.bet_amount * bet.multiplier;
+    // 1. Unified function evaluation logic mapped to UI numbers
+    const typeOfCashout = (
+      auto_cashout_requested: null | number,
+      manual_cashout_requested: null | number,
+      forced_cashout_requested: null | number
+    ) => {
+      if (auto_cashout_requested !== null) return 1;
+      if (manual_cashout_requested !== null) return 2;
+      if (forced_cashout_requested !== null) return 3;
+      return 0;
+    };
 
-    let cashOutType = "Not Settled";
-    if (isBusted) {
-      cashOutType = "Bust / Lost";
-    } else if (bet.force_cash_out) {
-      cashOutType = "Force Trigger";
-    } else if (bet.auto_cash_out === null || bet.auto_cash_out === undefined) {
-      // Business rule: if auto_cash_out is null, user manually cashed out
-      cashOutType = "Manual Exit";
-    } else {
-      // Otherwise, the setup executed automatically via engine parameters
-      cashOutType = "Auto Engine";
-    }
+    const getReadableCashoutType = (id: number) => {
+      if (id === 1) return "Auto Cashout";
+      if (id === 2) return "Manual Cashout";
+      if (id === 3) return "Forced Cashout";
+      return "No Cashout";
+    };
+
+    const getRequestedCashoutAmount = (id: number) => {
+      if (id === 1) return bet.auto_cash_out;
+      if (id === 2) return bet.requested_cash_out;
+      if (id === 3) return bet.force_cash_out;
+      return -1;
+    };
+
+    const id_typeOfCashout = typeOfCashout(bet.auto_cash_out, bet.requested_cash_out, bet.force_cash_out);
+    const cashOutType = getReadableCashoutType(id_typeOfCashout);
+    const requestedCashoutAmount = getRequestedCashoutAmount(id_typeOfCashout);
+
+    const bet_amount = bet.bet_amount ?? 0;
+    const multiplierLabel = bet.multiplier > 0 ? `${bet.multiplier}x` : '-';
+    const isBusted = id_typeOfCashout === 0;
 
     return {
-      title: `BET SPOT POSITION #0${index + 1}`,
-      subtitle: `Bet ID: ${bet.bet_id}`,
-      wager: bet.bet_amount,
-      payout: payoutReceived,
+      title: `SPOT POSITION #0${index + 1}`,
+      subtitle: `Bet ID: ${bet.bet_id || "—"}`,
+      wager: bet_amount,
+      payout: requestedCashoutAmount, // Matches payoutReceived fallback logic
       status: {
         label: cashOutType.toUpperCase(),
         variant: isBusted ? ("danger" as const) : ("success" as const),
       },
       metrics: [
-        // Target Setup metric removed from here
-        { label: "Executed Mult", value: isBusted ? "Bust" : `${bet.multiplier.toFixed(2)}x` },
+        { label: "Executed Mult", value: multiplierLabel },
         { label: "Network Dropped", value: bet.is_disconnected ? "TRUE" : "FALSE" }
       ],
+      // Retaining explicit timestamps for audit-trail logging requirements
+      sequenceLogs: {
+        committed: bet.created_time,
+        autoInit: bet.auto_cash_out_initiated_time,
+        reqInit: bet.requested_cash_out_initiated_time,
+        forceOverride: bet.force_cash_out_initiated_time,
+        disconnectedTime: bet.disconnected_time
+      }
     };
   });
 
@@ -74,6 +108,8 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
       playerId,
       gameId,
       gameCrashedAt,
+      totalBet,
+      totalPayout
     },
     sections,
   };
