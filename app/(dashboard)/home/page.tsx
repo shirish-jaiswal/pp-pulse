@@ -53,24 +53,6 @@ function HomePage() {
             </div>
           </a>
 
-          {/* Kibana - HIGHLIGHTED UNDER TESTING */}
-          <a
-            href="/portal/log-exp"
-            className="border-2 border-blue-400 bg-blue-50/30 rounded-xl p-4 shadow-md relative overflow-hidden block hover:shadow-lg transition-all group"
-          >
-            <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
-              Under Testing
-            </div>
-            <div className="flex items-center gap-2.5 text-blue-900 group-hover:text-blue-700 transition-colors">
-              <Terminal className="h-5 w-5 stroke-[2]" />
-              <h2 className="font-semibold text-lg">Kibana</h2>
-            </div>
-            <p className="text-sm text-blue-800/80 mt-3">
-              Dynamic pre-built search filters, faster log exploration, and
-              improved observability workflows.
-            </p>
-          </a>
-
           {/* Resolution System */}
           <a
             href="/portal/resolution-template"

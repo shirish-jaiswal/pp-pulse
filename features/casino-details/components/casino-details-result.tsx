@@ -1,325 +1,551 @@
 "use client";
 
-import { useState } from "react";
-import { NormalisedCasinoData, SharedEnv } from "@/lib/api/casino-details/casino-details";
+import React, { useState } from "react";
+import {
+  NormalisedCasinoData,
+  SharedEnv,
+} from "@/lib/api/casino-details/casino-details";
+
+/* SHADCN components */
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  Tabs, 
+  TabsList, 
+  TabsTrigger, 
+  TabsContent 
+} from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+
+/* LUCIDE ICONS */
+import { 
+  Search, 
+  Copy, 
+  Check, 
+  Download, 
+  Eye, 
+  Layers, 
+  Sliders, 
+  Table2, 
+  Info, 
+  Database 
+} from "lucide-react";
 
 /* ───────── HELPERS ───────── */
 
 function KVRow({ label, value }: { label: string; value: React.ReactNode }) {
-    return (
-        <div className="flex items-center py-2 text-sm border-b border-border/40">
-            <span className="w-[180px] text-muted-foreground">{label}</span>
-            <span className="font-medium text-foreground">{value ?? "—"}</span>
-        </div>
-    );
+  return (
+    <div className="grid grid-cols-[200px_1fr] gap-4 py-2.5 text-sm border-b border-gray-100 last:border-0 items-baseline">
+      <span className="text-muted-foreground font-medium break-words">{label}</span>
+      <span className="text-foreground font-semibold break-all whitespace-pre-wrap selection:bg-blue-50">
+        {value ?? <span className="text-muted-foreground/40">—</span>}
+      </span>
+    </div>
+  );
 }
 
-function BoolBadge({ value }: { value: boolean }) {
-    return (
-        <Badge variant={value ? "default" : "outline"}>
-            {value ? "Yes" : "No"}
-        </Badge>
-    );
-}
-
-/* ───────── CASINO TAB ───────── */
+/* ───────── CASINO INFO OVERVIEW ───────── */
 
 function CasinoInfoTab({ data }: { data: NormalisedCasinoData }) {
-    return (
-        <div className="max-w-xl border rounded-md p-4 bg-background">
-            <h3 className="text-sm font-semibold mb-3">Casino Info</h3>
-            <KVRow label="Casino ID" value={data.casino_id} />
-            <KVRow label="Casino Name" value={data.casino_desc} />
-            <KVRow label="Wallet Type" value={data.Wallet_Type} />
-            <KVRow label="Main Env ID" value={data.main_env_id} />
-            <KVRow label="Main Env Name" value={data.main_env_name} />
-            <KVRow label="Extra Data On Bet" value={<BoolBadge value={!!data.extra_data_on_bet} />} />
-            <KVRow label="Extra Data On Win" value={<BoolBadge value={!!data.extra_data_on_win} />} />
-            <KVRow label="Extra Data on DF" value={<BoolBadge value={!!data.extra_data_on_df} />} />
-        </div>
-    );
+  return (
+    <div className="w-full border border-gray-200 rounded-xl p-5 bg-white shadow-xs overflow-hidden">
+      <div className="flex items-center gap-2 mb-4 text-muted-foreground border-b border-gray-100 pb-3">
+        <Info className="w-4 h-4 text-gray-500 stroke-[2.5]" />
+        <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">Casino Overview</h3>
+      </div>
+
+      <div className="space-y-0.5">
+        <KVRow label="Casino ID" value={data.casino_id} />
+        <KVRow label="Casino Name" value={data.casino_desc} />
+        <KVRow label="Wallet Type" value={data.Wallet_Type} />
+        <KVRow label="Main Env ID" value={data.main_env_id} />
+        <KVRow label="Main Env Name" value={data.main_env_name} />
+        <KVRow 
+          label="Extra Data On Bet" 
+          value={
+            <Badge variant={data.extra_data_on_bet ? "success" : "secondary"}>
+              {data.extra_data_on_bet ? "Enabled" : "Disabled"}
+            </Badge>
+          } 
+        />
+        <KVRow 
+          label="Extra Data On Win" 
+          value={
+            <Badge variant={data.extra_data_on_win ? "success" : "secondary"}>
+              {data.extra_data_on_win ? "Enabled" : "Disabled"}
+            </Badge>
+          } 
+        />
+        <KVRow 
+          label="Extra Data on DF" 
+          value={
+            <Badge variant={data.extra_data_on_df ? "success" : "secondary"}>
+              {data.extra_data_on_df ? "Enabled" : "Disabled"}
+            </Badge>
+          } 
+        />
+      </div>
+    </div>
+  );
 }
 
-/* ───────── SHARDED TAB ───────── */
+/* ───────── SHARDED ENVS TABLE ───────── */
 
 function ShardedDetailsTab({ data }: { data: NormalisedCasinoData }) {
-    if (!data.sharedEnvs?.length) {
-        return <p className="text-sm text-muted-foreground">No sharded config</p>;
-    }
-
+  if (!data.sharedEnvs || data.sharedEnvs.length === 0) {
     return (
-        <div className="border rounded-md overflow-hidden">
-            <table className="w-full text-sm">
-                <thead className="bg-muted/60">
-                    <tr>
-                        <th className="p-2 text-left">CasinoId</th>
-                        <th className="p-2 text-left">Sharded Env Id</th>
-                        <th className="p-2 text-left">Sharded Env Name</th>
-                        <th className="p-2 text-left">Sharded CasinoId</th>
-                        <th className="p-2 text-left">Sharded OperatorId</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {data.sharedEnvs.map((e: SharedEnv, i) => (
-                        <tr key={i} className="border-t hover:bg-muted/20">
-                            <td className="p-2">{e.casino_id}</td>
-                            <td className="p-2">{e.env ?? e.env_id}</td>
-                            <td className="p-2">{e.env_name}</td>
-                            <td className="p-2">{e.shardedCasinoId ?? "—"}</td>
-                            <td className="p-2">{e.shardedOperatorId ?? "—"}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
+      <div className="text-xs font-medium text-muted-foreground p-8 border border-dashed rounded-xl bg-gray-50/50 text-center flex flex-col items-center justify-center gap-2">
+        <Database className="w-5 h-5 text-muted-foreground/60" />
+        <span>No sharded environment clustering mapped to this node.</span>
+      </div>
     );
+  }
+
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white overflow-hidden shadow-xs w-full">
+      <Table className="table-fixed w-full">
+        <TableHeader className="bg-gray-50 border-b border-gray-200">
+          <TableRow className="hover:bg-transparent">
+            <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[18%]">Casino ID</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Env ID</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[27%]">Env Name</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[20%]">Sharded Casino ID</TableHead>
+            <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[20%]">Sharded Operator ID</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.sharedEnvs.map((e: SharedEnv, i) => (
+            <TableRow key={i} className="hover:bg-muted/30 border-b border-gray-100 last:border-0 font-medium text-sm">
+              <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{e.casino_id}</TableCell>
+              <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{e.env ?? e.env_id}</TableCell>
+              <TableCell className="text-gray-700 break-words whitespace-pre-wrap">{e.env_name}</TableCell>
+              <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{e.shardedCasinoId ?? <span className="text-muted-foreground/40">—</span>}</TableCell>
+              <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{e.shardedOperatorId ?? <span className="text-muted-foreground/40">—</span>}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
 }
 
-/* ───────── CONFIG TAB ───────── */
+/* ───────── CONFIGURATIONS TAB ───────── */
 
 function ConfigurationsTab({ data }: { data: NormalisedCasinoData }) {
-    const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("");
+  const [copied, setCopied] = useState(false);
 
-    const lines = data.conf_data?.split("\n") || [];
+  const text = data.conf_data || "";
+  const filtered = text
+    .split("\n")
+    .filter((l) => l.toLowerCase().includes(search.toLowerCase()));
 
-    const filtered = lines.filter(line =>
-        line.toLowerCase().includes(search.toLowerCase())
-    );
+  const handleCopyAll = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
-    return (
-        <>
-            <div className="mb-3">
-                <input
-                    placeholder="Search config..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="border px-3 py-1 text-sm rounded w-[220px]"
-                />
-            </div>
+  return (
+    <div className="flex flex-col gap-3 h-full min-h-[calc(100vh-12rem)]">
+      <div className="flex gap-2 items-center justify-between shrink-0">
+        <div className="relative w-full max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Filter keys or attributes..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9 text-xs border-gray-200"
+          />
+        </div>
 
-            <div className="grid grid-cols-2 gap-2 max-h-[60vh] overflow-auto">
-                {filtered.map((line, i) => {
-                    const [k, ...v] = line.split("=");
-                    return (
-                        <div key={i} className="border rounded p-2 text-xs">
-                            <div className="text-muted-foreground">{k}</div>
-                            <div className="font-medium break-all">{v.join("=")}</div>
-                        </div>
-                    );
-                })}
-            </div>
-        </>
-    );
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={!text || text.trim() === ""}
+          className="h-9 gap-1.5 font-semibold text-xs uppercase tracking-wider border-gray-200"
+          onClick={handleCopyAll}
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
+          {copied ? "Copied" : "Copy Buffer"}
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-auto border border-gray-200 bg-white rounded-xl shadow-xs">
+        <Table className="table-fixed w-full">
+          <TableBody>
+            {filtered.map((line, i) => {
+              const [k, ...v] = line.split("=");
+              if (!k && v.length === 0) return null;
+              return (
+                <TableRow key={i} className="hover:bg-muted/30 border-b border-gray-100 last:border-0 text-xs font-medium">
+                  <TableCell className="w-[20%] bg-gray-50/50 border-r border-gray-100 break-all whitespace-pre-wrap selection:bg-blue-100">
+                    {k}
+                  </TableCell>
+                  <TableCell className="font-mono text-foreground break-all whitespace-pre-wrap selection:bg-blue-100">
+                    {v.join("=")}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
 }
 
-/* ───────── TABLES TAB ───────── */
+/* ───────── LIVE TABLES WORKBOOK TAB ───────── */
 
 function TablesTab({ tables }: { tables: any[] }) {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [configFilter, setConfigFilter] = useState("all");
+  const [config, setConfig] = useState<string | null>(null);
 
-    const [config, setConfig] = useState<string | null>(null);
-    const [search, setSearch] = useState("");
-    const [page, setPage] = useState(1);
+  const [dialogSearch, setDialogSearch] = useState("");
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [copied, setCopied] = useState(false);
 
-    /* ✅ NEW FILTER STATES */
-    const [statusFilter, setStatusFilter] = useState("all");
-    const [configFilter, setConfigFilter] = useState("all");
+  const allLines = (config || "").split("\n").filter(line => line.trim() !== "");
 
-    const PAGE_SIZE = 20;
+  const handleSelectAll = () => {
+    if (selectedRows.length === allLines.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(allLines);
+    }
+  };
 
-    let filtered = tables.filter(t =>
-        t.table_name?.toLowerCase().includes(search.toLowerCase())
-    );
+  const exportToCSV = () => {
+    if (filtered.length === 0) return;
 
-    /* ✅ STATUS FILTER */
+    const rows = filtered.map((t) => ({
+      table_name: t.table_name,
+      operator_game_id: t.operator_game_id,
+      table_id: t.table_id,
+      env_name: t.env_name,
+      status: t.table_open ? "Open" : "Closed",
+    }));
+
+    const header = Object.keys(rows[0]).join(",");
+    const csv = [header, ...rows.map((r) => Object.values(r).join(","))].join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "lc_enabled_tables_manifest.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filtered = tables.filter((t) => {
+    const q = search.toLowerCase();
+    const matchQuery =
+      t.table_name?.toLowerCase().includes(q) ||
+      String(t.operator_game_id || "").toLowerCase().includes(q) ||
+      String(t.table_id || "").toLowerCase().includes(q) ||
+      String(t.env_name || "").toLowerCase().includes(q);
+
+    let matchStatus = true;
     if (statusFilter !== "all") {
-        filtered = filtered.filter(t =>
-            statusFilter === "open" ? t.table_open === true : t.table_open === false
-        );
+      matchStatus = statusFilter === "open" ? t.table_open : !t.table_open;
     }
 
-    /* ✅ CONFIG FILTER */
+    let matchConfig = true;
     if (configFilter !== "all") {
-        filtered = filtered.filter(t => {
-            const isDefault = !t.tc_conf_data || t.tc_conf_data === "#";
-            return configFilter === "default" ? isDefault : !isDefault;
-        });
+      const isDefault = !t.tc_conf_data || t.tc_conf_data === "#";
+      matchConfig = configFilter === "default" ? isDefault : !isDefault;
     }
 
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-    const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+    return matchQuery && matchStatus && matchConfig;
+  });
 
-    return (
-        <>
-            {/* ✅ TOP BAR WITH FILTERS */}
-            <div className="flex flex-wrap gap-2 justify-between mb-3">
+  return (
+    <div className="flex flex-col gap-3 h-full min-h-[calc(100vh-12rem)]">
+      
+      {/* FILTER & CONTROL TASKBAR */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-3 shrink-0">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative w-48">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              placeholder="Search table matrix..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-8 h-8 text-xs border-gray-200"
+            />
+          </div>
 
-                <div className="flex gap-2">
+          <div className="text-xs flex items-center gap-1.5">
+            <span className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="border border-gray-200 bg-white rounded-md text-xs px-2 py-1 font-medium focus:outline-none focus:ring-1 focus:ring-black"
+            >
+              <option value="all">All Channels</option>
+              <option value="open">Open Only</option>
+              <option value="closed">Closed Only</option>
+            </select>
+          </div>
 
-                    <input
-                        placeholder="Search table..."
-                        value={search}
-                        onChange={(e) => {
-                            setSearch(e.target.value);
-                            setPage(1);
+          <div className="text-xs flex items-center gap-1.5">
+            <span className="font-semibold text-muted-foreground uppercase tracking-wider text-[10px]">Config:</span>
+            <select
+              value={configFilter}
+              onChange={(e) => setConfigFilter(e.target.value)}
+              className="border border-gray-200 bg-white rounded-md text-xs px-2 py-1 font-medium focus:outline-none focus:ring-1 focus:ring-black"
+            >
+              <option value="all">All Variables</option>
+              <option value="default">Default Stack</option>
+              <option value="custom">Custom Payload</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4">
+          <div className="text-xs text-muted-foreground font-medium">
+            Total: <span className="font-bold text-foreground">{tables.length}</span> | Matched: <span className="font-bold text-foreground">{filtered.length}</span>
+          </div>
+
+          <Button
+            size="sm"
+            onClick={exportToCSV}
+            className="bg-emerald-600 hover:bg-emerald-700 h-8 gap-1.5 text-xs font-bold uppercase tracking-wider shadow-xs"
+          >
+            <Download className="w-3.5 h-3.5" />
+            Export Manifest
+          </Button>
+        </div>
+      </div>
+
+      {/* CORE MATRIX GRID */}
+      <div className="flex-1 overflow-auto border border-gray-200 bg-white rounded-xl shadow-xs">
+        <Table className="table-fixed w-full">
+          <TableHeader className="bg-gray-50 sticky top-0 border-b border-gray-200 z-10">
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[25%]">Table Name</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Game ID</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Table ID</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[20%]">Environment</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[10%]">Status</TableHead>
+              <TableHead className="text-xs font-bold uppercase tracking-wider h-10 w-[15%]">Configuration</TableHead>
+            </TableRow>
+          </TableHeader>
+
+          <TableBody>
+            {filtered.map((t, i) => (
+              <TableRow key={i} className="hover:bg-muted/30 border-b border-gray-100 last:border-0 font-medium text-sm">
+                <TableCell className="font-semibold text-foreground break-all whitespace-pre-wrap">{t.table_name}</TableCell>
+                <TableCell className="font-mono text-xs text-muted-foreground break-all whitespace-pre-wrap">{t.operator_game_id}</TableCell>
+                <TableCell className="font-mono text-xs break-all whitespace-pre-wrap">{t.table_id}</TableCell>
+                <TableCell className="text-xs break-words whitespace-pre-wrap">{t.env_name}</TableCell>
+                <TableCell>
+                  <Badge variant={t.table_open ? "success" : "default"} className="text-[10px]">
+                    {t.table_open ? "Open" : "Closed"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {!t.tc_conf_data || t.tc_conf_data === "#" ? (
+                    <span className="text-xs text-muted-foreground/60 pl-2 break-words">System default</span>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-7 text-xs font-semibold gap-1 px-2 border-gray-200 shadow-3xs"
+                      onClick={() => {
+                        setConfig(t.tc_conf_data);
+                        setDialogSearch("");
+                        setSelectedRows([]);
+                      }}
+                    >
+                      <Eye className="w-3 h-3 text-muted-foreground" />
+                      View Layer
+                    </Button>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* ───────── DRAWER CONFIG MODAL ───────── */}
+      <Dialog open={!!config} onOpenChange={() => setConfig(null)}>
+        <DialogContent className="w-[90vw] max-w-4xl max-h-[85vh] flex flex-col p-5 rounded-xl">
+          <DialogHeader className="border-b border-gray-100 pb-3">
+            <DialogTitle className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-gray-800" />
+              Runtime Payload Parameters
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* INTERNAL MODAL CONTROLS */}
+          <div className="flex flex-wrap items-center justify-between gap-3 my-2 pt-1">
+            <div className="flex items-center gap-2 flex-1 max-w-md">
+              <div className="relative w-full">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Filter active scope strings..."
+                  value={dialogSearch}
+                  onChange={(e) => setDialogSearch(e.target.value)}
+                  className="pl-8 h-8 text-xs border-gray-200"
+                />
+              </div>
+
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8 text-xs font-semibold shrink-0"
+                onClick={handleSelectAll}
+              >
+                {selectedRows.length === allLines.length ? "Deselect All" : "Select All"}
+              </Button>
+
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50/50 disabled:opacity-30 shrink-0"
+                onClick={() => setSelectedRows([])}
+                disabled={selectedRows.length === 0}
+              >
+                Clear
+              </Button>
+            </div>
+
+            <Button
+              size="sm"
+              className="bg-black hover:bg-gray-800 text-white font-bold text-xs uppercase tracking-wider h-8 gap-1.5"
+              onClick={() => {
+                const payload = selectedRows.length > 0 ? selectedRows : allLines;
+                navigator.clipboard.writeText(payload.join("\n"));
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+            >
+              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? "Copied" : selectedRows.length > 0 ? `Copy Selected (${selectedRows.length})` : "Copy Full State"}
+            </Button>
+          </div>
+
+          {/* COMPACTED SELECT MATRIX BUFFER */}
+          <div className="flex-1 overflow-auto border border-gray-100 bg-gray-50/50 rounded-lg p-1 font-mono text-xs max-h-[50vh]">
+            {allLines
+              .filter(line => line.toLowerCase().includes(dialogSearch.toLowerCase()))
+              .map((line, i) => {
+                const checked = selectedRows.includes(line);
+                return (
+                  <div
+                    key={i}
+                    onClick={() => {
+                      if (checked) {
+                        setSelectedRows(selectedRows.filter(l => l !== line));
+                      } else {
+                        setSelectedRows([...selectedRows, line]);
+                      }
+                    }}
+                    className={`flex items-start gap-3 py-1.5 px-2 border-b border-gray-200/40 last:border-0 cursor-pointer transition-colors select-all ${
+                      checked ? "bg-blue-50/40 hover:bg-blue-50/60" : "hover:bg-white"
+                    }`}
+                  >
+                    <div className="pt-0.5" onClick={(e) => e.stopPropagation()}>
+                      <Checkbox
+                        checked={checked}
+                        onCheckedChange={(isTrue) => {
+                          if (isTrue) {
+                            setSelectedRows([...selectedRows, line]);
+                          } else {
+                            setSelectedRows(selectedRows.filter(l => l !== line));
+                          }
                         }}
-                        className="border px-3 py-1 text-sm rounded w-[200px]"
-                    />
-
-                    <select
-                        value={statusFilter}
-                        onChange={(e) => setStatusFilter(e.target.value)}
-                        className="border px-2 py-1 text-sm rounded"
-                    >
-                        <option value="all">All Status</option>
-                        <option value="open">Open</option>
-                        <option value="closed">Closed</option>
-                    </select>
-
-                    <select
-                        value={configFilter}
-                        onChange={(e) => setConfigFilter(e.target.value)}
-                        className="border px-2 py-1 text-sm rounded"
-                    >
-                        <option value="all">All Config</option>
-                        <option value="default">Default</option>
-                        <option value="custom">Custom</option>
-                    </select>
-
-                </div>
-
-                <span className="text-xs text-muted-foreground">
-                    {filtered.length} tables
-                </span>
-            </div>
-
-            {/* TABLE */}
-            <div className="border rounded-md overflow-hidden">
-                <div className="max-h-[500px] overflow-auto">
-                    <table className="w-full text-sm">
-                        <thead className="bg-muted sticky top-0">
-                            <tr>
-                                <th className="p-2 text-left">TableName</th>
-                                <th className="p-2 text-left">Operator_GameId</th>
-                                <th className="p-2 text-left">TableId</th>
-                                <th className="p-2 text-left">Environment</th>
-                                <th className="p-2 text-center w-[120px]">Status</th>
-                                <th className="p-2 text-center w-[160px]">Config</th>
-                            </tr>
-                        </thead>
-
-                        <tbody>
-                            {paginated.map((t, i) => (
-                                <tr key={i} className="border-t hover:bg-muted/20">
-
-                                    <td className="p-2">{t.table_name}</td>
-                                    <td className="p-2">{t.operator_game_id}</td>
-                                    <td className="p-2 font-mono text-xs">{t.table_id}</td>
-                                    <td className="p-2">{t.env_name}</td>
-
-                                    <td className="p-2 text-center">
-                                        <Badge variant={t.table_open ? "default" : "outline"}>
-                                            {t.table_open ? "Open" : "Closed"}
-                                        </Badge>
-                                    </td>
-
-                                    <td className="p-2">
-                                        <div className="flex justify-center">
-                                            {!t.tc_conf_data || t.tc_conf_data === "#" ? (
-                                                <Badge variant="outline" className="text-[10px]">
-                                                    Default
-                                                </Badge>
-                                            ) : (
-                                                <button
-                                                    onClick={() => setConfig(t.tc_conf_data)}
-                                                    className="text-xs px-2 py-1 bg-primary text-white rounded"
-                                                >
-                                                    View
-                                                </button>
-                                            )}
-                                        </div>
-                                    </td>
-
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            {/* PAGINATION */}
-            <div className="flex justify-between mt-2 text-xs">
-                <button disabled={page === 1} onClick={() => setPage(p => p - 1)}>Prev</button>
-                <span>{page} / {totalPages || 1}</span>
-                <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)}>Next</button>
-            </div>
-
-            {/* MODAL */}
-            {config && config !== "#" && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
-                    <div className="bg-white p-4 w-[600px] max-h-[70vh] overflow-auto rounded">
-                        <table className="w-full text-xs">
-                            <tbody>
-                                {config.split("\n").map((l, i) => {
-                                    const [k, ...v] = l.split("=");
-                                    return (
-                                        <tr key={i}>
-                                            <td className="p-2 text-muted-foreground">{k}</td>
-                                            <td className="p-2">{v.join("=")}</td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-
-                        <div className="text-right mt-2">
-                            <button onClick={() => setConfig(null)}>Close</button>
-                        </div>
+                      />
                     </div>
-                </div>
-            )}
-        </>
-    );
+                    <span className="leading-relaxed text-gray-800 break-all whitespace-pre-wrap">{line}</span>
+                  </div>
+                );
+              })}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
 
-/* ───────── MAIN ───────── */
-
-type TabKey = "casino" | "sharded" | "config" | "tables";
-
-const TABS = [
-    { key: "casino", label: "Casino Details" },
-    { key: "sharded", label: "Sharded Details" },
-    { key: "config", label: "Configurations" },
-    { key: "tables", label: "Tables" },
-];
+/* ───────── MAIN MANAGEMENT MODULE ───────── */
 
 export function CasinoDetailsResult({ data }: { data: NormalisedCasinoData }) {
+  const shardedCount = data.sharedEnvs?.length || 0;
 
-    const [activeTab, setActiveTab] = useState<TabKey>("casino");
+  return (
+    <div className="w-full min-h-screen flex flex-col p-1">
+      <Tabs defaultValue="casino" className="space-y-4 w-full flex-1 flex flex-col">
+        
+        {/* SYSTEM CONTROLS TABS HUB */}
+        <TabsList className="flex items-center bg-gray-100 p-1 rounded-xl w-fit gap-1 border border-gray-200/30 shrink-0 mb-0">
+          <TabsTrigger
+            value="casino"
+            className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all flex items-center gap-1.5 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-xs"
+          >
+            <Info className="w-3.5 h-3.5 stroke-[2]" />
+            Overview
+          </TabsTrigger>
 
-    return (
-        <div className="border rounded bg-card">
+          <TabsTrigger
+            value="sharded"
+            className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all flex items-center gap-2 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-xs"
+          >
+            <Layers className="w-3.5 h-3.5 stroke-[2]" />
+            <span>Sharded Envs</span>
+            
+            <Badge 
+              variant={shardedCount > 0 ? "success" : "secondary"} 
+              className="text-[10px] px-1.5 py-0.5 font-mono lowercase rounded-md"
+            >
+              {shardedCount} envs
+            </Badge>
+          </TabsTrigger>
 
-            <div className="flex border-b">
-                {TABS.map(tab => (
-                    <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key as TabKey)}
-                        className={activeTab === tab.key ? "px-4 py-2 border-b-2" : "px-4 py-2"}
-                    >
-                        {tab.label}
-                    </button>
-                ))}
-            </div>
+          <TabsTrigger
+            value="config"
+            className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all flex items-center gap-1.5 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-xs"
+          >
+            <Sliders className="w-3.5 h-3.5 stroke-[2]" />
+            Configurations
+          </TabsTrigger>
 
-            <div className="p-4">
-                {activeTab === "casino" && <CasinoInfoTab data={data} />}
-                {activeTab === "sharded" && <ShardedDetailsTab data={data} />}
-                {activeTab === "config" && <ConfigurationsTab data={data} />}
-                {activeTab === "tables" && <TablesTab tables={data?.tables || []} />}
-            </div>
+          <TabsTrigger
+            value="tables"
+            className="px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider text-muted-foreground transition-all flex items-center gap-1.5 data-[state=active]:bg-black data-[state=active]:text-white data-[state=active]:shadow-xs"
+          >
+            <Table2 className="w-3.5 h-3.5 stroke-[2]" />
+            Tables Configuration
+          </TabsTrigger>
+        </TabsList>
 
+        <div className="flex-1 w-full pt-1">
+          <TabsContent value="casino" className="mt-0 focus-visible:outline-none h-full"><CasinoInfoTab data={data} /></TabsContent>
+          <TabsContent value="sharded" className="mt-0 focus-visible:outline-none h-full"><ShardedDetailsTab data={data} /></TabsContent>
+          <TabsContent value="config" className="mt-0 focus-visible:outline-none h-full"><ConfigurationsTab data={data} /></TabsContent>
+          <TabsContent value="tables" className="mt-0 focus-visible:outline-none h-full"><TablesTab tables={data?.tables || []} /></TabsContent>
         </div>
-    );
+      </Tabs>
+    </div>
+  );
 }

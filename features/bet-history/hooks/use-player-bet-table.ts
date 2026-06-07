@@ -18,7 +18,7 @@ import {
 import { useState, useEffect, useMemo } from "react";
 
 export function useDataTable({ data, columns }: any) {
-  // Prevent saving before hydration completes
+  // Prevent saving or running table updates before hydration completes
   const [hasHydrated, setHasHydrated] = useState(false);
 
   const [globalFilter, setGlobalFilter] = useState<string>("");
@@ -142,22 +142,28 @@ export function useDataTable({ data, columns }: any) {
     enableRowSelection: true,
 
     onRowSelectionChange: (updater) => {
+      if (!hasHydrated) return;
       setRowSelection(updater);
     },
 
     onSortingChange: (updater) => {
+      if (!hasHydrated) return;
       setSorting(updater);
     },
     onGlobalFilterChange: (updater) => {
+      if (!hasHydrated) return;
       setGlobalFilter(updater);
     },
     onColumnFiltersChange: (updater) => {
+      if (!hasHydrated) return;
       setColumnFilters(updater);
     },
     onColumnVisibilityChange: (updater) => {
+      if (!hasHydrated) return;
       setColumnVisibility(updater);
     },
     onPaginationChange: (updater) => {
+      if (!hasHydrated) return;
       setPagination(updater);
     },
     getCoreRowModel: getCoreRowModel(),

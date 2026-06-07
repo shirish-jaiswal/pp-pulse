@@ -76,7 +76,7 @@ export function transformBaccaratToConfig({ roundDetails, cardDetails }: Baccara
     },
     {
       title: "BANKER HAND",
-      subtitle: winner === "BANKER" ? "🎉 Natural Winner" : "Hand Result",
+      subtitle: winner === "BANKER" ? "Natural Winner" : "Hand Result",
       score: `${bankerScore} Points`,
       status: {
         label: winner === "BANKER" ? "WINNER" : winner === "TIE" ? "TIE" : "LOSE",
