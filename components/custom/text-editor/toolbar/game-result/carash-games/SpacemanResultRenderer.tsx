@@ -324,11 +324,11 @@ export function SpacemanResultRenderer({ config }: SpacemanResultRendererProps) 
                                 fontWeight: "semibold", 
                                 padding: "4px 8px", 
                                 borderRadius: "4px", 
-                                border: bet.meta.isDisconnected ? "1px solid rgba(16, 185, 129, 0.2)" : "1px solid rgba(245, 158, 11, 0.2)",
-                                backgroundColor: bet.meta.isDisconnected ? "rgba(16, 185, 129, 0.1)" : "rgba(245, 158, 11, 0.1)",
-                                color: bet.meta.isDisconnected ? "#10b981" : "#d97706"
+                                border: bet.meta.isDisconnected ? "1px solid rgba(245, 158, 11, 0.2)" : "1px solid rgba(16, 185, 129, 0.2)",
+                                backgroundColor: bet.meta.isDisconnected ?  "rgba(245, 158, 11, 0.1)" : "rgba(16, 185, 129, 0.1)",
+                                color: bet.meta.isDisconnected ? "#d97706" : "#10b981",
                               }}>
-                                {bet.meta.isDisconnected ? "NO" : "YES"}
+                                {bet.meta.isDisconnected ? "YES" : "NO"}
                               </td>
                             </tr>
                           </tbody>

@@ -1,24 +1,14 @@
 "use client";
 
-import React from "react";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { HighflyerBetType } from "@/features/round-details/types/highflyer";
-
-const formatDate = (date?: string | null) => {
-  if (!date) return "—";
-  return new Date(date).toUTCString();
-};
-
-const formatCurrency = (amount?: number | null) => {
-  return Number(amount || 0).toLocaleString();
-};
+import { formatCurrency, formatDate } from "./helper";
 
 const HighflyerGameResult = () => {
   const { roundDetails } = useRoundDetails();
   
-  // Extract highflyer data array from context
   const bets: HighflyerBetType[] = roundDetails?.highflyerData || [];
-  
+  const currency = roundDetails?.tptInfo?.at(0)?.currency_code as string;
   const gameCrashedAt = roundDetails?.gameDetails?.[0]?.state_indicator 
     ? (Number(roundDetails.gameDetails[0].state_indicator) / 100).toFixed(2) 
     : null;
@@ -38,15 +28,11 @@ const HighflyerGameResult = () => {
     <div className="flex flex-col gap-3 w-full text-sm">
       <div className="rounded-2xl border border-border bg-background shadow-sm overflow-hidden">
         
-        {/* UNIFIED MASTER HEADER (COMMON ELEMENTS) */}
         <div className="px-5 py-4 border-b border-border bg-muted/20">
           <div className="flex items-start justify-between gap-4">
             {/* LEFT */}
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="h-6 px-2 flex items-center rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-600">
-                  HIGHFLYER ACTIVITY TRACKED
-                </span>
                 <span className="h-6 px-2 flex items-center rounded-md text-xs font-medium bg-muted text-muted-foreground font-mono">
                   {bets.length} ACTIVE {bets.length === 1 ? "BET POSITION" : "BET POSITIONS"}
                 </span>
@@ -130,13 +116,13 @@ const HighflyerGameResult = () => {
                     <div className="rounded-xl border border-border bg-background p-3">
                       <p className="text-xs text-muted-foreground">Bet Amount</p>
                       <p className="text-base font-semibold mt-1">
-                        IDR {formatCurrency(wageredAmount)}
+                        {formatCurrency(currency, wageredAmount)}
                       </p>
                     </div>
                     <div className="rounded-xl border border-border bg-background p-3">
                       <p className="text-xs text-muted-foreground">Payout Received</p>
                       <p className={`text-base font-semibold mt-1 ${totalPayout > 0 ? "text-emerald-600" : "text-muted-foreground"}`}>
-                        IDR {formatCurrency(totalPayout)}
+                        {formatCurrency(currency, totalPayout)}
                       </p>
                     </div>
                   </div>
@@ -153,14 +139,6 @@ const HighflyerGameResult = () => {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Requested Cashout</span>
                         <span className="font-mono font-medium">{requestedCashout ? requestedCashout : "—"}</span>
-                      </div>
-                      
-                      {/* Telemetry log for debug context */}
-                      <div className="flex justify-between border-t border-dashed border-indigo-100/60 pt-1.5 mt-0.5 text-xs">
-                        <span className="text-muted-foreground italic">Raw auto_cash_out:</span>
-                        <span className="font-mono font-medium text-indigo-950/70">
-                          {bet.auto_cash_out !== null && bet.auto_cash_out !== undefined ? String(bet.auto_cash_out) : "null"}
-                        </span>
                       </div>
                     </div>
 
@@ -180,8 +158,8 @@ const HighflyerGameResult = () => {
                     </div>
 
                     <div className="pt-2 border-t border-dashed border-indigo-100 flex justify-between items-center text-xs">
-                      <span className="text-indigo-900/60 font-medium">Spot Return:</span>
-                      <span className="text-emerald-600 font-bold text-sm">IDR {formatCurrency(totalPayout)}</span>
+                      <span className="text-indigo-900/60 font-medium">Payout :</span>
+                      <span className="text-emerald-600 font-bold text-sm">{formatCurrency(currency, totalPayout)}</span>
                     </div>
                   </div>
 

@@ -8,7 +8,7 @@ import {
     SheetTitle,
 } from "@/components/ui/sheet";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { useEffect, useState, useRef } from "react";
 import { useCategories } from "@/hooks/excel-db/use-categories";
@@ -30,7 +30,7 @@ export function ResolutionEditor({ gameName }: Props) {
     const { data: categories = [], isLoading } = useCategories();
     const [tabSelected, setTabSelected] = useState<string>();
 
-    // This controls the LEFT Freshdesk sidebar workspace (collapsed by default via 'false')
+    // Controls the LEFT Freshdesk sidebar workspace
     const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
     const [loadedTicketId, setLoadedTicketId] = useState<string | null>(null);
     const [ticketInput, setTicketInput] = useState("");
@@ -46,7 +46,6 @@ export function ResolutionEditor({ gameName }: Props) {
     }, [categories, tabSelected]);
 
     // RESET SIDEBAR EXPLICITLY WHEN SHEET CLOSES:
-    // Ensures clean state next time the user clicks to open the workspace sheet
     useEffect(() => {
         if (!resolutionEditorOpen) {
             setIsWorkspaceOpen(false);
@@ -190,14 +189,20 @@ export function ResolutionEditor({ gameName }: Props) {
                                 })}
                             </TabsList>
 
+                            {/* FIXED INTERIOR CONTENT CONTEXT */}
                             <div className="flex-1 min-h-0 overflow-y-auto p-1">
                                 {categories.map((cat) => (
-                                    <ResolutionEditorContent
-                                        key={cat.id}
-                                        gameName={gameName}
-                                        category={cat.title}
-                                        tabsValue={cat.title}
-                                    />
+                                    <TabsContent 
+                                        key={cat.id} 
+                                        value={cat.title}
+                                        className="h-full m-0 data-[state=inactive]:hidden focus-visible:outline-none focus-visible:ring-0"
+                                    >
+                                        <ResolutionEditorContent
+                                            gameName={gameName}
+                                            category={cat.title}
+                                            tabsValue={cat.title}
+                                        />
+                                    </TabsContent>
                                 ))}
                             </div>
 

@@ -193,6 +193,8 @@ export function KibanaResponseProvider({ children }: { children: React.ReactNode
         searchHistogram(queryParams),
       ]);
 
+
+      console.log(logsResponse)
       if (requestId !== activeRequestIdRef.current) {
         return;
       }
