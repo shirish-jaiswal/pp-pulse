@@ -36,19 +36,19 @@ export const CrashGameBetSchema = z.object({
   HC_CashPayOut: z.number(),
   FC_CashPayOut: z.number(),
 
-  HC_Requested: z.number().nullable().optional(),
-  FC_Requested: z.number().nullable().optional(),
+  HC_Requested: z.number().nullable(),
+  FC_Requested: z.number().nullable(),
 
-  HC_RequestTime: DateTimeSchema.optional(),
-  FC_RequestTime: DateTimeSchema.optional(),
+  HC_RequestTime: DateTimeSchema.nullable(),
+  FC_RequestTime: DateTimeSchema.nullable(),
 
-  HC_SettleTime: DateTimeSchema.optional(),
-  FC_SettleTime: DateTimeSchema.optional(),
+  HC_SettleTime: DateTimeSchema.nullable(),
+  FC_SettleTime: DateTimeSchema.nullable(),
 
-  Updated_on: DateTimeSchema.optional(),
-  Deleted_on: DateTimeSchema.nullable().optional(),
+  Updated_on: DateTimeSchema.nullable(),
+  Deleted_on: DateTimeSchema.nullable(),
 
-  Disconnected: BooleanLikeSchema.optional(),
+  Disconnected: BooleanLikeSchema.nullable(),
 
   betAmount: z.number(),
 
