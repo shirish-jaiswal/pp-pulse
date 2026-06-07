@@ -27,6 +27,7 @@ function UserManagementContent() {
   const searchParams = useSearchParams();
 
   const queryUserId = searchParams.get("userId");
+  const queryEmail = searchParams.get("email");
 
   const {
     data,
@@ -43,7 +44,14 @@ function UserManagementContent() {
       setUserIdQuery(queryUserId);
       fetchByUserId(queryUserId);
     }
-  }, [queryUserId]);
+
+    
+if (queryEmail) {
+    setActiveTab("email");
+    setEmailQuery(queryEmail);
+    fetchByEmail(queryEmail);
+  }
+}, [queryUserId, queryEmail]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -22,7 +22,6 @@ export function AuditLogsWrapper() {
   const [activeTab, setActiveTab] = useState("logs");
   const [chartTab, setChartTab] = useState("actions");
 
-  // ✅ CORRECT HOOK
   const { logs, refreshLogs, loading } = useAuditLogs();
 
   const {
@@ -39,7 +38,8 @@ export function AuditLogsWrapper() {
     setToDate,
   } = useAuditFilters(logs);
 
-  const { byAction, byUser, byDate } = usePivotData(filtered);
+  // ✅ ✅ FIX: added peakByDate
+  const { byAction, byUser, byDate, peakByDate } = usePivotData(filtered);
 
   return (
     <div className="px-6 py-4 bg-gray-50 min-h-screen">
@@ -87,7 +87,6 @@ export function AuditLogsWrapper() {
 
             <div className="flex gap-2 items-center">
 
-              {/* ✅ MANUAL REFRESH ONLY */}
               <button
                 onClick={refreshLogs}
                 disabled={loading}
@@ -125,7 +124,7 @@ export function AuditLogsWrapper() {
             <KPICards logs={filtered} />
           </div>
 
-          {/* INSIGHTS */}
+          {/* ✅ INSIGHTS */}
           <div className="grid grid-cols-3 gap-3 mb-4">
 
             <div className="bg-white border rounded-xl p-4 shadow-sm">
@@ -142,10 +141,11 @@ export function AuditLogsWrapper() {
               </p>
             </div>
 
+            {/* ✅ ✅ FIXED PEAK TIME */}
             <div className="bg-white border rounded-xl p-4 shadow-sm">
               <p className="text-sm text-gray-500">Peak Time</p>
               <p className="text-lg font-semibold">
-                {byDate?.[0]?.date || "-"}
+                {peakByDate?.[0]?.date || "-"}
               </p>
             </div>
 
@@ -187,7 +187,7 @@ export function AuditLogsWrapper() {
             </button>
           </div>
 
-          {/* CHART PANEL */}
+          {/* ✅ CHART PANEL */}
           <div className="bg-white border rounded-xl p-4 shadow-sm">
 
             {chartTab === "actions" && (
