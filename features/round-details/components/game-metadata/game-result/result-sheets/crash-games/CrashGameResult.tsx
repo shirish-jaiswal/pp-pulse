@@ -54,7 +54,7 @@ const CrashGameResult = () => {
         const half_cashout_type = parseCashoutTypeName(bet.HC_TYPE);
 
         // --- STRING VS BOOLEAN DISCONNECTION SAFEGUARD ---
-        const isDisconnected = bet.Disconnected ? "YES" : "NO";
+        const isDisconnected = (bet.Disconnected == null || bet.Disconnected == false) ? "YES" : "NO";
 
         console.log("isDIsco", isDisconnected)
         return (
