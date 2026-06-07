@@ -38,6 +38,10 @@ const CrashGameResult = () => {
         const isHalfBusted = bet.HC_MUL === -1 || bet.HC_MUL <= 0;
         const isCompleteBusted = bet.CO_MUL === -1 || bet.CO_MUL <= 0;
 
+        // Opt-in checks and configurations based on multiplier rules (-1 or <=0 means not opted)
+        const isHalfOptedIn = bet.halfmultiplier && bet.halfmultiplier > 0;
+        const isCompleteOptedIn = mainMultiplier && mainMultiplier > 0;
+
         // --- 2. MULTIPLIER CALCULATIONS ---
         // Half Cashout Target configuration (e.g. halfmultiplier: 2 means auto-half at 2.00x)
         const halfTargetConfig = bet.halfmultiplier && bet.halfmultiplier !== -1 
@@ -67,7 +71,6 @@ const CrashGameResult = () => {
 
         // --- 5. STRING VS BOOLEAN DISCONNECTION SAFEGUARD ---
         const isDisconnected = bet.is_disconnected === true || 
-                               bet.is_disconnected === "true" || 
                                bet.Disconnected === true || 
                                bet.Disconnected === "true";
 
@@ -164,8 +167,14 @@ const CrashGameResult = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">cashout opted at</span>
+                        <span className={`font-mono font-semibold text-xs ${isHalfOptedIn ? "text-indigo-600" : "text-muted-foreground"}`}>
+                          {isHalfOptedIn && halfTargetConfig ? `${halfTargetConfig}x` : "Not Opted"}
+                        </span>
+                      </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Auto Target Multiplier</span>
+                        <span className="text-muted-foreground">Requested Multiplier</span>
                         <span className="font-mono font-medium">{halfTargetConfig ? `${halfTargetConfig}x` : "—"}</span>
                       </div>
                       <div className="flex justify-between">
@@ -208,8 +217,14 @@ const CrashGameResult = () => {
                     </div>
 
                     <div className="flex flex-col gap-2 text-sm">
+                      <div className="flex justify-between items-center">
+                        <span className="text-muted-foreground">cashout opted at</span>
+                        <span className={`font-mono font-semibold text-xs ${isCompleteOptedIn ? "text-violet-600" : "text-red-500"}`}>
+                          {isCompleteOptedIn && fullTargetConfig ? `${fullTargetConfig}x` : "Not Opted"}
+                        </span>
+                      </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Auto Target Multiplier</span>
+                        <span className="text-muted-foreground">Requested Multiplier</span>
                         <span className="font-mono font-medium">{fullTargetConfig ? `${fullTargetConfig}x` : "—"}</span>
                       </div>
                       <div className="flex justify-between">
