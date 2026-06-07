@@ -2,15 +2,7 @@
 
 import { useRoundDetails } from "@/features/round-details/context/round-details-context";
 import { CrashGameBetType, CrashGameData } from "@/features/round-details/types/crash-games";
-
-const formatDate = (date?: string | null) => {
-  if (!date) return "—";
-  return new Date(date).toUTCString();
-};
-
-const formatCurrency = (currency: string, amount?: number | null) => {
-  return currency.trim() + " " + Number(amount || 0).toLocaleString();
-};
+import { formatCurrency, formatDate } from "./helper";
 
 // Helper function to translate API cashout type strings into human-readable text
 const parseCashoutTypeName = (typeString: string | null) => {
@@ -62,7 +54,9 @@ const CrashGameResult = () => {
         const half_cashout_type = parseCashoutTypeName(bet.HC_TYPE);
 
         // --- STRING VS BOOLEAN DISCONNECTION SAFEGUARD ---
-        const isDisconnected = bet.Disconnected;
+        const isDisconnected = bet.Disconnected ? "YES" : "NO";
+
+        console.log("isDIsco", isDisconnected)
         return (
           <div
             key={bet.bet_id || index}
@@ -126,9 +120,8 @@ const CrashGameResult = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Auto Cashout Enabled at</span>
                         <span
-                          className={`font-mono font-semibold text-xs ${
-                            half_cashout_opted_enabled ? "text-indigo-600" : "text-muted-foreground"
-                          }`}
+                          className={`font-mono font-semibold text-xs ${half_cashout_opted_enabled ? "text-indigo-600" : "text-muted-foreground"
+                            }`}
                         >
                           {half_cashout_opted_enabled}
                         </span>
@@ -187,9 +180,8 @@ const CrashGameResult = () => {
                       <div className="flex justify-between items-center">
                         <span className="text-muted-foreground">Auto Cashout Enabled at</span>
                         <span
-                          className={`font-mono font-semibold text-xs ${
-                            full_cashout_opted_enabled ? "text-violet-600" : "text-red-500"
-                          }`}
+                          className={`font-mono font-semibold text-xs ${full_cashout_opted_enabled ? "text-violet-600" : "text-red-500"
+                            }`}
                         >
                           {full_cashout_opted_enabled}
                         </span>
@@ -275,13 +267,9 @@ const CrashGameResult = () => {
 
                     <span className="text-muted-foreground py-1">Network Interrupted</span>
                     <span
-                      className={`text-right font-semibold px-2 py-1 rounded border ${
-                        isDisconnected
-                          ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20"
-                          :"bg-amber-500/10 text-amber-600 border-amber-500/20"
-                      }`}
+                      className={`text-right font-semibold px-2 py-1 rounded border`}
                     >
-                      {isDisconnected ? "NO" : "YES"}
+                      {isDisconnected}
                     </span>
                   </div>
                 </div>
