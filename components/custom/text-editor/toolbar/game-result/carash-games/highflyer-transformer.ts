@@ -14,7 +14,7 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
 
   const roundId = String(roundDetails?.tptInfo?.at(0)?.round_id || "N/A");
   const stateIndicator = roundDetails?.gameDetails?.[0]?.state_indicator;
-  const gameCrashedAt = stateIndicator ? (Number(stateIndicator) / 100).toFixed(2) : "BUST";
+  const gameCrashedAt = stateIndicator ? (Number(stateIndicator) / 100).toFixed(2) + "x" : "BUST";
 
   if (!Array.isArray(roundDetails?.highflyerData) || roundDetails.highflyerData.length === 0) {
     return null;
@@ -36,15 +36,19 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
   const sections = validBets.map((bet, index) => {
     const isBusted = bet.multiplier === -1 || bet.multiplier <= 0;
     const payoutReceived = isBusted ? 0 : bet.bet_amount * bet.multiplier;
-    
-    const rawTarget = bet.auto_cash_out ?? bet.requested_cash_out ?? bet.force_cash_out;
-    const targetThreshold = rawTarget && rawTarget !== -1 ? `${rawTarget.toFixed(2)}x` : "None";
 
     let cashOutType = "Not Settled";
-    if (isBusted) cashOutType = "Bust / Lost";
-    else if (bet.force_cash_out) cashOutType = "Force Trigger";
-    else if (bet.auto_cash_out || bet.requested_cash_out) cashOutType = "Auto Engine";
-    else if (bet.multiplier > 0) cashOutType = "Manual Exit";
+    if (isBusted) {
+      cashOutType = "Bust / Lost";
+    } else if (bet.force_cash_out) {
+      cashOutType = "Force Trigger";
+    } else if (bet.auto_cash_out === null || bet.auto_cash_out === undefined) {
+      // Business rule: if auto_cash_out is null, user manually cashed out
+      cashOutType = "Manual Exit";
+    } else {
+      // Otherwise, the setup executed automatically via engine parameters
+      cashOutType = "Auto Engine";
+    }
 
     return {
       title: `BET SPOT POSITION #0${index + 1}`,
@@ -56,7 +60,7 @@ export function transformHighflyerToConfig({ roundDetails }: HighflyerTransforme
         variant: isBusted ? ("danger" as const) : ("success" as const),
       },
       metrics: [
-        { label: "Target Setup", value: targetThreshold },
+        // Target Setup metric removed from here
         { label: "Executed Mult", value: isBusted ? "Bust" : `${bet.multiplier.toFixed(2)}x` },
         { label: "Network Dropped", value: bet.is_disconnected ? "TRUE" : "FALSE" }
       ],

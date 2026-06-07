@@ -85,19 +85,26 @@ const HighflyerGameResult = () => {
               const isBusted = mainMultiplier === -1 || mainMultiplier <= 0;
 
               // --- 2. CONFIGURATION STRINGS ---
-              const rawTarget = bet.auto_cash_out ?? bet.requested_cash_out ?? bet.force_cash_out;
-              const targetConfigDisplay = rawTarget && rawTarget !== -1 ? `${Number(rawTarget).toFixed(2)}x` : null;
+              const rawTarget = bet.requested_cash_out;
+              const requestedCashout = rawTarget ?? null;
 
               // --- 3. PAYOUT CALCULATION ---
               const totalPayout = isBusted ? 0 : wageredAmount * mainMultiplier;
 
               // --- 4. EXECUTED CASHOUT SCHEME TYPE ---
               let cashOutTypeDisplay = "Not Settled";
-              if (isBusted) cashOutTypeDisplay = "Bust / Lost";
-              else if (bet.force_cash_out) cashOutTypeDisplay = "Force Cashout";
-              else if (bet.auto_cash_out) cashOutTypeDisplay = "Auto Cashout";
-              else if (bet.requested_cash_out) cashOutTypeDisplay = "Requested Cashout";
-              else if (mainMultiplier > 0) cashOutTypeDisplay = "Manual Cashout";
+
+              if (isBusted) {
+                cashOutTypeDisplay = "Bust / Lost";
+              } else if (bet.force_cash_out) {
+                cashOutTypeDisplay = "Force Cashout";
+              } else if (bet.auto_cash_out === null || bet.auto_cash_out === undefined) {
+                // business rule verified: if null, it was a manual user cashout
+                cashOutTypeDisplay = "Manual Cashout";
+              } else {
+                // if not null, it was an automatic setup triggering settlement
+                cashOutTypeDisplay = "Auto Cashout";
+              }
 
               const isDisconnected = bet.is_disconnected === true;
 
@@ -107,13 +114,15 @@ const HighflyerGameResult = () => {
                   className="rounded-xl border border-border bg-muted/5 p-4 flex flex-col gap-4 shadow-sm"
                 >
                   {/* Spot Label Header */}
-                  <div className="flex items-center justify-between border-b border-border pb-2">
-                    <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider font-mono">
-                      Spot Position #0{index + 1}
-                    </h3>
-                    <span className="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
-                      {cashOutTypeDisplay}
-                    </span>
+                  <div className="flex flex-col gap-1.5 border-b border-border pb-2">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-indigo-700 uppercase tracking-wider font-mono">
+                        Spot Position #0{index + 1}
+                      </h3>
+                      <span className="text-xs font-medium bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded">
+                        {cashOutTypeDisplay}
+                      </span>
+                    </div>
                   </div>
 
                   {/* FINANCIAL KPI SUBROW */}
@@ -136,13 +145,21 @@ const HighflyerGameResult = () => {
                   <div className="rounded-xl border border-indigo-100 bg-indigo-50/10 p-4 flex flex-col justify-between gap-3">
                     <div className="flex flex-col gap-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Auto Target Setup</span>
-                        <span className="font-mono font-medium">{targetConfigDisplay ? targetConfigDisplay : "—"}</span>
-                      </div>
-                      <div className="flex justify-between">
                         <span className="text-muted-foreground">Executed Multiplier</span>
                         <span className={`font-mono font-bold ${isBusted ? "text-red-500" : "text-indigo-600"}`}>
                           {isBusted ? "Bust" : `${mainMultiplier.toFixed(2)}x`}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Requested Cashout</span>
+                        <span className="font-mono font-medium">{requestedCashout ? requestedCashout : "—"}</span>
+                      </div>
+                      
+                      {/* Telemetry log for debug context */}
+                      <div className="flex justify-between border-t border-dashed border-indigo-100/60 pt-1.5 mt-0.5 text-xs">
+                        <span className="text-muted-foreground italic">Raw auto_cash_out:</span>
+                        <span className="font-mono font-medium text-indigo-950/70">
+                          {bet.auto_cash_out !== null && bet.auto_cash_out !== undefined ? String(bet.auto_cash_out) : "null"}
                         </span>
                       </div>
                     </div>

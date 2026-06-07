@@ -5,7 +5,7 @@ import React from "react";
 export interface Card {
     rank: string | number;
     suit: "spades" | "hearts" | "diamonds" | "clubs" | "s" | "h" | "d" | "c"; 
-    actions?: string[]; // Used to flag special layout conditions like "Rotated"
+    actions?: string[]; 
 }
 
 export interface Status {
@@ -31,7 +31,7 @@ export interface BaccaratResultConfig {
         gameId: string;
     };
     sections: Section[];
-    actions?: string[]; // Global game payouts/rules notices
+    actions?: string[]; 
 }
 
 export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfig }) {
@@ -62,14 +62,13 @@ export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfi
 
                 {/* 2. Hands Section (Player & Banker) */}
                 {sections?.map((section, idx) => {
-                    // Adapt specific theme color borders matching Baccarat profiles 
                     const isPlayerSide = section.title.toUpperCase().includes("PLAYER");
-                    const sideThemeColor = isPlayerSide ? "#2563eb" : "#dc2626"; // Blue vs Red
+                    const sideThemeColor = isPlayerSide ? "#2563eb" : "#dc2626"; 
                     
                     let statusBg = "#f1f5f9"; 
                     let statusColor = "#334155"; 
-                    if (section.status?.variant === "success") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } // Blue highlight
-                    else if (section.status?.variant === "danger") { statusBg = "#fee2e2"; statusColor = "#991b1b"; } // Red highlight
+                    if (section.status?.variant === "success") { statusBg = "#dbeafe"; statusColor = "#1e40af"; } 
+                    else if (section.status?.variant === "danger") { statusBg = "#fee2e2"; statusColor = "#991b1b"; } 
                     else if (section.status?.variant === "warning") { statusBg = "#fef3c7"; statusColor = "#92400e"; }
 
                     return (
@@ -108,7 +107,7 @@ export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfi
                                     </tbody>
                                 </table>
 
-                                {/* Cards Layout Mapping (Supporting horizontal rotation models for Baccarat 3rd card draws) */}
+                                {/* Cards Layout Mapping */}
                                 {section.cards && section.cards.length > 0 && (
                                     <table data-game-block="true" cellPadding="0" cellSpacing="0" style={{ borderCollapse: "separate", borderSpacing: "6px 0", marginBottom: "8px" }}>
                                         <tbody data-game-block="true">
@@ -116,7 +115,7 @@ export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfi
                                                 {section.cards.map((card, cIdx) => {
                                                     const suitStr = String(card.suit).toLowerCase().trim();
                                                     const isRedSuit = suitStr === "hearts" || suitStr === "h" || suitStr === "diamonds" || suitStr === "d";
-                                                    const isRotatedThirdCard = card.actions?.includes("Rotated") || cIdx === 2;
+                                                    const isThirdCard = cIdx === 2;
                                                     
                                                     let symbol = "♣";
                                                     if (suitStr === "spades" || suitStr === "s") symbol = "♠";
@@ -139,8 +138,8 @@ export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfi
                                                                 paddingBottom: "4px"
                                                             }}
                                                         >
-                                                            {/* Custom Label wrapper stack for the 3rd card element anchor node */}
-                                                            {isRotatedThirdCard && (
+                                                            {/* Keeps the text label flag for the 3rd card without applying rotation */}
+                                                            {isThirdCard && (
                                                                 <div data-game-block="true" style={{ fontSize: "9px", color: "#94a3b8", textAlign: "center", marginBottom: "2px", fontFamily: "monospace" }}>
                                                                     3rd
                                                                 </div>
@@ -155,12 +154,7 @@ export function BaccaratResultRenderer({ config }: { config: BaccaratResultConfi
                                                                     border: "1px solid #cbd5e1",
                                                                     borderRadius: "4px",
                                                                     padding: "6px",
-                                                                    boxSizing: "border-box",
-                                                                    /* Inline-safe static clipboard CSS fallback matrix transformation representation for cross-client rotation */
-                                                                    transform: isRotatedThirdCard ? "rotate(90deg)" : undefined,
-                                                                    transformOrigin: isRotatedThirdCard ? "bottom center" : undefined,
-                                                                    marginRight: isRotatedThirdCard ? "12px" : "0px",
-                                                                    marginLeft: isRotatedThirdCard ? "6px" : "0px"
+                                                                    boxSizing: "border-box"
                                                                 }}
                                                             >
                                                                 <div data-game-block="true" style={{ fontSize: "12px", fontWeight: "bold", color: "#0f172a", lineHeight: "1" }}>

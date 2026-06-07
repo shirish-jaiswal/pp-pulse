@@ -33,10 +33,16 @@ export default function LoginPage() {
 
     onSubmit: async ({ value }) => {
       try {
-        const res = await c_login({
-          email: value.email,
-          password: value.password,
-        });
+        let res;
+        try {
+          res = await c_login({
+            email: value.email,
+            password: value.password,
+          });
+        } catch (err) {
+          console.error("Login request failed:", err);
+          throw new Error("Login failed: Please check your credentials and try again.");
+        }
 
         if (!res?.success || !res?.authenticated) {
           toast.error("Login failed: Invalid credentials");
@@ -79,22 +85,30 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <Card className="w-full max-w-sm border border-border/60 shadow-lg bg-background/80 backdrop-blur-sm">
 
-        <CardHeader className="space-y-3 text-center align-center">
-
-          <div className="flex items-center justify-center w-28 h-12 bg-slate-900 rounded-full">
-            <Image
-              src="/portal/logo.png"
-              alt="logo"
-              width={90}
-              height={20}
-              className="object-contain"
-              priority
-            />
+        <CardHeader className="space-y-3 text-center flex flex-col items-center">
+          {/* Logo container strictly left-aligned */}
+          <div className="w-full flex justify-start">
+            <div className="flex items-center justify-center w-28 h-12 bg-slate-900 rounded-full">
+              <Image
+                src="/portal/logo.png"
+                alt="logo"
+                width={90}
+                height={20}
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
 
-          <CardTitle className="text-2xl font-bold tracking-tight">
-            Sign in
-          </CardTitle>
+          {/* Text content stays centered */}
+          <div className="space-y-1 w-full flex flex-col items-center">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Sign in
+            </CardTitle>
+            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-500/10 py-1 px-2 rounded-md inline-block max-w-[90%]">
+              Note: Use Backoffice username and password to login
+            </p>
+          </div>
 
           <CardDescription>
             Enter your email or username to access your account
@@ -144,6 +158,11 @@ export default function LoginPage() {
                       }
                     />
                   </div>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-xs text-destructive font-medium text-left">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  )}
                 </div>
               )}
             />
@@ -172,7 +191,7 @@ export default function LoginPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       className={`pl-9 pr-10 h-10 ${field.state.meta.errors.length
-                        ? "border-destructive"
+                        ? "border-destructive focus-visible:ring-destructive"
                         : ""
                         }`}
                       value={field.state.value}
@@ -196,6 +215,11 @@ export default function LoginPage() {
                       )}
                     </button>
                   </div>
+                  {field.state.meta.errors.length > 0 && (
+                    <p className="text-xs text-destructive font-medium text-left">
+                      {field.state.meta.errors.join(", ")}
+                    </p>
+                  )}
                 </div>
               )}
             />

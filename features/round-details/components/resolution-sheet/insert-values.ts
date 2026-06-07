@@ -259,7 +259,7 @@ export function buildBetDetailsTable(data: BetTableInfo) {
 
 export function buildTransactionTable(data: TPTTableInfo) {
   if (!Array.isArray(data) || data.length === 0) return null;
-  const headers = ["Amount", "Action", "Status", "Transaction ID", "Game Mode", "Error", "Retry", "Date", "Payoff"];
+  const headers = ["Date", "Bet Amount", "Action", "Transaction ID", "Status", "Error", "Retry", "Payoff"];
 
   return {
     type: "table",
@@ -274,14 +274,13 @@ export function buildTransactionTable(data: TPTTableInfo) {
       createTableRowNode(headers.map(h => createTableCellNode(h, { isHeader: true }))),
       ...data.map((tx) =>
         createTableRowNode([
+          createTableCellNode(formatDate(tx.trans_date)),
           createTableCellNode(`${tx.amount} ${tx.currency_code}`, { align: "right" }),
           createTableCellNode(tx.action_type),
-          createTableCellNode(formatStatus(tx.status_code)),
           createTableCellNode(tx.transaction_id),
-          createTableCellNode(tx.game_mode),
+          createTableCellNode(formatStatus(tx.status_code)),
           createTableCellNode(`${tx.error_code || "-"} - ${tx.error_description || "-"}`),
           createTableCellNode(String(tx.retry_counter), { align: "right" }),
-          createTableCellNode(formatDate(tx.trans_date)),
           createTableCellNode(Number(tx.payoff ?? 0).toFixed(2), { align: "right" }),
         ])
       ),

@@ -72,7 +72,7 @@ export function transformBlackjackToConfig({
     const isWinner = winners.includes(id);
 
     let variant: "success" | "danger" | "warning" | "default" = "default";
-    let label = "STAY";
+    let label = "";
 
     if (isWinner) {
       variant = "success";

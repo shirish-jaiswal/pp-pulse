@@ -1,5 +1,4 @@
 // @/features/round-details/components/round-audit/tab-content/log-monitor/hooks/useLogState.ts
-
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -62,27 +61,24 @@ export function useLogState() {
     return logsArray.filter((log: any) => {
       if (!log) return false;
 
-      // Extract every potential structural variant where round_id might live
-      const logRoundId = log.roundId || 
-                         log.round_id || 
-                         log.raw?.roundId || 
-                         log.raw?.round_id || 
-                         log.raw?.contextMap?.roundId ||
-                         log.raw?.contextMap?.round_id ||
-                         log.app?.roundId ||
-                         log.app?.round_id;
+      const logRoundId = log.roundId ||
+        log.round_id ||
+        log.raw?.roundId ||
+        log.raw?.round_id ||
+        log.raw?.contextMap?.roundId ||
+        log.raw?.contextMap?.round_id ||
+        log.app?.roundId ||
+        log.app?.round_id;
 
-      // If an explicit round identity exists on this log row, it MUST match perfectly
       if (logRoundId) {
         return String(logRoundId).trim() === String(targetedRound).trim();
       }
 
-      // If the log doesn't carry a clear round parameter identifier, keep it as ambient metadata
       return true;
     });
   };
 
-  // ✅ FIXED: Filter out overlapping fast solo rounds BEFORE updating platform/transaction cache state
+  // Filter out overlapping fast solo rounds BEFORE updating platform/transaction cache state
   useEffect(() => {
     if (txnQuery.data && roundId) {
       const cleanPlatformLogs = filterLogsByRoundId(txnQuery.data.platformLogs, roundId);
@@ -103,7 +99,7 @@ export function useLogState() {
     }
   }, [txnQuery.data, roundId, setAccumulatedLogs]);
 
-  // ✅ FIXED: Filter out overlapping fast solo rounds BEFORE updating game log cache state
+  // Filter out overlapping fast solo rounds BEFORE updating game log cache state
   useEffect(() => {
     if (gameQuery.data && roundId) {
       const cleanGameLogs = filterLogsByRoundId(gameQuery.data.gameLogs, roundId);
@@ -135,27 +131,34 @@ export function useLogState() {
       }
       return accumulatedLogs[roundId]?.gameLogs || [];
     }
-    
+
     if (activeTab === "platformLogs") {
       if (showTxnQueryInstantData && txnQuery.data?.platformLogs) {
         return filterLogsByRoundId(txnQuery.data.platformLogs, roundId);
       }
       return accumulatedLogs[roundId]?.platformLogs || [];
     }
-    
+
     if (activeTab === "lcTransactionLogs") {
       if (showTxnQueryInstantData && txnQuery.data?.lcTransactionLogs) {
         return filterLogsByRoundId(txnQuery.data.lcTransactionLogs, roundId);
       }
       return accumulatedLogs[roundId]?.lcTransactionLogs || [];
     }
-    
+
     return [];
   }, [activeTab, txnQuery.data, txnQuery.isFetching, gameQuery.data, gameQuery.isFetching, accumulatedLogs, roundId]);
 
   // Determine error layout parameters per stream safely
-  const hasTxnError = txnQuery.data?.isTxnError || accumulatedLogs[roundId]?.isTxnError || txnQuery.isError;
-  const hasGameError = gameQuery.data?.isGameError || accumulatedLogs[roundId]?.isGameError || gameQuery.isError;
+  const hasTxnError = !!(txnQuery.data?.isTxnError || accumulatedLogs[roundId]?.isTxnError || txnQuery.isError);
+  const hasGameError = !!(gameQuery.data?.isGameError || accumulatedLogs[roundId]?.isGameError || gameQuery.isError);
+
+  // Isolate processing indicators for granular tab UI reflection
+  const txnIsLoading = txnQuery.isLoading || txnQuery.isFetching || txnQuery.isRefetching;
+  const gameIsLoading = gameQuery.isLoading || gameQuery.isFetching || gameQuery.isRefetching;
+
+  const txnIsSuccess = txnQuery.isSuccess && !hasTxnError && !txnIsLoading;
+  const gameIsSuccess = gameQuery.isSuccess && !hasGameError && !gameIsLoading;
 
   const tabStatus = useMemo(() => {
     const isGameTab = activeTab === "gameLogs";
@@ -163,11 +166,11 @@ export function useLogState() {
     const currentTabError = isGameTab ? hasGameError : hasTxnError;
 
     return {
-      isLoading: targetQuery.isLoading || targetQuery.isRefetching || targetQuery.isFetching,
+      isLoading: isGameTab ? gameIsLoading : txnIsLoading,
       isError: currentTabError,
       refetch: targetQuery.refetch,
     };
-  }, [activeTab, txnQuery, gameQuery, hasTxnError, hasGameError]);
+  }, [activeTab, txnQuery, gameQuery, hasTxnError, hasGameError, txnIsLoading, gameIsLoading]);
 
   const refetchRoundLogs = async (): Promise<void> => {
     await tabStatus.refetch();
@@ -236,14 +239,61 @@ export function useLogState() {
 
   const filteredLogs = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return (logs || []).filter((h: any) => {
-      if (!q) return true;
-      return buildSearchableText(h).includes(q);
-    }).sort((a: any, b: any) => {
-      const timeA = new Date(a?.timestamp || a?.raw?.["@timestamp"] || 0).getTime();
-      const timeB = new Date(b?.timestamp || b?.raw?.["@timestamp"] || 0).getTime();
-      return timeA - timeB;
-    });
+
+    return (logs || [])
+      .filter((h: any) => {
+        if (!q) return true;
+        const fullText = buildSearchableText(h);
+        try {
+          const tokens = q.match(/"[^"]+"|\(|\)|\band\b|\bor\b|[^\s()]+/gi) || [];
+          let currentOp: "AND" | "OR" = "AND";
+          let result: boolean | null = null;
+
+          const evaluateToken = (token: string) => {
+            const clean = token.replace(/^"|"$/g, "").toLowerCase().trim();
+            if (!clean) return true;
+            if (fullText.includes(clean)) return true;
+            if (fullText.includes(`${clean}=`)) return true;
+
+            const words = fullText.split(/\s+/);
+            return words.some((word) => {
+              if (word.includes(clean)) return true;
+              let i = 0, j = 0, mismatches = 0;
+              while (i < word.length && j < clean.length) {
+                if (word[i] === clean[j]) {
+                  i++; j++;
+                } else {
+                  mismatches++; i++;
+                }
+                if (mismatches > 2) return false;
+              }
+              return j === clean.length;
+            });
+          };
+
+          for (const rawToken of tokens) {
+            const token = rawToken.toLowerCase();
+            if (token === "and") { currentOp = "AND"; continue; }
+            if (token === "or") { currentOp = "OR"; continue; }
+            if (token === "(" || token === ")") continue;
+
+            const tokenResult = evaluateToken(token);
+            if (result === null) {
+              result = tokenResult;
+            } else if (currentOp === "AND") {
+              result = result && tokenResult;
+            } else {
+              result = result || tokenResult;
+            }
+          }
+          return result ?? true;
+        } catch {
+          return fullText.includes(q.replace(/"/g, ""));
+        }
+      })
+      .sort((a: any, b: any) =>
+        new Date(a?.raw?.["@timestamp"] || 0).getTime() - new Date(b?.raw?.["@timestamp"] || 0).getTime()
+      );
   }, [logs, query]);
 
   const resetToDefault = () => {
@@ -262,6 +312,10 @@ export function useLogState() {
     isTabError: tabStatus.isError,
     hasTxnError,
     hasGameError,
+    txnIsLoading,
+    gameIsLoading,
+    txnIsSuccess,
+    gameIsSuccess,
     refetchRoundLogs,
     activeTab,
     setActiveTab,

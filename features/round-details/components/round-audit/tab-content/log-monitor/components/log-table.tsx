@@ -1,5 +1,3 @@
-// @/features/round-details/components/round-audit/tab-content/log-monitor/components/LogTable.tsx
-
 "use client";
 
 import React, { useState, useRef } from "react";

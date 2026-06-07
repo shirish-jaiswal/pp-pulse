@@ -1,7 +1,7 @@
 // @/features/round-details/components/round-audit/tab-content/log-monitor/components/log-header.tsx
 "use client";
 
-import { Search, Activity, RefreshCw, AlertCircle } from "lucide-react";
+import { Search, Activity, RefreshCw, AlertCircle, Check } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 interface LogHeaderProps {
@@ -15,6 +15,10 @@ interface LogHeaderProps {
   isLoading: boolean;
   hasTxnError?: boolean;
   hasGameError?: boolean;
+  txnIsLoading?: boolean;
+  gameIsLoading?: boolean;
+  txnIsSuccess?: boolean;
+  gameIsSuccess?: boolean;
 }
 
 export function LogHeader({
@@ -28,36 +32,59 @@ export function LogHeader({
   isLoading,
   hasTxnError = false,
   hasGameError = false,
+  txnIsLoading = false,
+  gameIsLoading = false,
+  txnIsSuccess = false,
+  gameIsSuccess = false,
 }: LogHeaderProps) {
+  
   return (
     <header className="h-10 flex items-center border-b border-border px-3 bg-muted/60">
       
-      {/* LEFT: Tabs with localized error indicators */}
+      {/* LEFT: Tabs with customized status badges */}
       <div className="flex items-center gap-1 flex-shrink-0">
         {availableTabs.map((tab: string) => {
           const isGameLogsTab = tab === "gameLogs";
           const isPlatformOrTxnTab = tab === "platformLogs" || tab === "lcTransactionLogs";
           
-          // Match the tab with its specific error state
           const tabHasFailed = (isGameLogsTab && hasGameError) || (isPlatformOrTxnTab && hasTxnError);
+          const tabIsLoading = (isGameLogsTab && gameIsLoading) || (isPlatformOrTxnTab && txnIsLoading);
+          const tabIsSuccess = (isGameLogsTab && gameIsSuccess) || (isPlatformOrTxnTab && txnIsSuccess);
 
           return (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={cn(
-                "relative flex items-center gap-1.5 px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition select-none",
+                "relative flex items-center gap-1.5 px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition select-none h-8",
                 activeTab === tab
                   ? "border-foreground text-foreground"
                   : "border-transparent text-muted-foreground hover:text-foreground",
-                tabHasFailed && "text-destructive hover:text-destructive/80"
+                tabHasFailed && "text-destructive hover:text-destructive/80",
+                tabIsLoading && "text-primary/80"
               )}
-              title={tabHasFailed ? "Warning: Failed to fetch records for this segment round query" : undefined}
+              title={
+                tabHasFailed 
+                  ? "Warning: Failed to fetch records for this segment round query" 
+                  : tabIsLoading 
+                    ? "Streaming records..." 
+                    : undefined
+              }
             >
               <span>{tab}</span>
               
-              {/* Pulsing Red Status Indicator Dot */}
-              {tabHasFailed && (
+              {/* Animated Refresh Spinner inside Loading Tab */}
+              {tabIsLoading && (
+                <RefreshCw className="w-2.5 h-2.5 animate-spin text-primary" />
+              )}
+
+              {/* Minimal Checkmark Variant for Loaded Stream Confirmation */}
+              {tabIsSuccess && !tabIsLoading && (
+                <Check className="w-2.5 h-2.5 text-emerald-500 animate-in fade-in zoom-in-75 duration-200" />
+              )}
+
+              {/* Pulsing Red Status Indicator Dot for Errors */}
+              {tabHasFailed && !tabIsLoading && (
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>

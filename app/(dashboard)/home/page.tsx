@@ -35,31 +35,22 @@ function HomePage() {
               <Dices className="h-5 w-5 stroke-[2]" />
               <h2 className="font-semibold text-lg">Round Activity</h2>
             </div>
-            <ul className="text-sm text-gray-600 mt-3 space-y-1 pl-1">
-              <li>• Blackjack</li>
-              <li>• Roulette</li>
-              <li>• Baccarat</li>
-              <li>• Sweet Bonanza</li>
-              <li className="text-gray-400 italic">• All other games (partial integration)</li>
-            </ul>
-          </a>
-
-          {/* Kibana - HIGHLIGHTED UNDER TESTING */}
-          <a
-            href="/portal/log-exp"
-            className="border-2 border-blue-400 bg-blue-50/30 rounded-xl p-4 shadow-md relative overflow-hidden block hover:shadow-lg transition-all group"
-          >
-            <div className="absolute top-0 right-0 bg-blue-500 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-bl-lg shadow-sm">
-              Under Testing
+            
+            {/* Split List */}
+            <div className="grid grid-cols-2 gap-x-2 text-sm text-gray-600 mt-3 pl-1">
+              <ul className="space-y-1">
+                <li>• Blackjack</li>
+                <li>• Roulette</li>
+                <li>• Baccarat</li>
+                <li>• Sweet Bonanza</li>
+              </ul>
+              <ul className="space-y-1">
+                <li>• Spaceman</li>
+                <li>• Big Bass Crash</li>
+                <li>• Highflyer</li>
+                <li className="text-gray-400 italic text-xs pt-0.5">• Others (partial)</li>
+              </ul>
             </div>
-            <div className="flex items-center gap-2.5 text-blue-900 group-hover:text-blue-700 transition-colors">
-              <Terminal className="h-5 w-5 stroke-[2]" />
-              <h2 className="font-semibold text-lg">Kibana</h2>
-            </div>
-            <p className="text-sm text-blue-800/80 mt-3">
-              Dynamic pre-built search filters, faster log exploration, and
-              improved observability workflows.
-            </p>
           </a>
 
           {/* Resolution System */}
@@ -86,7 +77,7 @@ function HomePage() {
               <h2 className="font-semibold text-lg">Player History</h2>
             </div>
             <p className="text-sm text-gray-600 mt-3">
-              Last 24 hours betting timelines and deep identity activity tracking.
+              48 hours betting timelines.
             </p>
           </a>
 
@@ -117,21 +108,6 @@ function HomePage() {
               Player account access controls, profiles, and structural identity variables.
             </p>
           </a>
-        </div>
-
-        {/* Upcoming Features */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-semibold">Upcoming Features</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* Crash Games Expansion */}
-            <div className="border rounded-xl p-4 shadow-sm bg-yellow-50/50">
-              <h3 className="font-semibold">Crash Games Expansion</h3>
-              <p className="text-sm text-gray-600 mt-2">
-                Full integration of crash games into round activity tracking pipelines.
-              </p>
-            </div>
-          </div>
         </div>
       </div>
 

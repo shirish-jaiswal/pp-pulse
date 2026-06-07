@@ -30,25 +30,36 @@ interface ResolutionEditorContentProps {
   tabsValue: string;
 }
 
-function findValueDeep(obj: any, targetKey: string): any {
-  if (!obj || typeof obj !== "object") return undefined;
+function findExactOrSubstringValues(obj: any, targetKey: string, accumulator: Set<string>): void {
+  if (!obj || typeof obj !== "object") return;
+  const normalizedTarget = targetKey.toLowerCase();
 
-  if (Object.prototype.hasOwnProperty.call(obj, targetKey)) {
-    return obj[targetKey];
+  for (const key of Object.keys(obj)) {
+    const normalizedKey = key.toLowerCase();
+    const value = obj[key];
+
+    const isExactMatch = normalizedKey === normalizedTarget;
+    const isPartialMatch = normalizedKey.includes(normalizedTarget) || normalizedTarget.includes(normalizedKey);
+
+    if (isExactMatch || isPartialMatch) {
+      if (value !== undefined && value !== null && typeof value !== "object") {
+        const trimmedVal = String(value).trim();
+        if (trimmedVal !== "") {
+          accumulator.add(trimmedVal);
+        }
+      }
+    }
   }
 
   if (Array.isArray(obj)) {
     for (const item of obj) {
-      const found = findValueDeep(item, targetKey);
-      if (found !== undefined) return found;
+      findExactOrSubstringValues(item, targetKey, accumulator);
     }
   } else {
     for (const value of Object.values(obj)) {
-      const found = findValueDeep(value, targetKey);
-      if (found !== undefined) return found;
+      findExactOrSubstringValues(value, targetKey, accumulator);
     }
   }
-  return undefined;
 }
 
 export function ResolutionEditorContent({
@@ -63,11 +74,19 @@ export function ResolutionEditorContent({
     });
 
   const { data: variables = [], isLoading: varsLoading } = useGetVariables();
-
   const { selectedRoundDetailsMap, roundDetails } = useRoundDetails();
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [editorContent, setEditorContent] = useState<string>("");
+
+  // 1. Initialize state directly from localStorage so it recovers immediately on mount
+  const [localModifications, setLocalModifications] = useState<Record<string, string>>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("resolution_editor_modifications");
+      return saved ? JSON.parse(saved) : {};
+    }
+    return {};
+  });
 
   const activeTargetsMap = useMemo(() => {
     if (Object.keys(selectedRoundDetailsMap).length === 0 && roundDetails) {
@@ -77,12 +96,22 @@ export function ResolutionEditorContent({
     return selectedRoundDetailsMap;
   }, [selectedRoundDetailsMap, roundDetails]);
 
+  // Unique key capturing the specific environment context
+  const contextKey = useMemo(() => {
+    const activeIds = Object.keys(activeTargetsMap).join("-");
+    return `${gameName}-${category}-${selectedId}-${activeIds}`;
+  }, [gameName, category, selectedId, activeTargetsMap]);
+
+  // 2. Sync localModifications state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("resolution_editor_modifications", JSON.stringify(localModifications));
+  }, [localModifications]);
+
   const { dataValues, linkMeta } = useMemo(() => {
     if (varsLoading) return { dataValues: {}, linkMeta: {} };
 
     const values: Record<string, any> = {};
     const links: Record<string, any> = {};
-
     const staticVariables: Record<string, string> = {
       currentUrl: typeof window !== "undefined" ? window.location.href.trim() : "",
     };
@@ -91,11 +120,7 @@ export function ResolutionEditorContent({
 
     variables.forEach((variable: any) => {
       const key = variable.key;
-
-      links[key] = {
-        isLink: variable.isLink,
-        linkTemplate: variable.linkTemplate,
-      };
+      links[key] = { isLink: variable.isLink, linkTemplate: variable.linkTemplate };
 
       if (staticVariables[key]) {
         values[key] = staticVariables[key];
@@ -123,20 +148,11 @@ export function ResolutionEditorContent({
       }
 
       const scalarAccumulator = new Set<string>();
-
       Object.values(activeTargetsMap).forEach((singlePayload) => {
-        const discoveredValue = findValueDeep(singlePayload, key);
-        if (discoveredValue !== undefined && discoveredValue !== null) {
-          const trimmedVal = String(discoveredValue).trim();
-          if (trimmedVal !== "") {
-            scalarAccumulator.add(trimmedVal);
-          }
-        }
+        findExactOrSubstringValues(singlePayload, key, scalarAccumulator);
       });
 
-      values[key] = scalarAccumulator.size > 0
-        ? Array.from(scalarAccumulator).join(", ")
-        : "";
+      values[key] = scalarAccumulator.size > 0 ? Array.from(scalarAccumulator).join(", ") : "";
     });
 
     return { dataValues: values, linkMeta: links };
@@ -147,22 +163,13 @@ export function ResolutionEditorContent({
   const getPopulatedContent = useCallback(
     (rawContent: string) => {
       if (!rawContent || !isReady) return "";
-
       try {
         const editorStateObj = JSON.parse(rawContent);
-
         if (editorStateObj?.root) {
-          editorStateObj.root = fillAndTransformData(
-            editorStateObj.root,
-            dataValues,
-            linkMeta
-          );
+          editorStateObj.root = fillAndTransformData(editorStateObj.root, dataValues, linkMeta);
           return JSON.stringify(editorStateObj);
         }
-
-        return JSON.stringify(
-          fillAndTransformData(editorStateObj, dataValues, linkMeta)
-        );
+        return JSON.stringify(fillAndTransformData(editorStateObj, dataValues, linkMeta));
       } catch (e) {
         console.error("Transformation Error:", e);
         return rawContent;
@@ -171,22 +178,34 @@ export function ResolutionEditorContent({
     [dataValues, linkMeta, isReady]
   );
 
+  // Sync baseline logic or restore user modification
   useEffect(() => {
     if (!isReady || resolutions.length === 0) return;
 
-    const current =
-      resolutions.find((r) => r.id.toString() === selectedId) ||
-      resolutions[0];
+    const current = resolutions.find((r) => r.id.toString() === selectedId) || resolutions[0];
 
     if (current) {
       if (!selectedId) {
         setSelectedId(current.id.toString());
       }
 
-      const populated = getPopulatedContent(current.content);
-      setEditorContent(populated);
+      // If a modified copy exists in our persistent record, use it.
+      if (localModifications[contextKey]) {
+        setEditorContent(localModifications[contextKey]);
+      } else {
+        const populated = getPopulatedContent(current.content);
+        setEditorContent(populated);
+      }
     }
-  }, [resolutions, selectedId, getPopulatedContent, isReady, activeTargetsMap]);
+  }, [resolutions, selectedId, getPopulatedContent, isReady, contextKey, localModifications]);
+
+  const handleEditorChange = useCallback((updatedJson: string) => {
+    setEditorContent(updatedJson);
+    setLocalModifications((prev) => ({
+      ...prev,
+      [contextKey]: updatedJson,
+    }));
+  }, [contextKey]);
 
   const isDataLoading = templatesLoading || varsLoading;
 
@@ -201,7 +220,6 @@ export function ResolutionEditorContent({
 
         <Card className="border-none shadow-none bg-transparent py-0 max-h-[calc(100vh-10rem)]">
           <CardContent className="p-2">
-            {/* HEADER */}
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-[13px] font-medium text-muted-foreground tracking-tight">
                 {category}
@@ -226,7 +244,6 @@ export function ResolutionEditorContent({
               </Select>
             </div>
 
-            {/* EDITOR */}
             <div className="h-[calc(100vh-12rem)] overflow-hidden rounded-md border border-border/40 bg-background/40">
               {!isReady ? (
                 <div className="flex items-center justify-center h-full text-xs text-muted-foreground">
@@ -234,9 +251,9 @@ export function ResolutionEditorContent({
                 </div>
               ) : (
                 <RichTextEditor
-                  key={`${category}-${selectedId}-${Object.keys(activeTargetsMap).join("-")}`}
+                  key={`${gameName}-${category}-${selectedId}-${Object.keys(activeTargetsMap).join("-")}`}
                   initialValue={editorContent}
-                  onChange={setEditorContent}
+                  onChange={handleEditorChange}
                   placeholder={`Write ${category.toLowerCase()}...`}
                   copyPopup={true}
                   showFieldPlugin={false}
