@@ -97,33 +97,44 @@ export function IntegratedDateTimeRangePicker({ value, onChange }: Props) {
   }
 
   return (
-    <FieldGroup className="max-w-2xl w-fit">
-      <Field className="max-w-xl">
+    <FieldGroup className="w-full">
+      <Field className="w-full">
         <Popover open={picker.open} onOpenChange={picker.setOpen}>
           <PopoverTrigger asChild>
-            <div className="flex items-center gap-2 max-w-4xl cursor-pointer">
-              <TriggerButton
-                label={formatButtonLabel(startDate, startTime, "Select Start Time")}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  setActiveTab("start")
-                  if (!picker.open) picker.setOpen(true)
-                }}
-                className={picker.open && activeTab === "start" ? "ring-2 ring-primary border-transparent" : ""}
-              />
+            <div className="flex items-center gap-1 w-full cursor-pointer">
+              {/* Flex child grows evenly to minimize dead margin space */}
+              <div className="flex-1 min-w-0">
+                <TriggerButton
+                  label={formatButtonLabel(startDate, startTime, "Select Start Time")}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveTab("start")
+                    if (!picker.open) picker.setOpen(true)
+                  }}
+                  className={`w-full text-xs px-2 h-9 ${
+                    picker.open && activeTab === "start" ? "ring-2 ring-primary border-transparent" : ""
+                  }`}
+                />
+              </div>
 
-              <span className="text-sm font-medium text-muted-foreground shrink-0 select-none">to</span>
+              <span className="text-xs font-normal text-muted-foreground shrink-0 select-none px-0.5">
+                to
+              </span>
 
-              <TriggerButton
-                label={formatButtonLabel(endDate, endTime, "Select End Time")}
-                onClick={(e) => {
-                  // FIX 2: Prevent Radix from toggling/closing when shifting inner tabs
-                  e.stopPropagation()
-                  setActiveTab("end")
-                  if (!picker.open) picker.setOpen(true)
-                }}
-                className={picker.open && activeTab === "end" ? "ring-2 ring-primary border-transparent" : ""}
-              />
+              {/* Flex child grows evenly */}
+              <div className="flex-1 min-w-0">
+                <TriggerButton
+                  label={formatButtonLabel(endDate, endTime, "Select End Time")}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setActiveTab("end")
+                    if (!picker.open) picker.setOpen(true)
+                  }}
+                  className={`w-full text-xs px-2 h-9 ${
+                    picker.open && activeTab === "end" ? "ring-2 ring-primary border-transparent" : ""
+                  }`}
+                />
+              </div>
             </div>
           </PopoverTrigger>
 

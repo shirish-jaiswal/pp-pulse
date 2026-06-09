@@ -234,7 +234,6 @@ export const ExcelEngine = {
 
   return rows.filter((row) =>
     Object.entries(filters).every(([key, value]) => {
-      // 🔥 detect LIKE mode
       const isLike = key.endsWith("_like");
       const actualKey = isLike ? key.replace("_like", "") : key;
 
