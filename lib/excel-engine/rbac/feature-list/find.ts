@@ -4,11 +4,12 @@ import { TABLE_NAME } from ".";
 import { DB_NAME } from "..";
 
 export async function findFeatureList(filters: {
-  email: string;
+  roles: string[];
 }) {
   debugger;
    try {
     const rows = await ExcelEngine.findRows(DB_NAME, TABLE_NAME, filters);
+    console.log(rows)
     return JSON.parse(JSON.stringify(rows));
   } catch (e) {
     console.error("FIND PROFILE ERROR:", e);

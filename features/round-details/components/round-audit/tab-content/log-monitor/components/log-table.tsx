@@ -35,15 +35,17 @@ export function LogTable({
 
     const roundId = activeId || roundDetails?.tptInfo?.[0]?.round_id || "";
 
+    // Simplified to prioritize the steady, unique 'id' derived by our hook
     const getLogId = (log: any, fallbackIdx: number): string => {
         if (!log) return String(fallbackIdx);
+        if (log.id) return String(log.id);
 
         const timestamp = log.timestamp || log.raw?.["@timestamp"];
         if (timestamp) {
             return `${String(timestamp)}-${fallbackIdx}`;
         }
 
-        const id = log.id || log.logId || log.raw?.id || log.raw?.logId;
+        const id = log.logId || log.raw?.id || log.raw?.logId;
         return id ? `${String(id)}-${fallbackIdx}` : String(fallbackIdx);
     };
 

@@ -78,16 +78,17 @@ export function LogTogglePlugin() {
     );
   }, [selectedRoundDetailsMap, activeId, allAccumulatedLogs]);
 
-  // FIXED: Robust ID Extractor properly matching selections by processing top-level ISO timestamps
+  // FIXED: Synchronized matching architecture prioritizing log.id over volatile timestamp hashes
   const getLogId = React.useCallback((log: any, fallbackIdx: number): string => {
     if (!log) return String(fallbackIdx);
+    if (log.id) return String(log.id);
 
     const timestamp = log.timestamp || log.raw?.["@timestamp"];
     if (timestamp) {
       return `${String(timestamp)}-${fallbackIdx}`;
     }
 
-    const id = log.id || log.logId || log.raw?.id || log.raw?.logId;
+    const id = log.logId || log.raw?.id || log.raw?.logId;
     return id ? `${String(id)}-${fallbackIdx}` : String(fallbackIdx);
   }, []);
 
@@ -100,8 +101,6 @@ export function LogTogglePlugin() {
   const groupedRoundLogs = React.useMemo(() => {
     if (!allAccumulatedLogs || !activeTab) return [];
 
-    const isGameLogTab = activeTab.toLowerCase().includes("game");
-
     return targetRoundIds
       .map((id) => {
         const roundLogs = allAccumulatedLogs[id];
@@ -109,9 +108,18 @@ export function LogTogglePlugin() {
 
         if (!Array.isArray(tabLogs) || tabLogs.length === 0) return null;
 
-        const sortedTabLogs = [...tabLogs].sort((a, b) => {
-          const timeA = new Date(a.timestamp || 0).getTime();
-          const timeB = new Date(b.timestamp || 0).getTime();
+        // Stabilize structural map instances to match exact list indexing array sequences
+        const processedTabLogs = tabLogs.map((log, idx) => {
+          if (!log || typeof log !== "object") return log;
+          return {
+            ...log,
+            id: log.id || getLogId(log, idx),
+          };
+        });
+
+        const sortedTabLogs = [...processedTabLogs].sort((a, b) => {
+          const timeA = new Date(a.timestamp || a.raw?.["@timestamp"] || 0).getTime();
+          const timeB = new Date(b.timestamp || b.raw?.["@timestamp"] || 0).getTime();
           return timeA - timeB;
         });
 
@@ -123,9 +131,9 @@ export function LogTogglePlugin() {
 
         const filteredLogs = hasSelections
           ? sortedTabLogs.filter((log, idx) => {
-            const logId = getLogId(log, idx);
-            return selectedRows.includes(logId);
-          })
+              const logId = getLogId(log, idx);
+              return selectedRows.includes(logId);
+            })
           : sortedTabLogs;
 
         return filteredLogs.length > 0

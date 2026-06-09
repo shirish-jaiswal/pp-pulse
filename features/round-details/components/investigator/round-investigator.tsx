@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { MultiRoundDetailsForm } from "@/features/round-details/components/investigator/round-details-from-bulk";
 import { cn } from "@/utils/cn";
 import { Button } from "@/components/ui/button";
+
 export function RoundInvestigator() {
   const router = useRouter();
 
@@ -21,6 +22,7 @@ export function RoundInvestigator() {
 
   const prevBulkMode = useRef(isBulkMode);
 
+  // Automatically handle page redirect when switching away from Bulk Mode
   useEffect(() => {
     if (prevBulkMode.current === true && isBulkMode === false) {
       window.location.href = "/portal/round-activity";
@@ -28,6 +30,22 @@ export function RoundInvestigator() {
 
     prevBulkMode.current = isBulkMode;
   }, [isBulkMode]);
+
+  // Keydown listener for Ctrl+B / Cmd+B to toggle Bulk Mode
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.key.toLowerCase() === "b" && 
+        (event.ctrlKey || event.metaKey)
+      ) {
+        event.preventDefault(); // Prevents browser default behavior
+        setBulkMode((prev: boolean) => !prev);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [setBulkMode]);
 
   const handleSubmit = (data: RoundDetailsInputProps) => {
     if (isBulkMode) return;
@@ -55,7 +73,12 @@ export function RoundInvestigator() {
           <div className="flex items-center gap-2 text-muted-foreground">
             <Activity className="h-4 w-4" />
             <span className="text-xs font-semibold uppercase tracking-wide text-foreground/80">
-              Round Investigator
+              Round Investigator 
+              {isBulkMode &&
+                <span className="ml-2 text-[10px] font-bold normal-case tracking-normal px-1.5 py-0.5 rounded-md bg-destructive/10 text-destructive border border-destructive/20 ml-0.5">
+                  Max 30
+                </span>
+              }
             </span>
           </div>
 
@@ -69,6 +92,7 @@ export function RoundInvestigator() {
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-muted text-muted-foreground border-border hover:bg-muted/70"
             )}
+            title="ctrl + B"
           >
             Bulk Mode: {isBulkMode ? "ON" : "OFF"}
           </Button>

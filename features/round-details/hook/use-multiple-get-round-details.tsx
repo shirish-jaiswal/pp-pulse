@@ -7,7 +7,7 @@ type Params = {
   ids: string[];
   mode: "round" | "game";
   user_id?: string;
-  enabled: boolean; // 🔥 manual trigger
+  enabled: boolean;
 };
 
 export function useGetMultipleRoundDetails({
@@ -32,7 +32,6 @@ export function useGetMultipleRoundDetails({
 
         queryFn: () => c_getRoundDetails(params),
 
-        // 🔥 ONLY FETCH WHEN ENABLED
         enabled:
           enabled &&
           (mode === "round"

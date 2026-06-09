@@ -32,9 +32,10 @@ interface Props {
   }) => void;
 }
 
+const MAX_IDS = 30;
+
 export function MultiRoundDetailsForm({ onSubmit }: Props) {
   const router = useRouter();
-
   const { setMultiIds, setRoundDetailsInput } = useRoundDetails();
 
   const form = useForm({
@@ -99,7 +100,6 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
       }
 
       router.push(`/round-activity/?${params.toString()}`);
-
       onSubmit?.(payload);
     },
   });
@@ -110,7 +110,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
   const userId = useStore(form.store, (s) => s.values.user_id);
 
   /**
-   * BULK INPUT PARSER
+   * BULK INPUT PARSER (Enforces 30 ID limit)
    */
   const processBulkInput = (value: string) => {
     const parts = value.split(/[\s,]+/).filter(Boolean);
@@ -121,21 +121,39 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
     const schema = mode === "round" ? RoundIdSchema : GameIdSchema;
     const existing = mode === "round" ? roundIds : gameIds;
+    
+    // Total IDs allowed to be added before hitting the cap
+    const remainingSlots = MAX_IDS - existing.length;
+
+    if (remainingSlots <= 0) {
+      form.setFieldValue("raw_input", "");
+      form.setFieldMeta("raw_input", (prev) => ({
+        ...prev,
+        errors: [`Maximum of ${MAX_IDS} IDs reached.`],
+      }));
+      return;
+    }
 
     const valid: string[] = [];
-    let hasError = false;
+    let hasValidationError = false;
+    let hitLimitCap = false;
 
-    candidates.forEach((id) => {
+    for (const id of candidates) {
       const res = schema.safeParse(id);
 
       if (res.success) {
         if (!existing.includes(id) && !valid.includes(id)) {
-          valid.push(id);
+          if (valid.length < remainingSlots) {
+            valid.push(id);
+          } else {
+            hitLimitCap = true;
+            break;
+          }
         }
       } else {
-        hasError = true;
+        hasValidationError = true;
       }
-    });
+    }
 
     if (mode === "round") {
       form.setFieldValue("round_id", (prev) => [...prev, ...valid]);
@@ -145,17 +163,24 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
     form.setFieldValue("raw_input", "");
 
-    if (hasError) {
+    // Determine appropriate error feedback message
+    let errorMessage = "";
+    if (hitLimitCap) {
+      errorMessage = `Limited to ${MAX_IDS} IDs. Excess inputs ignored.`;
+    } else if (hasValidationError) {
+      errorMessage = "Some invalid IDs were skipped";
+    }
+
+    if (errorMessage) {
       form.setFieldMeta("raw_input", (prev) => ({
         ...prev,
-        errors: ["Some invalid IDs were skipped"],
+        errors: [errorMessage],
       }));
     }
   };
 
   const validateUser = (val: string) => {
     const res = UserIdSchema.safeParse(val);
-
     form.setFieldMeta("user_id", (prev) => ({
       ...prev,
       errors: res.success ? [] : res.error.errors.map((e) => e.message),
@@ -170,8 +195,8 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
     }
   };
 
-  const total =
-    roundIds.length + gameIds.length + (userId ? 1 : 0);
+  const total = roundIds.length + gameIds.length + (userId ? 1 : 0);
+  const totalIdsCount = mode === "round" ? roundIds.length : gameIds.length;
 
   return (
     <form
@@ -183,7 +208,6 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
       className="space-y-3"
     >
       <div className="flex w-full gap-2 mb-px">
-
         {/* MODE SWITCH */}
         <form.Field
           name="mode"
@@ -196,7 +220,6 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                   field.state.value === "round" ? "game" : "round";
 
                 field.handleChange(next);
-
                 form.setFieldValue("raw_input", "");
                 form.setFieldValue("round_id", []);
                 form.setFieldValue("game_id", []);
@@ -221,19 +244,15 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                   <Input
                     placeholder={
                       mode === "round"
-                        ? "Enter Round IDs..."
-                        : "Enter Game IDs..."
+                        ? `Enter Round IDs... (${totalIdsCount}/${MAX_IDS})`
+                        : `Enter Game IDs... (${totalIdsCount}/${MAX_IDS})`
                     }
                     value={field.state.value}
-                    onChange={(e) =>
-                      field.handleChange(e.target.value)
-                    }
+                    onChange={(e) => field.handleChange(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-
-                        const hasInput =
-                          field.state.value.trim().length > 0;
+                        const hasInput = field.state.value.trim().length > 0;
 
                         if (hasInput) {
                           processBulkInput(field.state.value);
@@ -242,9 +261,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                         }
                       }
                     }}
-                    onBlur={() =>
-                      processBulkInput(field.state.value)
-                    }
+                    onBlur={() => processBulkInput(field.state.value)}
                   />
 
                   {mode === "game" && (
@@ -269,7 +286,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                   </Button>
 
                   {errors.length > 0 && (
-                    <div className="text-red-500 text-[10px] flex items-center gap-1">
+                    <div className="text-red-500 text-[10px] flex items-center gap-1 whitespace-nowrap">
                       <AlertCircle className="h-3 w-3" />
                       {errors[0]}
                     </div>
@@ -285,7 +302,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
       <div className="space-y-2">
         {mode === "round" && (
           <IdList
-            title="Round IDs"
+            title={`Round IDs (${roundIds.length}/${MAX_IDS})`}
             icon={<Hash className="h-3 w-3" />}
             items={roundIds}
             onRemove={removeId}
@@ -294,7 +311,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
         {mode === "game" && (
           <IdList
-            title="Game IDs"
+            title={`Game IDs (${gameIds.length}/${MAX_IDS})`}
             icon={<Gamepad2 className="h-3 w-3" />}
             items={gameIds}
             onRemove={removeId}

@@ -1,4 +1,3 @@
-// @/features/round-details/components/round-audit/tab-content/log-monitor/hooks/useLogState.ts
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -118,35 +117,52 @@ export function useLogState() {
     }
   }, [gameQuery.data, roundId, setAccumulatedLogs]);
 
-  // Read data instantly from active queries or fallback to state cache safely
   const logs = useMemo(() => {
     if (!activeTab || !roundId) return [];
 
     const showTxnQueryInstantData = txnQuery.data && !txnQuery.isFetching;
     const showGameQueryInstantData = gameQuery.data && !gameQuery.isFetching;
 
+    let rawLogs: any[] = [];
+
     if (activeTab === "gameLogs") {
       if (showGameQueryInstantData && gameQuery.data?.gameLogs) {
-        return filterLogsByRoundId(gameQuery.data.gameLogs, roundId);
+        rawLogs = filterLogsByRoundId(gameQuery.data.gameLogs, roundId);
+      } else {
+        rawLogs = accumulatedLogs[roundId]?.gameLogs || [];
       }
-      return accumulatedLogs[roundId]?.gameLogs || [];
-    }
-
-    if (activeTab === "platformLogs") {
+    } else if (activeTab === "platformLogs") {
       if (showTxnQueryInstantData && txnQuery.data?.platformLogs) {
-        return filterLogsByRoundId(txnQuery.data.platformLogs, roundId);
+        rawLogs = filterLogsByRoundId(txnQuery.data.platformLogs, roundId);
+      } else {
+        rawLogs = accumulatedLogs[roundId]?.platformLogs || [];
       }
-      return accumulatedLogs[roundId]?.platformLogs || [];
-    }
-
-    if (activeTab === "lcTransactionLogs") {
+    } else if (activeTab === "lcTransactionLogs") {
       if (showTxnQueryInstantData && txnQuery.data?.lcTransactionLogs) {
-        return filterLogsByRoundId(txnQuery.data.lcTransactionLogs, roundId);
+        rawLogs = filterLogsByRoundId(txnQuery.data.lcTransactionLogs, roundId);
+      } else {
+        rawLogs = accumulatedLogs[roundId]?.lcTransactionLogs || [];
       }
-      return accumulatedLogs[roundId]?.lcTransactionLogs || [];
     }
 
-    return [];
+    // Assign fixed, predictable properties so IDs stay locked during searches
+    return rawLogs.map((log, index) => {
+      if (!log || typeof log !== "object") return log;
+
+      const uniqueId = log.id || 
+                       log._id || 
+                       log.logId || 
+                       log.raw?.id || 
+                       log.raw?.logId || 
+                       (log.timestamp ? `${log.timestamp}-${index}` : null) ||
+                       (log.raw?.["@timestamp"] ? `${log.raw["@timestamp"]}-${index}` : null) ||
+                       crypto.randomUUID();
+
+      return {
+        ...log,
+        id: uniqueId,
+      };
+    });
   }, [activeTab, txnQuery.data, txnQuery.isFetching, gameQuery.data, gameQuery.isFetching, accumulatedLogs, roundId]);
 
   // Determine error layout parameters per stream safely

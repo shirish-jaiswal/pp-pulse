@@ -119,10 +119,6 @@ export function RoundDetailsProvider({ children }: { children: React.ReactNode }
     []
   );
 
-  /**
-   * ✅ FIXED RESET (important)
-   * prevents ghost selection bugs in solo mode
-   */
   const resetSelectionState = useCallback(() => {
     setSelectedRoundDetailsMap({});
     setAccumulatedLogs({});

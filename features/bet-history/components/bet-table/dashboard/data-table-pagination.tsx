@@ -16,7 +16,7 @@ export function DataTablePagination({ table }: any) {
   const selectedRows = table.getSelectedRowModel().rows;
   return (
     <div className="flex items-center justify-between gap-4 text-sm">
-      <div>
+      <div className="w-auto min-w-20">
         Page {table.getState().pagination.pageIndex + 1} of{" "}
         {table.getPageCount()}
       </div>
