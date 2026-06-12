@@ -67,3 +67,10 @@ export const isDecisionEvent = (
 ) => {
   return event.event_type === "PLAYER_DECISION";
 };
+
+// Added export to fix the compilation error
+export const isInsuranceEvent = (
+  event: CardDetailsInfo[number]
+) => {
+  return event.event_type === "DEALER_INSURANCE";
+};
