@@ -9,20 +9,19 @@ import EmptyState from "./empty-state";
 import TicketHeader from "./ticket-header";
 import TicketTimeline from "./ticket-timeline";
 
-import { c_getFreshdeskTicket } from "@/lib/api/freshdesk/c_getFreshdeskTicket";
+import { s_getFreshdeskTicket } from "@/lib/api/freshdesk/s_getFreshdeskTicket";
 import { toast } from "sonner";
-import { FetchTicketResponse } from "./types";
+import { useTicketContext } from "./ticket-context";
 
 type WorkspaceProps = {
     sharedTicketNumber: string;
     onTicketNumberChange: (value: string) => void;
-    onTicketLoaded: (ticketId: string | null) => void;
 };
 
 export const FreshdeskWorkspace = forwardRef<{ triggerSearch: (id: string) => void }, WorkspaceProps>(
-    ({ sharedTicketNumber, onTicketNumberChange, onTicketLoaded }, ref) => {
+    ({ sharedTicketNumber, onTicketNumberChange }, ref) => {
         const [loading, setLoading] = useState(false);
-        const [ticketData, setTicketData] = useState<FetchTicketResponse | null>(null);
+        const { ticketData, setTicketData, setTicketId } = useTicketContext();
 
         // Core data loader function
         const executeSearch = async (targetId: string) => {
@@ -31,22 +30,20 @@ export const FreshdeskWorkspace = forwardRef<{ triggerSearch: (id: string) => vo
 
             try {
                 setLoading(true);
-                const res = await c_getFreshdeskTicket(cleanNumber);
+                const res = await s_getFreshdeskTicket(cleanNumber);
 
                 if (res.success && res.ticket) {
                     setTicketData(res);
+                    setTicketId(cleanNumber);
                     toast.success(`Ticket #${cleanNumber} loaded`);
-
-                    // Keeps the editor resolution payload button informed of the loaded ID
-                    onTicketLoaded(cleanNumber);
                 } else {
                     setTicketData(null);
-                    onTicketLoaded(null);
+                    setTicketId(null);
                     toast.error("Ticket not found");
                 }
             } catch (e) {
                 setTicketData(null);
-                onTicketLoaded(null);
+                setTicketId(null);
                 toast.error("Failed to load ticket");
             } finally {
                 setLoading(false);
@@ -69,9 +66,9 @@ export const FreshdeskWorkspace = forwardRef<{ triggerSearch: (id: string) => vo
                         value={sharedTicketNumber}
                         onChange={(e) => {
                             onTicketNumberChange(e.target.value);
-                            // If they clear the field, reset active verification states contextually
                             if (!e.target.value.trim()) {
-                                onTicketLoaded(null);
+                                setTicketData(null);
+                                setTicketId(null);
                             }
                         }}
                         onKeyDown={(e) => e.key === "Enter" && executeSearch(sharedTicketNumber)}
@@ -92,15 +89,12 @@ export const FreshdeskWorkspace = forwardRef<{ triggerSearch: (id: string) => vo
                     <>
                         {/* HEADER (fixed) */}
                         <div className="shrink-0">
-                            <TicketHeader ticket={ticketData.ticket!} />
+                            <TicketHeader />
                         </div>
 
                         {/* TIMELINE */}
                         <div className="flex-1 min-h-0 overflow-y-auto">
-                            <TicketTimeline
-                                description={ticketData.ticket?.description || ""}
-                                conversations={ticketData.conversations || []}
-                            />
+                            <TicketTimeline />
                         </div>
                     </>
                 )}

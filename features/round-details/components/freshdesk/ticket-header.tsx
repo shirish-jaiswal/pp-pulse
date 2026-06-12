@@ -1,7 +1,14 @@
-import { ExternalLink } from "lucide-react";
-import { TicketDetails } from "./types";
+"use client";
 
-export default function TicketHeader({ ticket }: { ticket: TicketDetails }) {
+import { ExternalLink } from "lucide-react";
+import { useTicketContext } from "./ticket-context";
+
+export default function TicketHeader() {
+    const { ticketData } = useTicketContext();
+    const ticket = ticketData?.ticket;
+
+    if (!ticket) return null;
+
     return (
         <div className="border-b px-4 py-3 bg-white">
             <div className="flex items-center justify-between">
@@ -18,6 +25,7 @@ export default function TicketHeader({ ticket }: { ticket: TicketDetails }) {
                 <a
                     href={`https://pragmaticplay.freshdesk.com/a/tickets/${ticket.id}`}
                     target="_blank"
+                    rel="noreferrer"
                 >
                     <ExternalLink className="h-4 w-4" />
                 </a>

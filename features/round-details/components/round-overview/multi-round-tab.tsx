@@ -32,23 +32,33 @@ export function MultiRoundTabs() {
 
   const ids = mode === "round" ? multiIds.round_ids : multiIds.game_ids;
 
-  // Automatically manage default active tab via global state triggers
-  useEffect(() => {
-    if (mode === "round" && multiIds.round_ids.length && !activeId) {
-      setActiveId(multiIds.round_ids[0]);
-    } else if (mode === "game" && multiIds.game_ids.length && !activeId) {
-      setActiveId(multiIds.game_ids[0]);
-    }
-  }, [mode, multiIds, activeId, setActiveId]);
+  // Stringified version of ids allows us to reliably detect when a brand new search happens
+  const idsKey = JSON.stringify(ids);
 
+  // 1. RESET TRIGGER ON NEW SEARCH
+  // When the user searches for new IDs, force-switch to the new first tab and wipe old selections
+  useEffect(() => {
+    if (ids && ids.length > 0) {
+      const firstId = ids[0];
+      setActiveId(firstId);
+      
+      // Clear out previous selections from the old search so they don't linger
+      setSelectedRoundDetailsMap({});
+    }
+  }, [idsKey, setActiveId, setSelectedRoundDetailsMap]);
+
+  // 2. DERIVE CURRENT EFFECTIVE ID SAFELY
+  const currentActiveId = activeId || (ids && ids.length > 0 ? ids[0] : "");
+
+  // 3. FETCH FOR THE FRESHLY ACTIVATED ID
   const {
     data: roundData,
     isLoading: isFetchingData,
     isFetching,
     isError,
   } = useGetRoundDetails({
-    game_id: mode === "game" ? activeId : "",
-    round_id: mode === "round" ? activeId : "",
+    game_id: mode === "game" ? currentActiveId : "",
+    round_id: mode === "round" ? currentActiveId : "",
     user_id: mode === "game" && multiIds.user_id ? multiIds.user_id : "",
   });
 
@@ -57,11 +67,11 @@ export function MultiRoundTabs() {
   // Unified keyboard navigation handler
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
-      if (document.activeElement?.tagName === "INPUT" || !ids.length || !activeId) {
+      if (document.activeElement?.tagName === "INPUT" || !ids.length || !currentActiveId) {
         return;
       }
 
-      const currentIndex = ids.indexOf(activeId);
+      const currentIndex = ids.indexOf(currentActiveId);
       if (currentIndex === -1) return;
 
       if (e.key === "ArrowRight" || e.key === "ArrowDown") {
@@ -82,7 +92,7 @@ export function MultiRoundTabs() {
         }
       }
     },
-    [ids, activeId, setActiveId]
+    [ids, currentActiveId, setActiveId]
   );
 
   useEffect(() => {
@@ -123,24 +133,24 @@ export function MultiRoundTabs() {
   ]);
 
   useEffect(() => {
-    if (roundData && !isLoading && activeId) {
+    if (roundData && !isLoading && currentActiveId) {
       setSelectedRoundDetailsMap((prevMap) => {
-        if (activeId in prevMap) {
+        if (currentActiveId in prevMap) {
           return {
             ...prevMap,
-            [activeId]: roundData,
+            [currentActiveId]: roundData,
           };
         }
         return prevMap;
       });
     }
-  }, [roundData, isLoading, activeId, setSelectedRoundDetailsMap]);
+  }, [roundData, isLoading, currentActiveId, setSelectedRoundDetailsMap]);
 
   useEffect(() => {
-    if (isError && activeId) {
-      toast.error(`Failed to fetch data for ID: ${activeId}`);
+    if (isError && currentActiveId) {
+      toast.error(`Failed to fetch data for ID: ${currentActiveId}`);
     }
-  }, [isError, activeId]);
+  }, [isError, currentActiveId]);
 
   const handleCheckboxToggle = (id: string, isChecked: boolean) => {
     setSelectedRoundDetailsMap((prevMap) => {
@@ -149,7 +159,7 @@ export function MultiRoundTabs() {
       if (isChecked) {
         delete nextMap[id];
       } else {
-        nextMap[id] = (id === activeId && roundData && !isLoading)
+        nextMap[id] = (id === currentActiveId && roundData && !isLoading)
           ? roundData
           : ({} as any);
       }
@@ -163,16 +173,15 @@ export function MultiRoundTabs() {
   return (
     <div className="w-full bg-background/40">
       <Tabs
-        value={activeId}
+        value={currentActiveId}
         onValueChange={setActiveId}
         className="max-h-full border w-full flex items-center justify-between rounded-xl bg-background px-1 py-1 shadow-sm p-0"
       >
         <TabsList className="flex flex-wrap h-auto w-full gap-1 p-1 justify-start bg-transparent">
           {ids.map((id) => {
-            const isActive = activeId === id;
+            const isActive = currentActiveId === id;
             const isChecked = id in selectedRoundDetailsMap;
             
-            // Check if this specific tab has valid cache data saved in the details map
             const isDataLoaded = !!selectedRoundDetailsMap[id] && Object.keys(selectedRoundDetailsMap[id]).length > 0;
 
             return (
@@ -184,7 +193,6 @@ export function MultiRoundTabs() {
                   isActive
                     ? "bg-muted text-foreground border border-neutral-950 shadow-sm shadow-muted-foreground/50"
                     : "text-muted-foreground hover:bg-muted/50 data-[state=active]:bg-muted",
-                  // Visual accent for loaded tabs that are not currently active
                   isDataLoaded && !isActive && "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-transparent hover:bg-emerald-500/20"
                 )}
               >

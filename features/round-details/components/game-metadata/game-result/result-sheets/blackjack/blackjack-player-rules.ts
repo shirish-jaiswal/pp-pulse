@@ -38,26 +38,29 @@ export const getBlackjackPlayers = (
   cardDetails: any[],
   betDetails: BetTableInfo
 ): BlackjackSeatHand[] => {
-
   const sortedEvents = sortBlackjackEvents(events);
-
   const activeSeats = getActiveSeats(betDetails);
+
+  // 1. Create a Set of seats that accepted insurance
+  const insuredSeats = new Set<number>(
+    betDetails
+      .map((bet) => {
+        const source = bet.displayDescription || bet.description;
+        if (!source || !/insurance/i.test(source)) return null;
+
+        const match = source.match(/seat\s*(\d+)/i);
+        return match ? Number(match[1]) : null;
+      })
+      .filter((v): v is number => v !== null)
+  );
 
   const grouped = new Map<string, BlackjackSeatHand>();
 
   sortedEvents.forEach((event) => {
     if (isDealerEvent(event)) return;
 
-    /**
-     * Normalize event seat
-     */
     const seat = normalizeSeat(event.seat_number);
-    if (seat === null) return;
-
-    /**
-     * FILTER: only seats where user has bet
-     */
-    if (!activeSeats.has(seat)) return;
+    if (seat === null || !activeSeats.has(seat)) return;
 
     const key = `${seat}-${event.hand_number}`;
 
@@ -72,38 +75,26 @@ export const getBlackjackPlayers = (
         isBlackjack: false,
         isSoftHand: false,
         stateIndicator: event.state_indicator,
+        hasTakenInsurance: insuredSeats.has(seat), // 2. Map structural state match here
         events: [],
       });
     }
 
     const hand = grouped.get(key)!;
-
     hand.events.push(event);
 
-    /**
-     * CARD EVENTS
-     */
     if (isCardEvent(event)) {
       hand.cards.push(event.resultcode_id);
     }
 
-    /**
-     * PLAYER DECISIONS
-     */
     if (isDecisionEvent(event)) {
       hand.actions.push(event.event_value);
     }
   });
 
-  /**
-   * CALCULATE SCORES
-   */
+  // Calculate scores loop remains unchanged...
   grouped.forEach((hand) => {
-    const result = calculateBlackjackScore(
-      hand.cards,
-      cardDetails
-    );
-
+    const result = calculateBlackjackScore(hand.cards, cardDetails);
     hand.score = result.score;
     hand.isBust = result.isBust;
     hand.isBlackjack = result.isBlackjack;

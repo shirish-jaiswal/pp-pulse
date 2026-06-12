@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { deleteQna } from "@/lib/excel-engine/knowledge-base/qna/delete";
-import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/get-qna";
+import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/knowledge-boost/get-qna";
 import { toast } from "sonner";
 
 export function useDeleteQna() {

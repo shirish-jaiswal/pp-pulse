@@ -61,6 +61,10 @@ export const KNOWLEDGE_BASE_CONFIG = {
       name: "help_notes",
       schema: ["id", "notes", "priority", "created_at", "updated_at"]
     },
+    articles : {
+      name: "articles",
+      schema: ["id"]
+    }
   }
 };
 

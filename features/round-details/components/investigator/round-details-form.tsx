@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useForm, useStore } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,11 @@ interface Props {
 export function RoundDetailsForm({ onSubmit }: Props) {
     const { roundDetailsInput } = useRoundDetails();
     const defaultMode = roundDetailsInput?.game_id ? "game" : "round";
+
+    // 2. Refs to target the main fields dynamically
+    const roundInputRef = useRef<HTMLInputElement>(null);
+    const gameInputRef = useRef<HTMLInputElement>(null);
+
     const form = useForm({
         defaultValues: {
             mode: defaultMode,
@@ -58,6 +64,27 @@ export function RoundDetailsForm({ onSubmit }: Props) {
         (mode === "round"
             ? !roundId.trim()
             : (!gameId.trim() || !userId.trim()));
+
+    // 3. Keep current primary input in focus on mount or mode switch
+    useEffect(() => {
+        if (mode === "round") {
+            roundInputRef.current?.focus();
+        } else {
+            gameInputRef.current?.focus();
+        }
+    }, [mode]);
+
+    // 4. Helper helper to restore focus on resetting values
+    const handleReset = () => {
+        form.reset();
+        setTimeout(() => {
+            if (mode === "round") {
+                roundInputRef.current?.focus();
+            } else {
+                gameInputRef.current?.focus();
+            }
+        }, 0);
+    };
 
     return (
         <form
@@ -103,6 +130,7 @@ export function RoundDetailsForm({ onSubmit }: Props) {
                     children={(field) => (
                         <div className="flex flex-col flex-1">
                             <Input
+                                ref={roundInputRef} // 5. Added ref here
                                 placeholder="Enter Round ID (ends with 008)..."
                                 className={field.state.meta.errors.length ? "border-red-500 shadow-[0_0_0_1px_rgba(239,68,68,0.2)]" : ""}
                                 value={field.state.value}
@@ -135,6 +163,7 @@ export function RoundDetailsForm({ onSubmit }: Props) {
                         children={(field) => (
                             <div className="flex flex-col flex-1">
                                 <Input
+                                    ref={gameInputRef} // 6. Added ref here
                                     placeholder="Game ID..."
                                     className={field.state.meta.errors.length ? "border-red-500" : ""}
                                     value={field.state.value}
@@ -185,7 +214,7 @@ export function RoundDetailsForm({ onSubmit }: Props) {
 
             <Button
                 type="button"
-                onClick={() => form.reset()}
+                onClick={handleReset}
             >
                 <RotateCcw className="h-4 w-4" />
             </Button>

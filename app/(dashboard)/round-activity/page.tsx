@@ -5,6 +5,7 @@ import { RoundMetaInfo } from "@/features/round-details/types/game-details";
 import { CrashGameData } from "@/features/round-details/types/crash-games";
 import { TPTTableInfo } from "@/features/round-details/types/tpt-table-info";
 import { HighflyerResponseType } from "@/features/round-details/types/highflyer";
+import { TicketProvider } from "@/features/round-details/components/freshdesk/ticket-context";
 
 interface PageProps {
     searchParams: Promise<{
@@ -32,12 +33,14 @@ export default async function Page({ searchParams }: PageProps) {
         ? roundIds.split(",").map(id => id.trim()).filter(Boolean)
         : [];
     return (
-        <RoundDetailsWrapper
-            roundId={roundId}
-            gameId={gameId}
-            userId={userId}
-            isBulk={isBulk}
-            roundIds={parsedRoundIds}
-        />
+        <TicketProvider>
+            <RoundDetailsWrapper
+                roundId={roundId}
+                gameId={gameId}
+                userId={userId}
+                isBulk={isBulk}
+                roundIds={parsedRoundIds}
+            />
+        </TicketProvider>
     );
 }

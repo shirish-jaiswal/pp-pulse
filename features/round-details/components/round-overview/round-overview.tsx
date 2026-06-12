@@ -35,10 +35,6 @@ const RoundOverview = () => {
         {roundOverview.map((section: any, idx) => {
           // 1. Unify incoming data property from both your manual maps and helper functions
           const rawIcon = section.icon || section.iName;
-
-          // 2. Resolve the value: 
-          // If it matches a key in our Lucide map, extract the React Component.
-          // If it doesn't match (like "Seamless" or "SW"), keep it as a raw string.
           const resolvedIcon = (typeof rawIcon === "string" && ICON_MAP[rawIcon])
             ? ICON_MAP[rawIcon]
             : rawIcon;

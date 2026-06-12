@@ -20,6 +20,8 @@ import PushResolutionButton from "./push-resolution-button";
 import { Input } from "@/components/ui/input";
 import { useProfile } from "@/context/use-profile";
 import { toast } from "sonner";
+import { useTicketContext } from "../freshdesk/ticket-context";
+import RelatedArticlesPanel from "../freshdesk/RelatedArticlesPanel";
 
 type Props = {
     gameName: string;
@@ -30,11 +32,13 @@ export function ResolutionEditor({ gameName }: Props) {
     const { data: categories = [], isLoading } = useCategories();
     const [tabSelected, setTabSelected] = useState<string>();
 
-    // Controls the LEFT Freshdesk sidebar workspace
+    // Controls the LEFT Freshdesk sidebar workspace display limits
     const [isWorkspaceOpen, setIsWorkspaceOpen] = useState(false);
-    const [loadedTicketId, setLoadedTicketId] = useState<string | null>(null);
     const [ticketInput, setTicketInput] = useState("");
     const { user } = useProfile();
+
+    // Context synchronization handles state injection across distant components
+    const { ticketId, setTicketData, setTicketId } = useTicketContext();
 
     const workspaceRef = useRef<{ triggerSearch: (id: string) => void } | null>(null);
 
@@ -45,13 +49,15 @@ export function ResolutionEditor({ gameName }: Props) {
         }
     }, [categories, tabSelected]);
 
-    // RESET SIDEBAR EXPLICITLY WHEN SHEET CLOSES:
+    // RESET SIDEBAR AND CLEAR CONTEXT EXPLICITLY WHEN SHEET CLOSES:
     useEffect(() => {
         if (!resolutionEditorOpen) {
             setIsWorkspaceOpen(false);
             setTicketInput("");
+            setTicketData(null);
+            setTicketId(null);
         }
-    }, [resolutionEditorOpen]);
+    }, [resolutionEditorOpen, setTicketData, setTicketId]);
 
     const checkFreshdeskIntegration = (): boolean => {
         if (!user?.isFreshDesk) {
@@ -69,7 +75,7 @@ export function ResolutionEditor({ gameName }: Props) {
         if (!cleanId) return;
 
         setIsWorkspaceOpen(true);
-        
+
         setTimeout(() => {
             workspaceRef.current?.triggerSearch(cleanId);
         }, 50);
@@ -80,9 +86,8 @@ export function ResolutionEditor({ gameName }: Props) {
     return (
         <Sheet open={resolutionEditorOpen} onOpenChange={setResolutionEditorOpen}>
             <SheetContent
-                className={`p-0 flex flex-col h-screen gap-1 transition-all duration-300 ease-in-out sm:max-w-none ${
-                    isWorkspaceOpen ? "w-screen min-w-[100vw]" : "w-[52vw] min-w-[50vw]"
-                }`}
+                className={`p-0 flex flex-col h-screen gap-1 transition-all duration-300 ease-in-out sm:max-w-none ${isWorkspaceOpen ? "w-screen min-w-[100vw]" : "w-[52vw] min-w-[50vw]"
+                    }`}
             >
                 {/* HEADER */}
                 <SheetHeader className="shrink-0 border-b px-6 py-3 flex flex-row items-center justify-between space-y-0 gap-4">
@@ -96,6 +101,8 @@ export function ResolutionEditor({ gameName }: Props) {
                     </div>
 
                     <div className="flex items-center gap-2 mr-10">
+                        <RelatedArticlesPanel />
+
                         {/* HEADER INPUT FIELD */}
                         {!isWorkspaceOpen && (
                             <div className="flex items-center gap-1.5 border rounded-md px-2 bg-background h-9 focus-within:ring-1 focus-within:ring-ring">
@@ -106,7 +113,7 @@ export function ResolutionEditor({ gameName }: Props) {
                                     value={ticketInput}
                                     onChange={(e) => setTicketInput(e.target.value)}
                                     onKeyDown={(e) => e.key === "Enter" && handleHeaderSearch()}
-                                    className="border-0 bg-transparent p-0 h-full w-[130px] focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+                                    className="border-0 bg-transparent p-0 h-full w-20 focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
                                 />
                             </div>
                         )}
@@ -141,26 +148,23 @@ export function ResolutionEditor({ gameName }: Props) {
 
                 {/* MAIN SPLIT AREA */}
                 <div className="flex flex-1 min-h-0 overflow-hidden">
-                    
-                    {/* LEFT PANEL (Freshdesk Ticket Workspace View) */}
+
+                    {/* LEFT PANEL (Freshdesk Ticket Workspace Context Sync View) */}
                     <div
-                        className={`transition-all duration-300 ease-in-out flex flex-col min-h-0 overflow-hidden ${
-                            isWorkspaceOpen ? "flex-1 opacity-100" : "w-0 opacity-0 pointer-events-none"
-                        }`}
+                        className={`transition-all duration-300 ease-in-out flex flex-col min-h-0 overflow-hidden ${isWorkspaceOpen ? "flex-1 opacity-100" : "w-0 opacity-0 pointer-events-none"
+                            }`}
                     >
-                        <FreshdeskWorkspace 
+                        <FreshdeskWorkspace
                             ref={workspaceRef}
                             sharedTicketNumber={ticketInput}
                             onTicketNumberChange={setTicketInput}
-                            onTicketLoaded={(id) => setLoadedTicketId(id)} 
                         />
                     </div>
 
                     {/* RIGHT PANEL (Resolution Editor Templates Workspace) */}
                     <div
-                        className={`transition-all duration-300 ease-in-out flex flex-col min-h-0 ${
-                            isWorkspaceOpen ? "w-[50%] border-l" : "w-full"
-                        }`}
+                        className={`transition-all duration-300 ease-in-out flex flex-col min-h-0 ${isWorkspaceOpen ? "w-[50%] border-l" : "w-full"
+                            }`}
                     >
                         <Tabs
                             value={tabSelected}
@@ -192,8 +196,8 @@ export function ResolutionEditor({ gameName }: Props) {
                             {/* FIXED INTERIOR CONTENT CONTEXT */}
                             <div className="flex-1 min-h-0 overflow-y-auto p-1">
                                 {categories.map((cat) => (
-                                    <TabsContent 
-                                        key={cat.id} 
+                                    <TabsContent
+                                        key={cat.id}
                                         value={cat.title}
                                         className="h-full m-0 data-[state=inactive]:hidden focus-visible:outline-none focus-visible:ring-0"
                                     >
@@ -207,7 +211,8 @@ export function ResolutionEditor({ gameName }: Props) {
                             </div>
 
                             <div className="p-1 border-t bg-background shrink-0">
-                                <PushResolutionButton activeTicketId={loadedTicketId} />
+                                {/* Component now picks up activeTicketId globally from the context pipeline */}
+                                <PushResolutionButton activeTicketId={ticketId} />
                             </div>
                         </Tabs>
                     </div>

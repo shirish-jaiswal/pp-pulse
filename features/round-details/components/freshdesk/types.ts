@@ -1,6 +1,7 @@
 export interface Conversation {
     id: number;
     body: string;
+    body_text: string,
     incoming: boolean;
     private: boolean;
     created_at: string;

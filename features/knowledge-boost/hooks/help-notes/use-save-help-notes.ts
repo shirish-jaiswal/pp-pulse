@@ -2,7 +2,7 @@ import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { QNA } from "@/lib/excel-engine/knowledge-base/qna/get-all";
 import { saveQna } from "@/lib/excel-engine/knowledge-base/qna/save";
-import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/get-qna";
+import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/knowledge-boost/get-qna";
 import { HelpNote } from "./use-help-notes";
 import { saveHelpNotes } from "@/lib/excel-engine/knowledge-base/help-notes/save";
 

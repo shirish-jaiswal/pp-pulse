@@ -118,10 +118,10 @@ export default function PotentialWinning() {
           </PopoverContent>
         </Popover>
       </div>
-
+{/* 
       {isBaccarat && baccaratTelemetry && (
         <BaccaratPanel playerCards={playerCards} bankerCards={bankerCards} metrics={baccaratTelemetry} onChange={(type, cards) => type === "player" ? setPlayerCards(cards) : setBankerCards(cards)} />
-      )}
+      )} */}
 
       {calculationResult && (
         <CalculationTable winningDescription={calculationResult.winningDescription} selectedResultBc={selectedResultBc} winningRatio={calculationResult.winningRatio} details={calculationResult.details} totalWager={calculationResult.totalWager} totalPayout={calculationResult.totalPayout} />

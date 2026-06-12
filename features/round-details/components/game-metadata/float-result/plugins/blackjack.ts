@@ -36,6 +36,7 @@ export const blackjackPlugin: GamePlugin = {
 
         let label = "LOSE";
 
+        // Base multi-seat win calculation
         if (winnerCount === totalPlayers && totalPlayers > 0) {
             label = "WIN";
         } else if (pushCount === totalPlayers && totalPlayers > 0) {
@@ -51,10 +52,15 @@ export const blackjackPlugin: GamePlugin = {
             label = "DLR BUST";
         }
 
+        // Check if any active player hit a natural blackjack
         const hasBlackjack = players.some((p: any) => p.isBlackjack);
 
         if (hasBlackjack) {
-            label = "BLACKJACK";
+            if (dealer.isBlackjack && winnerCount === 0) {
+                label = "PUSH";
+            } else {
+                label = "BLACKJACK";
+            }
         }
 
         const classMap: Record<string, string> = {

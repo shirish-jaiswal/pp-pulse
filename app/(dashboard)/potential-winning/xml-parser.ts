@@ -3,10 +3,6 @@ export interface ParsedBet {
   amt: number;
 }
 
-/**
- * Parses raw XML message elements to pull attributes out of <bet /> elements.
- * Handles variations in attribute ordering (amt before bc or vice-versa).
- */
 export function parseIncomingMessage(xmlString: string): ParsedBet[] {
   const bets: ParsedBet[] = [];
   
