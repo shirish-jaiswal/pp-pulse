@@ -3,6 +3,7 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { HelpNotesTabs } from "@/features/knowledge-boost/components/tabs/help-notes/help-notes-tab";
 import { QnaTabs } from "@/features/knowledge-boost/components/tabs/qna/qna-tabs";
+import SyncArticlesTab from "@/features/knowledge-boost/components/tabs/sync-kbs/sync-kb-articles";
 
 
 function KnowledgeBoost() {
@@ -12,6 +13,8 @@ function KnowledgeBoost() {
                 <TabsList>
                     <TabsTrigger value="qna">QNA</TabsTrigger>
                     <TabsTrigger value="help">Help Notes</TabsTrigger>
+                    <TabsTrigger value="sync-kb">Sync KB</TabsTrigger>
+
                 </TabsList>
 
                 <TabsContent value="qna">
@@ -20,6 +23,10 @@ function KnowledgeBoost() {
 
                 <TabsContent value="help">
                     <HelpNotesTabs />
+                </TabsContent>
+
+                <TabsContent value="sync-kb">
+                    <SyncArticlesTab/>
                 </TabsContent>
             </Tabs>
         </>

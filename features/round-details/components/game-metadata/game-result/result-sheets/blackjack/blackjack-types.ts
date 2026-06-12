@@ -10,6 +10,7 @@ export interface BlackjackSeatHand {
   isBlackjack: boolean;
   isSoftHand: boolean;
   stateIndicator: number;
+  hasTakenInsurance: boolean;
   events: CardDetailsInfo[number][];
 }
 
@@ -19,6 +20,7 @@ export interface BlackjackDealerHand {
   isBust: boolean;
   isBlackjack: boolean;
   events: CardDetailsInfo[number][];
+  offeredInsurance: boolean;
 }
 
 export interface BlackjackRoundResult {

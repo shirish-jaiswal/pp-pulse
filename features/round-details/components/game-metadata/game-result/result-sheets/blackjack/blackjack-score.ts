@@ -4,13 +4,13 @@ export const calculateBlackjackScore = (
 ) => {
   let total = 0;
   let aces = 0;
-
   const cards: any[] = [];
 
   for (const code of codes) {
     const card = cardDetails.find((c) => c.code === code);
 
-    if (!card) continue;
+    // If it's a structural log code rather than a real playing card, skip scoring calculations
+    if (!card || !card.rank) continue;
 
     cards.push(card);
 

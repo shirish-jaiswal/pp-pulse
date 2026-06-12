@@ -53,10 +53,13 @@ export const isPlayerEvent = (
 export const isCardEvent = (
   event: CardDetailsInfo[number]
 ) => {
-  return (
-    event.event_type.includes("CARD_DEALT") &&
-    !event.event_type.includes("HIDDEN")
-  );
+  if (!event.resultcode_id) return false;
+
+  if (event.resultcode_id.startsWith("blackjack")) {
+    return false;
+  }
+
+  return true;
 };
 
 export const isDecisionEvent = (

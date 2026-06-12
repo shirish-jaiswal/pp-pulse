@@ -22,41 +22,71 @@ const ianaFallbackMap: Record<string, string> = {
   brazil: "America/Sao_Paulo",
 };
 
+const REST_COUNTRIES = process.env.REST_COUNTRIES_API_KEY
 export async function s_fetchCountryZones() {
   try {
-    // Utilize your shared apiRequest utility
-    const data = await apiRequest({
-      method: "GET",
-      endpoint: "/v3.1/all?fields=name,cca2,timezones",
-      baseURL: "https://restcountries.com",
-      requireCookie: false,
-    });
+    let allCountries: any[] = [];
+    let offset = 0;
+    const limit = 100; 
+    let hasMore = true;
 
-    if (!data || !Array.isArray(data)) {
-      throw new Error("Invalid or empty data received from the RestCountries API.");
+    while (hasMore) {
+      const urlParams = new URLSearchParams({
+        limit: limit.toString(),
+        offset: offset.toString(),
+        response_fields: "names.common,codes.alpha_2,timezones",
+      });
+
+      const response = await apiRequest({
+        method: "GET",
+        endpoint: `/countries/v5?${urlParams.toString()}`,
+        baseURL: "https://api.restcountries.com",
+        requireCookie: false,
+        headers: {
+          Authorization: `Bearer ${REST_COUNTRIES}`,
+        },
+      });
+
+      const countriesArray = response?.data?.objects;
+
+      if (!countriesArray || !Array.isArray(countriesArray) || countriesArray.length === 0) {
+        hasMore = false;
+      } else {
+        allCountries = allCountries.concat(countriesArray);
+        
+        if (countriesArray.length < limit) {
+          hasMore = false;
+        } else {
+          offset += limit;
+        }
+      }
     }
 
-    const formatted: CountryZone[] = data
+    if (allCountries.length === 0) {
+      throw new Error("Invalid or empty data array received from the RestCountries v5 API.");
+    }
+
+    const formatted: CountryZone[] = allCountries
       .map((item: any) => {
-        const countryName = item.name?.common || "Unknown";
+        const countryName = item.names?.common || "Unknown";
         const lowerName = countryName.toLowerCase();
-
-        // 1. Check DST override map first.
-        // 2. Look for a valid standard IANA string in their timezone list.
-        // 3. Fall back to generic UTC.
+        
         let chosenTz = ianaFallbackMap[lowerName];
-
         if (!chosenTz) {
           const standardIana = item.timezones?.find((tz: string) => tz.includes("/"));
           chosenTz = standardIana || "UTC";
         }
 
+        const rawCode = item.codes?.alpha_2;
+        const countryCode = typeof rawCode === "string" ? rawCode.toLowerCase() : "un";
+
         return {
           country: countryName,
-          code: item.cca2 ? item.cca2.toLowerCase() : "un",
+          code: countryCode,
           timezone: chosenTz,
         };
       })
+      .filter((item: CountryZone) => item.country !== "Unknown")
       .sort((a: CountryZone, b: CountryZone) => a.country.localeCompare(b.country));
 
     return {

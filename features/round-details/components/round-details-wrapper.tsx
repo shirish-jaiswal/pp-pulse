@@ -16,7 +16,6 @@ import { c_getRoundDetails } from "@/lib/api/round-details/c_round-details";
 import RoundDetailsSkeleton from "@/features/round-details/components/round-details-skeleton";
 import generateGameMetaData from "@/app/(dashboard)/round-activity/game-metadata";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 type RoundDetailsWrapperProps = {
   roundId?: string;

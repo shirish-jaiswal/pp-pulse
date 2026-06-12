@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react"; // Added useEffect and useRef
 import { useForm, useStore } from "@tanstack/react-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,9 @@ const MAX_IDS = 30;
 export function MultiRoundDetailsForm({ onSubmit }: Props) {
   const router = useRouter();
   const { setMultiIds, setRoundDetailsInput } = useRoundDetails();
+  
+  // 1. Create a ref for the main ID input
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm({
     defaultValues: {
@@ -101,6 +105,9 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
       router.push(`/round-activity/?${params.toString()}`);
       onSubmit?.(payload);
+      
+      // Focus after submit
+      inputRef.current?.focus();
     },
   });
 
@@ -108,6 +115,11 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
   const roundIds = useStore(form.store, (s) => s.values.round_id);
   const gameIds = useStore(form.store, (s) => s.values.game_id);
   const userId = useStore(form.store, (s) => s.values.user_id);
+
+  // 2. Keep focused on initial mount and whenever the mode changes
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [mode]);
 
   /**
    * BULK INPUT PARSER (Enforces 30 ID limit)
@@ -122,7 +134,6 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
     const schema = mode === "round" ? RoundIdSchema : GameIdSchema;
     const existing = mode === "round" ? roundIds : gameIds;
     
-    // Total IDs allowed to be added before hitting the cap
     const remainingSlots = MAX_IDS - existing.length;
 
     if (remainingSlots <= 0) {
@@ -163,7 +174,6 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
 
     form.setFieldValue("raw_input", "");
 
-    // Determine appropriate error feedback message
     let errorMessage = "";
     if (hitLimitCap) {
       errorMessage = `Limited to ${MAX_IDS} IDs. Excess inputs ignored.`;
@@ -177,6 +187,9 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
         errors: [errorMessage],
       }));
     }
+
+    // Refocus immediately after processing chip input
+    inputRef.current?.focus();
   };
 
   const validateUser = (val: string) => {
@@ -193,6 +206,8 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
     } else {
       form.setFieldValue("game_id", (p) => p.filter((x) => x !== id));
     }
+    // Refocus after removing a tag
+    inputRef.current?.focus();
   };
 
   const total = roundIds.length + gameIds.length + (userId ? 1 : 0);
@@ -224,6 +239,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                 form.setFieldValue("round_id", []);
                 form.setFieldValue("game_id", []);
                 form.setFieldValue("user_id", "");
+                // Focus returns via useEffect dependency on mode change
               }}
             >
               {field.state.value === "round" ? "R_ID" : "G_ID"}
@@ -242,6 +258,7 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
               return (
                 <div className="flex-1 flex items-center gap-2">
                   <Input
+                    ref={inputRef} // 3. Attached the input ref here
                     placeholder={
                       mode === "round"
                         ? `Enter Round IDs... (${totalIdsCount}/${MAX_IDS})`
@@ -277,7 +294,13 @@ export function MultiRoundDetailsForm({ onSubmit }: Props) {
                     />
                   )}
 
-                  <Button type="button" onClick={() => form.reset()}>
+                  <Button 
+                    type="button" 
+                    onClick={() => {
+                      form.reset();
+                      inputRef.current?.focus(); // Focus after form clear
+                    }}
+                  >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
 

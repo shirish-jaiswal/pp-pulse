@@ -172,6 +172,83 @@ export const ExcelEngine = {
     return newRow;
   },
 
+  insertRows(dbName: string, tableName: string, dataArray: Record<string, any>[]) {
+    if (!dataArray || dataArray.length === 0) return [];
+
+    const wb = loadWB(dbName);
+    const sheet = wb.Sheets[tableName];
+    if (!sheet) throw new Error("Table not found");
+
+    const rows: any[] = utils.sheet_to_json(sheet);
+
+    // Calculate the starting increment ID based on existing rows
+    let currentId = rows.length ? Math.max(...rows.map((r) => r.id || 0)) : 0;
+    const now = new Date().toISOString();
+
+    const newRows = dataArray.map((data) => {
+      currentId += 1;
+      return { id: currentId, ...data, created_at: now, updated_at: now };
+    });
+
+    // Append all items to the existing collection at once
+    rows.push(...newRows);
+
+    // Maintain column order according to the table schema header config
+    const schema = ExcelEngine.getSchema(dbName, tableName);
+    wb.Sheets[tableName] = utils.json_to_sheet(rows, {
+      header: schema.length ? schema : undefined,
+    });
+
+    saveWorkbook(wb, getDBPath(dbName));
+    return newRows;
+  },
+
+  upsertRows(dbName: string, tableName: string, incomingData: Record<string, any>[]) {
+    if (!incomingData || incomingData.length === 0) return [];
+
+    const wb = loadWB(dbName);
+    const sheet = wb.Sheets[tableName];
+    if (!sheet) throw new Error("Table not found");
+
+    // Get all old rows currently stored
+    const rows: any[] = utils.sheet_to_json(sheet);
+    const now = new Date().toISOString();
+    let maxId = rows.length ? Math.max(...rows.map((r) => r.id || 0)) : 0;
+
+    incomingData.forEach((incomingItem) => {
+      // Look for a matching entry using your business key 'article_id'
+      const existingIndex = rows.findIndex(
+        (r) => Number(r.article_id) === Number(incomingItem.article_id)
+      );
+
+      if (existingIndex !== -1) {
+        // OVERWRITE existing row details, preserving its original sequential 'id' and 'created_at' timestamps
+        rows[existingIndex] = {
+          ...rows[existingIndex],
+          ...incomingItem,
+          updated_at: now
+        };
+      } else {
+        // APPEND as a completely new sequential row structure
+        maxId += 1;
+        rows.push({
+          id: maxId,
+          ...incomingItem,
+          created_at: now,
+          updated_at: now
+        });
+      }
+    });
+
+    const schema = ExcelEngine.getSchema(dbName, tableName);
+    wb.Sheets[tableName] = utils.json_to_sheet(rows, {
+      header: schema.length ? schema : undefined,
+    });
+
+    saveWorkbook(wb, getDBPath(dbName));
+    return incomingData;
+  },
+
   getRows(dbName: string, tableName: string): any[] {
     const wb = loadWB(dbName);
     const sheet = wb.Sheets[tableName];
@@ -221,49 +298,87 @@ export const ExcelEngine = {
     saveWorkbook(wb, getDBPath(dbName));
   },
   findRows(
-  dbName: string,
-  tableName: string,
-  filters: Record<string, string | string[]>
-) {
+    dbName: string,
+    tableName: string,
+    filters: Record<string, string | string[]>
+  ) {
 
-  const wb = loadWB(dbName);
-  const sheet = wb.Sheets[tableName];
-  if (!sheet) throw new Error("Table not found");
+    const wb = loadWB(dbName);
+    const sheet = wb.Sheets[tableName];
+    if (!sheet) throw new Error("Table not found");
 
-  const rows = utils.sheet_to_json<Record<string, any>>(sheet);
+    const rows = utils.sheet_to_json<Record<string, any>>(sheet);
 
-  return rows.filter((row) =>
-    Object.entries(filters).every(([key, value]) => {
-      const isLike = key.endsWith("_like");
-      const actualKey = isLike ? key.replace("_like", "") : key;
+    return rows.filter((row) =>
+      Object.entries(filters).every(([key, value]) => {
+        const isLike = key.endsWith("_like");
+        const actualKey = isLike ? key.replace("_like", "") : key;
 
-      const rowValue = row[actualKey];
-      if (rowValue === undefined || rowValue === null) return false;
+        const rowValue = row[actualKey];
+        if (rowValue === undefined || rowValue === null) return false;
 
-      const normalizedRowValue = String(rowValue).trim().toLowerCase();
+        const normalizedRowValue = String(rowValue).trim().toLowerCase();
 
-      const normalize = (v: string) => String(v).trim().toLowerCase();
+        const normalize = (v: string) => String(v).trim().toLowerCase();
 
-      // ✅ ARRAY handling
-      if (Array.isArray(value)) {
+        // ✅ ARRAY handling
+        if (Array.isArray(value)) {
+          if (isLike) {
+            return value.some((v) =>
+              normalizedRowValue.includes(normalize(v))
+            );
+          }
+
+          // ✅ EXISTING exact behavior (unchanged)
+          return value.map(normalize).includes(normalizedRowValue);
+        }
+
+        // ✅ SINGLE value
         if (isLike) {
-          return value.some((v) =>
-            normalizedRowValue.includes(normalize(v))
-          );
+          return normalizedRowValue.includes(normalize(value));
         }
 
         // ✅ EXISTING exact behavior (unchanged)
-        return value.map(normalize).includes(normalizedRowValue);
-      }
+        return normalizedRowValue === normalize(value);
+      })
+    );
+  },
+  findRowsByKeywords(
+    dbName: string, 
+    tableName: string, 
+    keywords: string[], 
+    searchColumns: string[]
+  ) {
+    if (!keywords || keywords.length === 0 || !searchColumns || searchColumns.length === 0) {
+      return [];
+    }
 
-      // ✅ SINGLE value
-      if (isLike) {
-        return normalizedRowValue.includes(normalize(value));
-      }
+    const wb = loadWB(dbName);
+    const sheet = wb.Sheets[tableName];
+    if (!sheet) throw new Error("Table not found");
 
-      // ✅ EXISTING exact behavior (unchanged)
-      return normalizedRowValue === normalize(value);
-    })
-  );
-}
+    // Load all rows dynamically from the sheet
+    const rows = utils.sheet_to_json<Record<string, any>>(sheet);
+
+    // Normalize all search keywords to lowercase for accurate matching
+    const normalizedKeywords = keywords
+      .map(kw => String(kw).trim().toLowerCase())
+      .filter(Boolean);
+
+    if (normalizedKeywords.length === 0) return rows;
+
+    // Filter rows based on matching strings dynamically across specified columns
+    return rows.filter((row) => {
+      // Check every specified column to see if any keyword hits a match
+      return searchColumns.some((colName) => {
+        const cellValue = row[colName];
+        if (cellValue === undefined || cellValue === null) return false;
+
+        const normalizedCellValue = String(cellValue).toLowerCase();
+
+        // Check if ANY of the input keywords are found in this specific cell
+        return normalizedKeywords.some((word) => normalizedCellValue.includes(word));
+      });
+    });
+  }
 };

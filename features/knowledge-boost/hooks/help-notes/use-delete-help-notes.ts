@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { helpNotesKeys } from "@/lib/excel-engine/excel-db-keys/help-notes";
+import { helpNotesKeys } from "@/lib/excel-engine/excel-db-keys/knowledge-boost/help-notes";
 import { deleteHelpNotes } from "@/lib/excel-engine/knowledge-base/help-notes/delete";
 
 export function useDeleteHelpNotes() {

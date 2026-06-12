@@ -1,9 +1,6 @@
 // Import the shared type structures directly from your layout renderer file
-// CHANGE THIS PATH to match wherever your GameResultRenderer file lives
-
 import { RoundDetailsResponse } from "@/app/(dashboard)/round-activity/page";
 import { BlackjackResultConfig, Section } from "@/components/custom/text-editor/toolbar/game-result/blackjack/BlackjackResultRenderer";
-
 
 interface CardDetail {
   code: string;
@@ -16,6 +13,7 @@ interface BlackjackResult {
     score: number;
     isBlackjack: boolean;
     isBust: boolean;
+    offeredInsurance?: boolean; // Track global insurance configuration status
     cards: string[];
   };
   players: Array<{
@@ -25,6 +23,7 @@ interface BlackjackResult {
     isBlackjack: boolean;
     isBust: boolean;
     isSoftHand: boolean;
+    hasTakenInsurance?: boolean; 
     actions: string[];
     cards: string[];
   }>;
@@ -36,7 +35,6 @@ interface TransformArgs {
   result: BlackjackResult | null;
   cardDetails: CardDetail[] | undefined;
 }
-
 export function transformBlackjackToConfig({
   roundDetails,
   result,
@@ -46,27 +44,41 @@ export function transformBlackjackToConfig({
 
   const { dealer, players, winners } = result;
 
+  // 1. Resolve Dealer Global Status Layout Properties
+  let dealerLabel: string | undefined = undefined;
+  let dealerVariant: "success" | "danger" | "warning" | "default" = "default";
+
+  if (dealer.isBlackjack) {
+    dealerLabel = "BLACKJACK";
+    dealerVariant = "warning";
+  } else if (dealer.isBust) {
+    dealerLabel = "BUST";
+    dealerVariant = "danger";
+  } else if (dealer.offeredInsurance) {
+    dealerLabel = "INSURANCE OFFERED";
+    dealerVariant = "warning";
+  }
+
+  const dealerValidCards = dealer.cards
+    .map((code: string) => cardDetails?.find((c) => c.code === code))
+    .filter((found): found is CardDetail => !!found && !found.code.startsWith("blackjack"))
+    .map((found) => ({
+      rank: found.rank,
+      suit: (found.suit?.toLowerCase() || "spades") as "spades" | "hearts" | "diamonds" | "clubs",
+    }));
+
   const sections: Section[] = [
     {
       title: "DEALER",
       subtitle: "Dealer Hand",
       score: String(dealer.score),
-      status: dealer.isBlackjack
-        ? { label: "BLACKJACK", variant: "warning" }
-        : dealer.isBust
-        ? { label: "BUST", variant: "danger" }
-        : undefined,
-      cards: dealer.cards.map((code: string) => {
-        const found = cardDetails?.find((c) => c.code === code);
-        return {
-          rank: found?.rank || code,
-          suit: (found?.suit?.toLowerCase() || "spades") as "spades" | "hearts" | "diamonds" | "clubs",
-        };
-      }),
+      status: dealerLabel ? { label: dealerLabel, variant: dealerVariant } : undefined,
+      cards: dealerValidCards, 
       actions: [],
     },
   ];
 
+  // 2. Loop and Resolve Active Seat Specific Config Layout Structures
   players.forEach((player) => {
     const id = `${player.seat}-Hand-${player.handNumber}`;
     const isWinner = winners.includes(id);
@@ -83,22 +95,27 @@ export function transformBlackjackToConfig({
     } else if (player.isBust) {
       variant = "danger";
       label = "BUST";
+    } else if (player.hasTakenInsurance) {
+      variant = "warning";
+      label = "INSURANCE TAKEN";
     } else if (player.isSoftHand) {
       label = "SOFT";
     }
+
+    const playerValidCards = player.cards
+      .map((code: string) => cardDetails?.find((c) => c.code === code))
+      .filter((found): found is CardDetail => !!found && !found.code.startsWith("blackjack"))
+      .map((found) => ({
+        rank: found.rank,
+        suit: (found.suit?.toLowerCase() || "spades") as "spades" | "hearts" | "diamonds" | "clubs",
+      }));
 
     sections.push({
       title: `Seat ${player.seat}`,
       subtitle: `Hand ${player.handNumber}`,
       score: String(player.score),
-      status: { label, variant },
-      cards: player.cards.map((code: string) => {
-        const found = cardDetails?.find((c) => c.code === code);
-        return {
-          rank: found?.rank || code,
-          suit: (found?.suit?.toLowerCase() || "spades") as "spades" | "hearts" | "diamonds" | "clubs",
-        };
-      }),
+      status: label ? { label, variant } : undefined,
+      cards: playerValidCards,
       actions: player.actions || [],
     });
   });

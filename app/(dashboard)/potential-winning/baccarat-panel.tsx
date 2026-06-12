@@ -20,7 +20,6 @@ const SUIT_LABELS: Record<Suit, string> = { S: "♠ Spades", H: "♥ Hearts", D:
 export function BaccaratPanel({ playerCards, bankerCards, onChange, metrics }: Props) {
   const [activePicker, setActivePicker] = useState<{ type: "player" | "banker"; index: number } | null>(null);
 
-  // Automatically enforce third-card draw rules safely with conditional diff guards
   useEffect(() => {
     const { playerNeedsThird, bankerNeedsThird } = determineThirdCardRequirements(playerCards, bankerCards);
 

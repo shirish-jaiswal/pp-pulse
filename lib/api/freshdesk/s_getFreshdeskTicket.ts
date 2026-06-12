@@ -3,7 +3,7 @@
 import apiRequest from "@/lib/api/api-request";
 import c_getDecryptedFdKey from "./c_getDecryptedFdKey";
 
-export async function c_getFreshdeskTicket(ticketId: string, ) {
+export async function s_getFreshdeskTicket(ticketId: string, ) {
   try {
     if (!ticketId) {
       throw new Error("Missing ticketId");

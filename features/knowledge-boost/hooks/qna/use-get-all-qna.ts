@@ -1,4 +1,4 @@
-import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/get-qna";
+import { qnaKeys } from "@/lib/excel-engine/excel-db-keys/knowledge-boost/get-qna";
 import { getAllQna, QNA } from "@/lib/excel-engine/knowledge-base/qna/get-all";
 import { useQuery } from "@tanstack/react-query";
 

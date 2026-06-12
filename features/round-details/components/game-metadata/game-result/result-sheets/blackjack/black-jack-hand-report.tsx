@@ -169,69 +169,46 @@ const BlackjackHandReport = () => {
     /**
      * PLAYER SECTION
      */
-    const PlayerSection = ({
-        player,
-    }: any) => {
-        const id = `${player.seat}-Hand-${player.handNumber}`;
+    const PlayerSection = ({ player }: any) => {
+    const id = `${player.seat}-Hand-${player.handNumber}`;
+    const isWinner = winners.includes(id);
 
-        const isWinner =
-            winners.includes(id);
-
-        return (
-            <div
-                className={cn(
-                    "rounded-lg border bg-background p-3 space-y-3 transition-colors hover:border-primary/30",
-                    isWinner &&
-                    "border-emerald-500/40 bg-emerald-500/5"
-                )}
-            >
-                <div className="flex items-start justify-between gap-4">
-                    <div>
-                        <h3 className="text-sm font-medium tracking-wide text-foreground">
-                            {"Seat " + player.seat}
-                        </h3>
-
-                        <p className="text-xs text-muted-foreground">
-                            Hand {player.handNumber}
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-end gap-2">
-                        {isWinner && (
-                            <Badge
-                                label="WIN"
-                                variant="success"
-                            />
-                        )}
-
-                        {player.isBlackjack && (
-                            <Badge
-                                label="BLACKJACK"
-                                variant="warning"
-                            />
-                        )}
-
-                        {player.isBust && (
-                            <Badge
-                                label="BUST"
-                                variant="danger"
-                            />
-                        )}
-
-                        {player.isSoftHand && (
-                            <Badge
-                                label="SOFT"
-                                variant="default"
-                            />
-                        )}
-
-                        <div className="text-lg font-semibold tabular-nums">
-                            {player.score}
-                        </div>
-                    </div>
+    return (
+        <div className={cn(
+            "rounded-lg border bg-background p-3 space-y-3 transition-colors hover:border-primary/30",
+            isWinner && "border-emerald-500/40 bg-emerald-500/5"
+        )}>
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h3 className="text-sm font-medium tracking-wide text-foreground">
+                        {"Seat " + player.seat}
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                        Hand {player.handNumber}
+                    </p>
                 </div>
 
-                <CardRow codes={player.cards} />
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                    {/* Render Insurance Taken Badge */}
+                    {player.hasTakenInsurance && (
+                        <Badge
+                            label="INSURANCE TAKEN"
+                            variant="success"
+                        />
+                    )}
+
+                    {isWinner && <Badge label="WIN" variant="success" />}
+                    {player.isBlackjack && <Badge label="BLACKJACK" variant="warning" />}
+                    {player.isBust && <Badge label="BUST" variant="danger" />}
+                    {player.isSoftHand && <Badge label="SOFT" variant="default" />}
+
+                    <div className="text-lg font-semibold tabular-nums">
+                        {player.score}
+                    </div>
+                </div>
+            </div>
+
+            <CardRow codes={player.cards} />
 
                 {!!player.actions.length && (
                     <div className="flex flex-wrap gap-1.5 pt-1">
