@@ -89,9 +89,9 @@ export const KIBANA_DB_CONFIG = {
       name: "search_auto_compelete",
       schema: ["id", "name", "created_at", "updated_at"]
     },
-    queries: {
-      name: "queries",
-      schema: ["id", "game", "filters", "query", "created_at", "updated_at"]
+    stored_queries: {
+      name: "stored_queries",
+      schema: []
     },
   }
 }

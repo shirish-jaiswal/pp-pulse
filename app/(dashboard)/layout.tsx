@@ -49,22 +49,6 @@ function LayoutContent({ children }: { children: React.ReactNode }) {
               </p>
             </div>
           </div>
-
-          {/* RIGHT SIDE: Dynamic Timezones (API Loaded) + Kibana Access Link */}
-          <div className="flex items-center gap-3">
-            {/* Live country/flag clock selector running smoothly beside the action link */}
-            {/* <IPTracker /> */}
-            <TimeZone />
-            {/* <a
-              href="/portal/log-exp"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ color: "#00BFB3" }}
-              className="text-sm font-medium px-3 py-1.5 rounded-md bg-[#00BFB3]/5 hover:bg-[#00BFB3]/15 border border-[#00BFB3]/10 hover:border-[#00BFB3]/30 transition-all duration-200 shrink-0"
-            >
-              Kibana
-            </a> */}
-          </div>
         </header>
 
         {/* MAIN DISPLAY REGION */}

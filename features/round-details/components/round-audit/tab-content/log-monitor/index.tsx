@@ -1,6 +1,6 @@
-// @/features/round-details/components/round-audit/tab-content/log-monitor/PremiumLogMonitor.tsx
 "use client";
 
+import { useMemo } from "react";
 import { LogHeader } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-header";
 import { LogSidebar } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-sidebar";
 import { LogTable } from "@/features/round-details/components/round-audit/tab-content/log-monitor/components/log-table";
@@ -14,35 +14,33 @@ interface PremiumLogMonitorProps {
   sharedState?: ReturnType<typeof useLogState>;
 }
 
-export default function PremiumLogMonitor({ sharedState }: PremiumLogMonitorProps) {
-  const localState = useLogState();
-  const state = sharedState || localState;
-  
-  const { roundDetails, selectedRowsMap, activeId } = useRoundDetails();
+export default function PremiumLogMonitor({ roundId, timeStamp, sharedState }: PremiumLogMonitorProps) {
+  const state = sharedState || useLogState();
+  const { selectedRowsMap } = useRoundDetails();
 
-  const targetRoundId = activeId || roundDetails?.tptInfo?.[0]?.round_id || "";
   const currentTab = state.activeTab ?? "default";
-  const currentSelectedIds = selectedRowsMap?.[targetRoundId]?.[currentTab] || [];
+  const currentSelectedIds = selectedRowsMap?.[roundId]?.[currentTab] || [];
 
-  const getLogId = (log: any, fallbackIdx: number): string => {
-    if (!log) return String(fallbackIdx);
-    const timestamp = log.timestamp || log.raw?.["@timestamp"];
-    if (timestamp) return `${String(timestamp)}-${fallbackIdx}`;
-    const id = log.id || log.logId || log.raw?.id || log.raw?.logId;
-    return id ? `${String(id)}-${fallbackIdx}` : String(fallbackIdx);
-  };
-
-  const logsToPassToSidebar = currentSelectedIds.length > 0
-    ? state.filteredLogs.filter((log: any, idx: number) => currentSelectedIds.includes(getLogId(log, idx)))
-    : state.filteredLogs;
+  const logsToCopy = useMemo(() => {
+    // If user has selected specific rows, intersect with currently filtered logs
+    if (currentSelectedIds.length > 0) {
+      return state.filteredLogs.filter((log) => currentSelectedIds.includes(log.id));
+    }
+    // Otherwise, copy exactly what the user sees (filtered/searched/sorted)
+    return state.filteredLogs;
+  }, [state.filteredLogs, currentSelectedIds]);
 
   return (
     <div className="h-[calc(100vh-2.5rem)] w-full flex flex-col text-[13px] overflow-hidden rounded-xl border">
       <LogHeader {...state} />
-
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        <LogSidebar {...state} logs={logsToPassToSidebar} />
-
+        <LogSidebar
+          sidebarKeys={state.sidebarKeys}
+          visibleColumns={state.visibleColumns}
+          setVisibleColumns={state.setVisibleColumns}
+          resetToDefault={state.resetToDefault}
+          filteredLogs={logsToCopy} 
+        />
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
           <LogTable
             filteredLogs={state.filteredLogs}
@@ -54,7 +52,6 @@ export default function PremiumLogMonitor({ sharedState }: PremiumLogMonitorProp
           />
         </main>
       </div>
-
       <LogFooter {...state} />
     </div>
   );
