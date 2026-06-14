@@ -44,7 +44,7 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
     }
   }, [isOpen]);
 
-  // Phase 1: Load countries and match against profile props OR user.default context OR Romania fallback
+  // Phase 1: Load locations and match against context parameters
   useEffect(() => {
     async function fetchCountries() {
       const result = await s_fetchCountryZones();
@@ -52,13 +52,21 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
       if (result.success && result.data.length > 0) {
         setCountries(result.data);
 
-        const targetCountryName = defaultCountryName || (user as any)?.defaultCountry || "Romania";
+        const targetCountryName = defaultCountryName || (user as any)?.defaultCountry || "Bucharest";
 
+        // Handle cases matching either parsed city identity or full zone name fallback
         const savedCountry = result.data.find(
-          (c) => c.country.toLowerCase() === targetCountryName.toLowerCase()
+          (c) => 
+            c.country.toLowerCase() === targetCountryName.toLowerCase() ||
+            c.timezone.toLowerCase().includes(targetCountryName.toLowerCase())
         );
 
-        const initialFallback = savedCountry || result.data.find((c) => c.country === "Romania") || result.data[0];
+        const initialFallback = 
+          savedCountry || 
+          result.data.find((c) => c.country === "Bucharest") || 
+          result.data.find((c) => c.timezone.includes("Bucharest")) || 
+          result.data[0];
+
         setSelected(initialFallback);
       } else {
         console.error("Failed fetching timezone data:", result.error);
@@ -69,11 +77,13 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
   }, []);
 
   useEffect(() => {
-    const activeDefault = defaultCountryName || (user as any)?.defaultCountry || "Romania";
+    const activeDefault = defaultCountryName || (user as any)?.defaultCountry || "Bucharest";
 
     if (countries.length > 0) {
       const savedCountry = countries.find(
-        (c) => c.country.toLowerCase() === activeDefault.toLowerCase()
+        (c) => 
+          c.country.toLowerCase() === activeDefault.toLowerCase() ||
+          c.timezone.toLowerCase().includes(activeDefault.toLowerCase())
       );
       if (savedCountry) {
         setSelected(savedCountry);
@@ -128,7 +138,8 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
   }, [selected]);
 
   const filteredCountries = countries.filter((c) =>
-    c.country.toLowerCase().includes(searchQuery.toLowerCase())
+    c.country.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    c.timezone.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
@@ -148,8 +159,9 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
             type="button"
             disabled={disabled}
             onClick={() => setIsOpen(!isOpen)}
-            className={`flex items-center gap-1.5 bg-background border border-border/50 rounded-md px-2 h-full transition-colors focus:outline-none max-w-[150px] ${disabled ? "opacity-90 cursor-not-allowed" : "hover:bg-muted/30"
-              }`}
+            className={`flex items-center gap-1.5 bg-background border border-border/50 rounded-md px-2 h-full transition-colors focus:outline-none max-w-[170px] ${
+              disabled ? "opacity-90 cursor-not-allowed" : "hover:bg-muted/30"
+            }`}
           >
             {selected && (
               <img
@@ -157,6 +169,10 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
                 srcSet={`https://flagcdn.com/w80/${selected.code}.png 2x`}
                 alt=""
                 className="w-4 h-auto object-cover rounded-[1px] shadow-sm shrink-0 select-none"
+                onError={(e) => {
+                  // Fallback anchor graphics if flagcdn cannot find a match for custom extracted pseudo codes
+                  (e.target as HTMLElement).style.display = "none";
+                }}
               />
             )}
             <span className="text-[11px] font-semibold text-foreground/90 truncate tracking-wide">
@@ -168,13 +184,13 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
           </button>
 
           {isOpen && !disabled && (
-            <div className="absolute top-[calc(100%+6px)] left-0 w-56 bg-popover border border-border/80 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden animate-in fade-in-50 slide-in-from-top-1 duration-150">
+            <div className="absolute top-[calc(100%+6px)] left-0 w-64 bg-popover border border-border/80 rounded-xl shadow-xl z-50 flex flex-col overflow-hidden animate-in fade-in-50 slide-in-from-top-1 duration-150">
               <div className="p-1.5 border-b border-border/60 bg-muted/20 flex items-center gap-1.5 shrink-0">
                 <Search className="w-3.5 h-3.5 text-muted-foreground/70 ml-1.5 shrink-0" />
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search country..."
+                  placeholder="Search regions or paths..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full bg-transparent text-xs text-foreground placeholder-muted-foreground/70 outline-none border-none py-1 h-6 focus:ring-0"
@@ -195,27 +211,39 @@ export default function TimeZone({ onCountrySelect, defaultCountryName, disabled
                   filteredCountries.map((c) => (
                     <button
                       type="button"
-                      key={c.country}
+                      // CRITICAL FIX: Changed key assignment to c.timezone to keep keys unique 
+                      key={c.timezone}
                       onClick={() => {
                         setSelected(c);
                         setIsOpen(false);
                         onCountrySelect?.(c.country);
                       }}
-                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors text-left ${selected?.country === c.country
+                      className={`w-full flex items-center justify-between px-2.5 py-1.5 text-xs rounded-md transition-colors text-left ${
+                        selected?.timezone === c.timezone
                           ? "bg-primary/10 text-primary font-semibold"
                           : "text-popover-foreground hover:bg-muted/60"
-                        }`}
+                      }`}
                     >
-                      <div className="flex items-center gap-2 truncate">
+                      <div className="flex items-center gap-2 truncate-all max-w-[85%]">
                         <img
                           src={`https://flagcdn.com/w40/${c.code}.png`}
                           srcSet={`https://flagcdn.com/w80/${c.code}.png 2x`}
                           alt=""
                           className="w-4 h-auto object-cover rounded-[1px] shadow-sm shrink-0 select-none"
+                          onError={(e) => {
+                            (e.target as HTMLElement).style.display = "none";
+                          }}
                         />
-                        <span className="truncate">{c.country}</span>
+                        <div className="flex flex-col truncate">
+                          <span className="truncate font-medium">{c.country}</span>
+                          <span className="text-[10px] text-muted-foreground/70 truncate font-mono">
+                            {c.timezone}
+                          </span>
+                        </div>
                       </div>
-                      {selected?.country === c.country && <Check className="w-3.5 h-3.5 text-primary shrink-0" />}
+                      {selected?.timezone === c.timezone && (
+                        <Check className="w-3.5 h-3.5 text-primary shrink-0 ml-1" />
+                      )}
                     </button>
                   ))
                 ) : (

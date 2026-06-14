@@ -1,16 +1,16 @@
-const queriesTemplateQueryKey = "queries-template" as const;
+const storedQueryKey = "stored-query" as const;
 
 // Query Key Factory
-export const queriesTemplateKeys = {
-  all: [queriesTemplateQueryKey] as const,
+export const storedQueryKeys = {
+  all: [storedQueryKey] as const,
 
-  lists: () => [...queriesTemplateKeys.all, "list"] as const,
+  lists: () => [...storedQueryKeys.all, "list"] as const,
 
   list: (filters?: Record<string, any>) =>
-    [...queriesTemplateKeys.lists(), { filters }] as const,
+    [...storedQueryKeys.lists(), { filters }] as const, // Added missing [ ]
 
-  details: () => [...queriesTemplateKeys.all, "detail"] as const,
+  details: () => [...storedQueryKeys.all, "detail"] as const,
 
   detail: (id: number | null) =>
-    [...queriesTemplateKeys.details(), id] as const,
+    [...storedQueryKeys.details(), id] as const, // Added missing [ ]
 };

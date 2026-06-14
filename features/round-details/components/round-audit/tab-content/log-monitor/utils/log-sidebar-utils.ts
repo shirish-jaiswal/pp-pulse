@@ -134,16 +134,32 @@ export const buildHtmlTable = (visibleColumns: string[], logs: any[]): string =>
 export const buildPlainText = (visibleColumns: string[], logs: any[]): string => {
   const orderedColumns = getOrderedColumns(visibleColumns, logs);
 
-  return logs
+  // 1. Create the Header Row (Tab-separated)
+  const header = orderedColumns
+    .map((col) => formatLabel(col))
+    .join("\t");
+
+  // 2. Create the Data Rows (Tab-separated values)
+  const rows = logs
     .map((log) =>
       orderedColumns
         .map((col) => {
-          const value = getNestedValue(log, col);
-          return `${formatLabel(col)}: ${
-            value == null ? "-" : String(value)
-          }`;
+          const val = getNestedValue(log, col);
+          
+          // Format the value
+          let displayVal = val == null ? "-" : (typeof val === 'object' ? JSON.stringify(val) : String(val));
+          
+          // Apply UTC timestamp formatting (consistent with your HTML builder)
+          if (col === "timestamp" && val != null) {
+            displayVal = new Date(val).toUTCString();
+          }
+          
+          return displayVal;
         })
-        .join(" | ")
+        .join("\t") // Tabs between columns
     )
-    .join("\n");
+    .join("\n"); // Newlines between rows
+
+  // Return full block
+  return `${header}\n${rows}`;
 };

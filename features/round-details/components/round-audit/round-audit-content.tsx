@@ -8,7 +8,6 @@ import BetTable from "@/features/round-details/components/round-audit/tab-conten
 import PremiumLogMonitor from "@/features/round-details/components/round-audit/tab-content/log-monitor";
 import TransactionTable from "@/features/round-details/components/round-audit/tab-content/transaction-table";
 import FullScreenWrapper from "@/features/round-details/components/round-audit/tab-content/full-screen-wrapper";
-import { usePrefetchTransactionLogs } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-prefetch-logs";
 import { useLogState } from "@/features/round-details/components/round-audit/tab-content/log-monitor/hooks/use-log-state";
 import { toast } from "sonner";
 
@@ -37,15 +36,6 @@ export function RoundAuditContent({
   const betsRef = useRef<HTMLDivElement>(null);
   const txRef = useRef<HTMLDivElement>(null);
   const logsRef = useRef<HTMLDivElement>(null);
-
-  usePrefetchTransactionLogs({
-    roundId: roundDetails?.tptInfo?.[0]?.round_id as string,
-    timeStamp: roundDetails?.tptInfo?.[0]?.trans_date as string,
-    game_id: roundDetails?.tptInfo?.[0]?.game_id as string,
-    user_id: roundDetails?.tptInfo?.[0]?.user_id as string,
-    game_type: roundDetails?.gameDetails?.[0]?.game_type as string,
-    operator: roundDetails?.tptInfo?.[0]?.Wallet_Type.toLowerCase() as string,
-  });
 
   // Listen to activeTab changes and trigger smooth scrolling
   useEffect(() => {

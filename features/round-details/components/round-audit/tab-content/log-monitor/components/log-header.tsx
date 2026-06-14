@@ -1,8 +1,9 @@
 // @/features/round-details/components/round-audit/tab-content/log-monitor/components/log-header.tsx
 "use client";
 
-import { Search, Activity, RefreshCw, AlertCircle, Check } from "lucide-react";
+import { Search, Activity, RefreshCw, AlertCircle, Check, ExternalLink } from "lucide-react";
 import { cn } from "@/utils/cn";
+import { useDynamicKibanaLink } from "../hooks/useDynamicKibanaLink";
 
 interface LogHeaderProps {
   availableTabs: string[];
@@ -38,10 +39,14 @@ export function LogHeader({
   gameIsSuccess = false,
 }: LogHeaderProps) {
   
+  // 1. Invoke hooks strictly at the top level of the component
+  const platformKibana = useDynamicKibanaLink({ logType: "platform" });
+  const gameKibana = useDynamicKibanaLink({ logType: "game" });
+  console.log("gameKibaan", gameKibana)
   return (
     <header className="h-10 flex items-center border-b border-border px-3 bg-muted/60">
       
-      {/* LEFT: Tabs with customized status badges */}
+      {/* LEFT: Tabs with customized status badges and external Kibana Deep-links */}
       <div className="flex items-center gap-1 flex-shrink-0">
         {availableTabs.map((tab: string) => {
           const isGameLogsTab = tab === "gameLogs";
@@ -51,46 +56,66 @@ export function LogHeader({
           const tabIsLoading = (isGameLogsTab && gameIsLoading) || (isPlatformOrTxnTab && txnIsLoading);
           const tabIsSuccess = (isGameLogsTab && gameIsSuccess) || (isPlatformOrTxnTab && txnIsSuccess);
 
+          // 2. Safely extract values out of top-level hook objects without violating React rules
+          const isPlatform = tab === "platformLogs";
+          const kibanaUrl = isPlatform ? platformKibana.url : gameKibana.url;
+          const hasTemplate = isPlatform ? platformKibana.hasTemplate : gameKibana.hasTemplate;
+
           return (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={cn(
-                "relative flex items-center gap-1.5 px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition select-none h-8",
-                activeTab === tab
-                  ? "border-foreground text-foreground"
-                  : "border-transparent text-muted-foreground hover:text-foreground",
-                tabHasFailed && "text-destructive hover:text-destructive/80",
-                tabIsLoading && "text-primary/80"
-              )}
-              title={
-                tabHasFailed 
-                  ? "Warning: Failed to fetch records for this segment round query" 
-                  : tabIsLoading 
-                    ? "Streaming records..." 
-                    : undefined
-              }
-            >
-              <span>{tab}</span>
-              
-              {/* Animated Refresh Spinner inside Loading Tab */}
-              {tabIsLoading && (
-                <RefreshCw className="w-2.5 h-2.5 animate-spin text-primary" />
-              )}
+            <div key={tab} className="relative flex items-center group h-8">
+              <button
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  "relative flex items-center gap-1.5 px-2 py-1 text-[11px] uppercase tracking-wide font-medium border-b-2 transition select-none h-full",
+                  activeTab === tab
+                    ? "border-foreground text-foreground"
+                    : "border-transparent text-muted-foreground hover:text-foreground",
+                  tabHasFailed && "text-destructive hover:text-destructive/80",
+                  tabIsLoading && "text-primary/80"
+                )}
+                title={
+                  tabHasFailed 
+                    ? "Warning: Failed to fetch records for this segment round query" 
+                    : tabIsLoading 
+                      ? "Streaming records..." 
+                      : undefined
+                }
+              >
+                <span>{tab}</span>
+                
+                {/* Animated Refresh Spinner inside Loading Tab */}
+                {tabIsLoading && (
+                  <RefreshCw className="w-2.5 h-2.5 animate-spin text-primary" />
+                )}
 
-              {/* Minimal Checkmark Variant for Loaded Stream Confirmation */}
-              {tabIsSuccess && !tabIsLoading && (
-                <Check className="w-2.5 h-2.5 text-emerald-500 animate-in fade-in zoom-in-75 duration-200" />
-              )}
+                {/* Minimal Checkmark Variant for Loaded Stream Confirmation */}
+                {tabIsSuccess && !tabIsLoading && (
+                  <Check className="w-2.5 h-2.5 text-emerald-500 animate-in fade-in zoom-in-75 duration-200" />
+                )}
 
-              {/* Pulsing Red Status Indicator Dot for Errors */}
-              {tabHasFailed && !tabIsLoading && (
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                </span>
+                {/* Pulsing Red Status Indicator Dot for Errors */}
+                {tabHasFailed && !tabIsLoading && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                )}
+              </button>
+
+              {/* Dynamic Kibana Tab Link Anchor Action - Displays only if template is matched in DB */}
+              {hasTemplate && kibanaUrl && (
+                <a
+                  href={kibanaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="mr-1.5 p-1 rounded-md text-muted-foreground transition hover:text-blue-500 hover:bg-background/80"
+                  title={`Open compiled Kibana instance for ${tab}`}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </a>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

@@ -66,7 +66,6 @@ export async function fetchGameLogs(data: TransactionLogsProps) {
         params: gameLogQueryParams,
         requireCookie: true,
     }).catch((err) => {
-        // ✅ Absorbs 500 errors gracefully so game-logs fail independently
         console.error("Game logs backend failure:", err);
         return { gameLogs: [], isGameError: true };
     });
